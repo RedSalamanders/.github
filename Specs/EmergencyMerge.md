@@ -13,13 +13,15 @@ The branch ruleset grants OrganizationAdmin with bypass_mode=pull_request. It do
 ```powershell
 $repository = 'RedSalamanders/RedSalamander' # Select the actual product.
 $pr = 123 # Select the reviewed PR.
-$head = gh pr view $pr --repo $repository --json headRefOid --jq .headRefOid
-if ($LASTEXITCODE -ne 0 -or $head -notmatch '^[a-f0-9]{40}$') { throw 'Cannot identify the reviewed PR head.' }
-gh pr merge $pr --repo $repository --admin --merge --match-head-commit $head --body-file emergency-reason.md
+$reviewedHead = 'REPLACE_WITH_THE_FULL_HEAD_REVIEWED_IN_STEP_1'
+if ($reviewedHead -cnotmatch '^[a-f0-9]{40}$') { throw 'Supply the full SHA already reviewed in step 1.' }
+$currentHead = gh pr view $pr --repo $repository --json headRefOid --jq .headRefOid
+if ($LASTEXITCODE -ne 0 -or $currentHead -cne $reviewedHead) { throw 'The PR changed or could not be read; review its exact source again.' }
+gh pr merge $pr --repo $repository --admin --merge --match-head-commit $reviewedHead --body-file emergency-reason.md
 if ($LASTEXITCODE -ne 0) { throw 'Emergency merge refused; preserve the diagnostic and review permissions or source drift.' }
 ```
 
-Use --admin only for the recorded emergency, never as an automatic fallback after an ordinary merge fails. GitHub retains the actual failed/pending checks and bypass audit trail. The reason also stays in the merge commit. This policy adds no bot-owned privileged workflow or publication credential.
+Keep the SHA captured during review; never replace it with a newly fetched head just to make the command pass. The API comparison catches a change since review, and --match-head-commit catches a later update before merging. Use --admin only for the recorded emergency, never as an automatic fallback after an ordinary merge fails. GitHub retains the actual failed/pending checks and bypass audit trail. The reason also stays in the merge commit. This policy adds no bot-owned privileged workflow or publication credential.
 
 ## Qualification after merging
 
