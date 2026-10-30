@@ -10,6 +10,8 @@ PR checks never compile, including compiler-dependent tooling fixtures. Classifi
 
 The manual writer accepts only main-targeting PRs, stages literal NUL-delimited paths, and uses a normal fast-forward push. It tolerates bounded lag from the old PR metadata head to its own new commit; another head, closed PR or changed target refuses confirmation. The artifact and publication commands expose each workflow output as a separate key/value line so upload/promotion cannot silently lose its archive path or version.
 
+Native child commands always capture stdout/stderr, including on windowless Windows hosts. Requested console diagnostics forward both captured streams after completion with publication credentials masked; the actual exit code and raw evidence remain intact. Timeouts fail and terminate only the process tree launched by that invocation.
+
 ## Admission and persistent state
 
 The cheap main coordinator waits for five continuous quiet minutes. Superseded coordinators may be cancelled. A separate repository/main concurrency lane uses GitHub's bounded queue with cancellation disabled. Stale queued candidates exit admission before any expensive setup; an active native pipeline is never cancelled by newer pushes. Admission rechecks the current head and the trusted main dispatch identity.
