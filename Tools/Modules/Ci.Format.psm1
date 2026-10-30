@@ -99,7 +99,7 @@ function Invoke-CiFormatCommit {
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$Repository, [Parameter(Mandatory)][int]$PullRequest)
     if ($env:GITHUB_EVENT_NAME -cne 'workflow_dispatch' -or $env:GITHUB_REF -cne 'refs/heads/main' -or $env:GITHUB_REPOSITORY -cne $Repository) { throw 'Formatting commits require an explicit trusted default-branch dispatch.' }
     $pr = Invoke-CiApi "repos/$Repository/pulls/$PullRequest"
-    if ($pr.state -cne 'open' -or $pr.head.repo.full_name -cne $Repository) { throw 'Only an open same-repository PR can receive a formatting commit; forks use the retained patch.' }
+    if ($pr.state -cne 'open' -or $pr.head.repo.full_name -cne $Repository -or $pr.base.ref -cne 'main') { throw 'Only an open same-repository PR targeting main can receive a formatting commit; forks use the retained patch.' }
     $head = [string]$pr.head.sha; $base = [string]$pr.base.sha; $branch = [string]$pr.head.ref
     if ($head -notmatch '^[a-f0-9]{40}$' -or $base -notmatch '^[a-f0-9]{40}$') { throw 'Invalid PR source identity.' }
     $null = Invoke-CiGit $Root @('check-ref-format', ('refs/heads/' + $branch))
@@ -114,13 +114,19 @@ function Invoke-CiFormatCommit {
     if ($latest.state -cne 'open' -or $latest.head.sha -cne $head) { throw 'PR head moved while formatting; retain the patch and do not push.' }
     $pathList = Assert-CiContainedPath $Root (Join-Path $Root '.build/ci/format.paths')
     [IO.File]::WriteAllText($pathList, (($result.changedPaths -join [char]0) + [char]0), [Text.UTF8Encoding]::new($false))
-    $null = Invoke-CiGit $Root @('--literal-pathspecs', 'add', '--pathspec-from-file=' + $pathList, '--pathspec-file-nul')
+    $null = Invoke-CiGit $Root @('--literal-pathspecs', 'add', ('--pathspec-from-file=' + $pathList), '--pathspec-file-nul')
     $null = Invoke-CiGit $Root @('-c', 'user.name=github-actions[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-m', 'Apply clang-format to PR source files')
     $newHead = (Invoke-CiGit $Root @('rev-parse', 'HEAD')).stdout.Trim()
     # Ordinary fast-forward push refuses a concurrent head change; there is no force update.
     $null = Invoke-CiGit $Root @('push', 'origin', ('HEAD:refs/heads/' + $branch))
     $published = Invoke-CiApi "repos/$Repository/pulls/$PullRequest"
-    if ($published.head.sha -cne $newHead) { throw 'Formatting commit identity was not confirmed.' }
+    # Git and PR metadata become visible separately. Wait only for the expected old-to-new
+    # transition; a different head or closed/retargeted PR is never accepted.
+    for ($attempt = 0; $attempt -lt 5 -and $published.head.sha -ceq $head; ++$attempt) {
+        Start-Sleep -Seconds 2
+        $published = Invoke-CiApi "repos/$Repository/pulls/$PullRequest"
+    }
+    if ($published.state -cne 'open' -or $published.base.ref -cne 'main' -or $published.head.ref -cne $branch -or $published.head.sha -cne $newHead) { throw 'Formatting commit identity was not confirmed; request exact-head checks explicitly before merging.' }
     # Execute trusted main YAML, with read-only PR checkout and a separate trusted status writer.
     $null = Invoke-CiApi "repos/$Repository/actions/workflows/ci.yml/dispatches" -Method POST -Body @{
         ref = 'main'; inputs = @{ pr_number = [string]$PullRequest; expected_head = $newHead } }

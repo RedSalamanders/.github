@@ -216,7 +216,7 @@ function Write-CiProductionReceipt {
     $path = Assert-CiContainedPath $Context.root (Join-Path $stage ("production-$($Context.platform).json"))
     [IO.File]::WriteAllText($path, ($receipt | ConvertTo-Json -Depth 15), [Text.UTF8Encoding]::new($false))
     if ($env:GITHUB_OUTPUT) {
-        Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value @('receipt_path=' + $path, 'archive_directory=' + $stage)
+        Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value @(('receipt_path=' + $path), ('archive_directory=' + $stage))
     }
     Write-Host "Qualified production ZIP receipt: $path"
 }

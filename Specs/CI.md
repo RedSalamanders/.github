@@ -8,6 +8,8 @@ Every project uses the same strict manifest schema. Explicit runtime/build/test 
 
 PR checks never compile, including compiler-dependent tooling fixtures. Classification errors fail the static gate. Formatting drift retains a patch and fails the check. An explicitly dispatched trusted formatter may commit a narrow change to the verified same-repository PR head, then explicitly dispatch fresh compiler-free checks for that exact new head. Because token pushes suppress ordinary workflow events, that dispatch also runs CodeQL with the exact pull-head ref/SHA and dependency review with the verified base/head SHAs. A trusted reporter completes each of the three separately required checks on that source; skipped, failed or cancelled security work cannot pass.
 
+The manual writer accepts only main-targeting PRs, stages literal NUL-delimited paths, and uses a normal fast-forward push. It tolerates bounded lag from the old PR metadata head to its own new commit; another head, closed PR or changed target refuses confirmation. The artifact and publication commands expose each workflow output as a separate key/value line so upload/promotion cannot silently lose its archive path or version.
+
 ## Admission and persistent state
 
 The cheap main coordinator waits for five continuous quiet minutes. Superseded coordinators may be cancelled. A separate repository/main concurrency lane uses GitHub's bounded queue with cancellation disabled. Stale queued candidates exit admission before any expensive setup; an active native pipeline is never cancelled by newer pushes. Admission rechecks the current head and the trusted main dispatch identity.
