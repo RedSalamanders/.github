@@ -33,3 +33,5 @@ Manual extended qualification retains existing Debug/ASan, stress and paired-per
 ZIP publication covers all six products. Winget covers the five applications and requires anonymous installer URLs and a suitable publication credential. Private visibility, account billing and licensed security availability are external acceptance prerequisites, never empty green checks.
 
 Dependency monitoring covers Actions and engine pins, vcpkg baselines/floors and source locks without automatic consumer adoption. Scheduled CodeQL uses explicit C/C++ build mode none. Default and advanced setup must not create duplicate scans. Supported dependency alerts, secret scanning and push protection are enabled consistently; unsupported capabilities stay visibly open.
+
+Emergency PR merge eligibility is governed by [Specs/EmergencyMerge.md](EmergencyMerge.md): explicit organization-owner PR-only bypass with a recorded reason and exact-head match. Failed checks remain visible; native qualification and publication evidence gates remain required. This is an operator route and requires no deployed engine-pin change.
