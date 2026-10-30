@@ -347,11 +347,21 @@ Invoke-Case 'Static project command selection refuses compiler-dependent entry p
     $context = @{ root = $root; phase = 'Static'; project = @{ repository = 'RedSalamanders/RedMonitor' } }
     Assert-Refused { Invoke-CiProjectScript $context 'build.ps1' }
 }
-Invoke-Case 'Streaming child execution preserves a real nonzero exit code' {
+Invoke-Case 'Windowless child diagnostics preserve both output streams and the real exit code' {
     $root = New-Fixture 'streaming-exit'
     $hostPath = (Get-Process -Id $PID).Path
-    $result = Invoke-CiProcess -FilePath $hostPath -Arguments @('-NoProfile','-NonInteractive','-Command','exit 17') -WorkingDirectory $root -Stream -AllowFailure
-    Assert-Equal 17 $result.exitCode
+    $old=$env:GH_TOKEN
+    try {
+        $env:GH_TOKEN='ci-fake-credential-value'
+        $command='[Console]::Out.WriteLine("child stdout ci-fake-credential-value"); [Console]::Error.WriteLine("child stderr"); exit 17'
+        $records=@(& { Invoke-CiProcess -FilePath $hostPath -Arguments @('-NoProfile','-NonInteractive','-Command',$command) -WorkingDirectory $root -Stream -AllowFailure } 6>&1)
+        $result=@($records|Where-Object {$_ -isnot [Management.Automation.InformationRecord]})[0]
+        $printed=(@($records|Where-Object {$_ -is [Management.Automation.InformationRecord]}|ForEach-Object ToString) -join [char]10)
+        Assert-Equal 17 $result.exitCode
+        Assert-True ($result.stdout.Contains('child stdout') -and $result.stderr.Contains('child stderr'))
+        Assert-True ($printed.Contains('child stdout <credential>') -and $printed.Contains('child stderr'))
+        Assert-True (-not $printed.Contains($env:GH_TOKEN))
+    } finally {$env:GH_TOKEN=$old}
 }
 
 Invoke-Case 'Production admission refuses test-role evidence, stale attempts and modified ZIP bytes' {

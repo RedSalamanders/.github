@@ -10,21 +10,19 @@ function Invoke-CiProcess {
     $start.WorkingDirectory = [IO.Path]::GetFullPath($WorkingDirectory)
     $start.UseShellExecute = $false
     $start.CreateNoWindow = $true
-    $start.RedirectStandardOutput = -not $Stream
-    $start.RedirectStandardError = -not $Stream
-    if (-not $Stream) {
-        $start.StandardOutputEncoding = [Text.UTF8Encoding]::new($false)
-        $start.StandardErrorEncoding = [Text.UTF8Encoding]::new($false)
-    }
+    # Hosted Windows PowerShell can have no inheritable console handles. Always
+    # capture both pipes, then forward requested diagnostics through this host.
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $start.StandardOutputEncoding = [Text.UTF8Encoding]::new($false)
+    $start.StandardErrorEncoding = [Text.UTF8Encoding]::new($false)
     foreach ($argument in $Arguments) { [void]$start.ArgumentList.Add($argument) }
     $child = [Diagnostics.Process]::new()
     $child.StartInfo = $start
     try {
         if (-not $child.Start()) { throw "Could not start $FilePath." }
-        if (-not $Stream) {
-            $stdout = $child.StandardOutput.ReadToEndAsync()
-            $stderr = $child.StandardError.ReadToEndAsync()
-        }
+        $stdout = $child.StandardOutput.ReadToEndAsync()
+        $stderr = $child.StandardError.ReadToEndAsync()
         if (-not $child.WaitForExit($TimeoutSeconds * 1000)) {
             # This exact handle was created by this invocation; it owns the entire child tree.
             $child.Kill($true)
@@ -32,8 +30,16 @@ function Invoke-CiProcess {
             throw "Owned $FilePath invocation timed out after $TimeoutSeconds seconds."
         }
         $result = [pscustomobject]@{ exitCode = $child.ExitCode;
-            stdout = $(if ($Stream) { '' } else { $stdout.GetAwaiter().GetResult() });
-            stderr = $(if ($Stream) { '' } else { $stderr.GetAwaiter().GetResult() }) }
+            stdout = $stdout.GetAwaiter().GetResult(); stderr = $stderr.GetAwaiter().GetResult() }
+        if ($Stream) {
+            foreach ($value in @($result.stdout, $result.stderr)) {
+                $display = $value
+                foreach ($secret in @($env:GH_TOKEN,$env:WINGET_TOKEN)) {
+                    if ($secret) { $display = $display.Replace($secret,'<credential>') }
+                }
+                if ($display) { Write-Host $display -NoNewline }
+            }
+        }
         if ($result.exitCode -ne 0 -and -not $AllowFailure) {
             $diagnostic=($result.stderr+$result.stdout).Trim()
             foreach($secret in @($env:GH_TOKEN,$env:WINGET_TOKEN)){if($secret){$diagnostic=$diagnostic.Replace($secret,'<credential>')}}
