@@ -1,0 +1,93 @@
+name: Compiler-free PR checks
+on:
+  workflow_call:
+    inputs:
+      engine_ref:
+        type: string
+        required: true
+      head:
+        type: string
+        required: true
+      base:
+        type: string
+        required: true
+permissions:
+  contents: read
+env:
+  CI_NATIVE_BUILDS_DISABLED: 'true'
+jobs:
+  tooling:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.head }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - name: Reviewed compiler-free project checks
+        shell: pwsh
+        env:
+          CI_BASE: ${{ inputs.base }}
+        run: |
+          $manifest = Get-Content .ci/project.json -Raw | ConvertFrom-Json
+          & (Join-Path $PWD $manifest.adapter) -Phase Static -EngineRoot (Join-Path $PWD '.ci-engine') -Base $env:CI_BASE
+  format:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.head }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - name: Produce narrow formatting feedback
+        shell: pwsh
+        env:
+          CI_BASE: ${{ inputs.base }}
+        run: ./.ci-engine/Tools/Invoke-Formatting.ps1 -Root . -Base $env:CI_BASE
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: clang-format-patch
+          path: .build/ci/format.patch
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14
+  ci-gate:
+    name: ci-gate
+    if: always()
+    needs: [tooling, format]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - shell: pwsh
+        env:
+          TOOLING: ${{ needs.tooling.result }}
+          FORMAT: ${{ needs.format.result }}
+        run: |
+          if ($env:TOOLING -cne 'success' -or $env:FORMAT -cne 'success') { throw 'Compiler-free PR checks failed or did not execute.' }

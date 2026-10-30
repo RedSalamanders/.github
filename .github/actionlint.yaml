@@ -1,0 +1,3 @@
+# GitHub-hosted VS 2026 ARM64 preview label, already used by the product workflows.
+self-hosted-runner:
+  labels: [windows-11-vs2026-arm]

@@ -64,9 +64,23 @@ function Invoke-CiFormatting {
         $sources.Add($path)
     }
     if ($sources.Count) {
+        $rootStyle=Assert-CiContainedPath $Root (Join-Path $Root '.clang-format')
+        if(-not(Test-Path -LiteralPath $rootStyle -PathType Leaf) -or [IO.File]::ReadAllText($rootStyle) -match 'InheritParentConfig'){
+            throw 'Formatting requires an owned root style that cannot inherit configuration outside the checkout.'
+        }
+        foreach($path in $sources){
+            $directory=[IO.Path]::GetDirectoryName((Join-Path $Root $path))
+            while($directory){
+                foreach($name in @('.clang-format','.clang-format-ignore')){
+                    $null=Assert-CiContainedPath $Root (Join-Path $directory $name)
+                }
+                if([IO.Path]::GetFullPath($directory).TrimEnd('\','/') -ceq [IO.Path]::GetFullPath($Root).TrimEnd('\','/')){break}
+                $directory=[IO.Path]::GetDirectoryName($directory)
+            }
+        }
         $formatter = Install-CiFormatter $Root
         foreach ($path in $sources) {
-            $null = Invoke-CiProcess $formatter @('--style=file', '-i', '--', $path) $Root
+            $null = Invoke-CiProcess $formatter @('--style=file', '--Werror', '-i', '--', $path) $Root
         }
     }
     $patch = (Invoke-CiGit $Root @('diff', '--binary', '--no-ext-diff')).stdout
@@ -100,7 +114,7 @@ function Invoke-CiFormatCommit {
     if ($latest.state -cne 'open' -or $latest.head.sha -cne $head) { throw 'PR head moved while formatting; retain the patch and do not push.' }
     $pathList = Assert-CiContainedPath $Root (Join-Path $Root '.build/ci/format.paths')
     [IO.File]::WriteAllText($pathList, (($result.changedPaths -join [char]0) + [char]0), [Text.UTF8Encoding]::new($false))
-    $null = Invoke-CiGit $Root @('add', '--pathspec-from-file=' + $pathList, '--pathspec-file-nul')
+    $null = Invoke-CiGit $Root @('--literal-pathspecs', 'add', '--pathspec-from-file=' + $pathList, '--pathspec-file-nul')
     $null = Invoke-CiGit $Root @('-c', 'user.name=github-actions[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-m', 'Apply clang-format to PR source files')
     $newHead = (Invoke-CiGit $Root @('rev-parse', 'HEAD')).stdout.Trim()
     # Ordinary fast-forward push refuses a concurrent head change; there is no force update.

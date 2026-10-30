@@ -40,4 +40,9 @@ if ($result.admitted) {
     if ($env:GITHUB_OUTPUT) {
         Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value @('admitted=true', ('commit=' + $Commit), ('build_number=' + $result.descriptor.buildNumber), ('version=' + $result.descriptor.version))
     }
-} elseif ($env:GITHUB_OUTPUT) { Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value 'admitted=false' }
+} else {
+    if ($env:GITHUB_OUTPUT) { Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value 'admitted=false' }
+    if ($result.decision.action -ceq 'retain' -and $result.decision.outcome -cne 'succeeded') {
+        throw "Native work was not repeated; retained real qualification outcome: $($result.decision.outcome)."
+    }
+}

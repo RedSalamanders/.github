@@ -13,3 +13,11 @@ The normative contract is [Specs/CI.md](Specs/CI.md). Engine behavior tests use 
 ```
 
 Implementation and live acceptance are tracked by [RedSalamander I55](https://github.com/RedSalamanders/RedSalamander/blob/main/Specs/Plans/WIP/CI_OrganizationStandardization_2026-10-29.md). A local test pass is not native project qualification.
+
+Each product has six canonical callers: compiler-free PR/main coordination, serialized main qualification, manual formatting, manual diagnostic qualification, compiler-free security, and manual publication. Tools/Update-ProjectPin.ps1 updates the manifest and callers together from a clean, exact engine checkout. A moving branch or a workflow-only pin update is refused by project conformance checks.
+
+Operator actions start from the product's main branch. Formatting names an open same-repository PR and explicitly requests new checks after its narrow fast-forward commit. Manual native retry requires retry=true for already admitted inputs. Extended qualification selects Debug, ASan Debug or Release and Normal or Full scope; it cannot qualify a public release. Publication selects an original successful main qualification run and defaults to Prepare. Release promotes its ZIPs, and Winget requires the published anonymous URLs and native install evidence before submitting manifests with the dedicated credential.
+
+No release or winget submission is part of engine validation. Ninety-day qualification artifacts may expire: operators then run an explicit fresh native qualification rather than reconstructing old ZIPs. Public reusable workflows let public and private products share the engine without changing product visibility.
+
+The winget idempotency implementation derives from the MIT-licensed RedSalamander module; its original notice is retained in [ThirdParty/RedSalamander/LICENSE.txt](ThirdParty/RedSalamander/LICENSE.txt). This does not assign a license to an application.

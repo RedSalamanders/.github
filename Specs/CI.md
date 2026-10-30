@@ -10,7 +10,7 @@ PR checks never compile, including compiler-dependent tooling fixtures. Classifi
 
 ## Admission and persistent state
 
-The cheap main coordinator waits for five continuous quiet minutes. Superseded coordinators may be cancelled. A separate repository/main concurrency lane serializes admitted native workflows, allowing the latest pending candidate to replace older waiting candidates without cancelling an admitted pipeline. Admission rechecks the current head before any expensive setup.
+The cheap main coordinator waits for five continuous quiet minutes. Superseded coordinators may be cancelled. A separate repository/main concurrency lane uses GitHub's bounded queue with cancellation disabled. Stale queued candidates exit admission before any expensive setup; an active native pipeline is never cancelled by newer pushes. Admission rechecks the current head and the trusted main dispatch identity.
 
 Persistent state lives on the project's `ci-state` branch, outside product source. Atomic fast-forward ref updates retain the admitted input identity, commit, engine/policy, run and actual outcome. Concurrent sibling updates fail rather than overwrite. Identical admitted inputs retain their original success, running state or failure; documentation cannot trigger an automatic retry or hide a failure. A retry is explicit. Missing state is conservative and never fabricates qualification.
 
@@ -24,7 +24,7 @@ Native production/package smoke is required on both architectures. Application Z
 
 ## Manual operations and security
 
-Manual extended qualification retains existing Debug/ASan, stress and paired-performance obligations; removing timers does not waive them. Product release and winget publication require an explicit default-branch action. Publication verifies a successful qualified batch and promotes the exact existing ZIPs without rebuilding or restamping. Missing or expired evidence refuses publication. Retries cannot overwrite an existing asset or create duplicate winget changes.
+Manual extended qualification retains existing Debug/ASan, stress and paired-performance obligations; removing timers does not waive them. The common action offers Normal and Full scope; a project whose normal suite is already Full uses that same canonical suite. RedSalamander's automatic normal suite is CI and its explicit Full remains separate. Paired-performance diagnostic A/A is not qualification. Product release and winget publication require an explicit default-branch action. Publication verifies a successful qualified batch and promotes the exact existing ZIPs without rebuilding or restamping. Missing or expired evidence refuses publication. Retries cannot overwrite an existing asset or create duplicate winget changes.
 
 ZIP publication covers all six products. Winget covers the five applications and requires anonymous installer URLs and a suitable publication credential. Private visibility, account billing and licensed security availability are external acceptance prerequisites, never empty green checks.
 

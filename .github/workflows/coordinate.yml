@@ -1,0 +1,35 @@
+name: Quiet-window coordinator
+on:
+  workflow_call:
+    inputs:
+      engine_ref:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: write
+  statuses: write
+jobs:
+  coordinate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - name: Classify cumulative inputs and wait five continuous quiet minutes
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./.ci-engine/Tools/Invoke-Coordinator.ps1 -Root . -RunId $env:GITHUB_RUN_ID

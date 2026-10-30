@@ -1,0 +1,79 @@
+name: Explicit native qualification
+on:
+  workflow_call:
+    inputs:
+      engine_ref:
+        type: string
+        required: true
+      configuration:
+        type: string
+        default: Debug
+      scope:
+        type: string
+        default: Normal
+permissions:
+  contents: read
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            runner: windows-2025-vs2026
+          - platform: ARM64
+            runner: windows-11-vs2026-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - uses: ./.github/actions/setup-msvc
+        with:
+          platform: ${{ matrix.platform }}
+      - name: Freeze an explicit qualification identity, without advancing main state
+        shell: pwsh
+        run: |
+          Import-Module ./.ci-engine/Tools/Modules/Ci.Policy.psm1
+          $batch = New-CiInputDescriptor -Root .
+          $batch.runId = $env:GITHUB_RUN_ID
+          New-Item -ItemType Directory -Path .build/ci -Force | Out-Null
+          $batch | ConvertTo-Json -Depth 15 | Set-Content -LiteralPath .build/ci/manual.json -Encoding utf8
+      - name: Build and execute the selected native diagnostic profile
+        id: qualification
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_CONFIGURATION: ${{ inputs.configuration }}
+          CI_QUALIFICATION_SCOPE: ${{ inputs.scope }}
+          CI_PLATFORM: ${{ matrix.platform }}
+          CI: 'true'
+        run: |
+          $manifest = Get-Content .ci/project.json -Raw | ConvertFrom-Json
+          & (Join-Path $PWD $manifest.adapter) -Phase Qualification -Configuration $env:CI_CONFIGURATION -QualificationScope $env:CI_QUALIFICATION_SCOPE -Platform $env:CI_PLATFORM -EngineRoot (Join-Path $PWD '.ci-engine') -Descriptor .build/ci/manual.json
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: qualification-${{ matrix.platform }}-${{ inputs.configuration }}
+          path: |
+            .build/logs/**
+            .build/reports/**
+            .build/evidence/**
+            .build/test-runs/**
+            .build/test-artifacts/**
+            ${{ steps.qualification.outputs.evidence_directory }}
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

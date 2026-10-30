@@ -1,0 +1,327 @@
+name: Native Release qualification
+on:
+  workflow_call:
+    inputs:
+      engine_ref:
+        type: string
+        required: true
+      commit:
+        type: string
+        default: main
+      mode:
+        type: string
+        default: manual
+      retry:
+        type: boolean
+        default: false
+      coordinator_run:
+        type: string
+        default: ''
+permissions:
+  contents: read
+jobs:
+  admission:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      statuses: write
+      actions: read
+    outputs:
+      admitted: ${{ steps.admit.outputs.admitted }}
+      commit: ${{ steps.admit.outputs.commit }}
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - id: admit
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_ENGINE_REF: ${{ inputs.engine_ref }}
+          CI_MODE: ${{ inputs.mode }}
+          CI_RETRY: ${{ inputs.retry }}
+          CI_COORDINATOR: ${{ inputs.coordinator_run }}
+        run: |
+          $commit = (git rev-parse HEAD).Trim()
+          ./.ci-engine/Tools/Invoke-Admission.ps1 -Root . -Commit $commit -EngineRef $env:CI_ENGINE_REF -RunId $env:GITHUB_RUN_ID -Mode $env:CI_MODE -Retry:($env:CI_RETRY -eq 'true') -CoordinatorRun $env:CI_COORDINATOR
+      - if: steps.admit.outputs.admitted == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: admission
+          path: .build/ci/batch.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90
+  regression:
+    needs: admission
+    if: needs.admission.outputs.admitted == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            runner: windows-2025-vs2026
+          - platform: ARM64
+            runner: windows-11-vs2026-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.admission.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: admission
+          path: .build/ci
+      - uses: ./.github/actions/setup-msvc
+        with:
+          platform: ${{ matrix.platform }}
+      - name: Restore dependency binary cache
+        id: deps
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/ci/vcpkg-cache
+          key: ci-deps-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ inputs.engine_ref }}-${{ hashFiles('.ci/project.json', 'Build/**', 'Tools/**', '*.ps1', '**/*.props', '**/*.targets', '**/vcpkg*.json', '**/*lock.json', '.github/actions/setup-msvc/**') }}
+      - name: Restore and build the test-enabled Release profile
+        id: build
+        shell: pwsh
+        env:
+          CI_PLATFORM: ${{ matrix.platform }}
+          GH_TOKEN: ${{ github.token }}
+          VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.build/ci/vcpkg-cache,readwrite
+        run: |
+          $manifest = Get-Content .ci/project.json -Raw | ConvertFrom-Json
+          & (Join-Path $PWD $manifest.adapter) -Phase ReleaseTestBuild -Platform $env:CI_PLATFORM -EngineRoot (Join-Path $PWD '.ci-engine') -Descriptor .build/ci/batch.json
+      - name: Save successfully populated dependency cache even if later tests fail
+        if: steps.build.outcome == 'success' && steps.deps.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/ci/vcpkg-cache
+          key: ${{ steps.deps.outputs.cache-primary-key }}
+      - name: Run actual regression tests and Release assertion probe
+        id: tests
+        shell: pwsh
+        env:
+          CI_PLATFORM: ${{ matrix.platform }}
+          GH_TOKEN: ${{ github.token }}
+          CI: 'true'
+        run: |
+          $manifest = Get-Content .ci/project.json -Raw | ConvertFrom-Json
+          & (Join-Path $PWD $manifest.adapter) -Phase ReleaseTest -Platform $env:CI_PLATFORM -EngineRoot (Join-Path $PWD '.ci-engine') -Descriptor .build/ci/batch.json
+      - if: steps.tests.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: regression-${{ matrix.platform }}
+          path: ${{ steps.tests.outputs.receipt_path }}
+          if-no-files-found: error
+          retention-days: 90
+      - if: steps.tests.outcome == 'success' && github.event.repository.name == 'RedSalamander'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: smoke-tools-${{ matrix.platform }}
+          path: ${{ steps.tests.outputs.smoke_harness }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: evidence-${{ matrix.platform }}
+          path: |
+            .build/logs/**
+            .build/evidence/**
+            .build/test-runs/**
+            .build/reports/**
+            .build/test-artifacts/**
+            ${{ steps.tests.outputs.evidence_directory }}
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+  test-gate:
+    needs: [admission, regression]
+    if: needs.admission.outputs.admitted == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: regression-*
+          path: evidence
+          merge-multiple: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: admission
+          path: evidence
+      - shell: pwsh
+        run: ./.ci-engine/Tools/Test-Qualification.ps1 -Directory evidence -Phase Regression
+  production:
+    needs: [admission, test-gate]
+    if: needs.admission.outputs.admitted == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            runner: windows-2025-vs2026
+          - platform: ARM64
+            runner: windows-11-vs2026-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.admission.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: admission
+          path: .build/ci
+      - uses: ./.github/actions/setup-msvc
+        with:
+          platform: ${{ matrix.platform }}
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/ci/vcpkg-cache
+          key: ci-deps-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ inputs.engine_ref }}-${{ hashFiles('.ci/project.json', 'Build/**', 'Tools/**', '*.ps1', '**/*.props', '**/*.targets', '**/vcpkg*.json', '**/*lock.json', '.github/actions/setup-msvc/**') }}
+      - if: github.event.repository.name == 'RedSalamander'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: smoke-tools-${{ matrix.platform }}
+          path: .build/ci/test-tools
+      - if: github.event.repository.name == 'RedSalamander'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: regression-${{ matrix.platform }}
+          path: .build/ci/test-tools
+      - name: Build production Release and smoke-test ZIP or SDK
+        id: package
+        shell: pwsh
+        env:
+          CI_PLATFORM: ${{ matrix.platform }}
+          GH_TOKEN: ${{ github.token }}
+          VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.build/ci/vcpkg-cache,readwrite
+        run: |
+          $manifest = Get-Content .ci/project.json -Raw | ConvertFrom-Json
+          & (Join-Path $PWD $manifest.adapter) -Phase Production -Platform $env:CI_PLATFORM -EngineRoot (Join-Path $PWD '.ci-engine') -Descriptor .build/ci/batch.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: production-${{ matrix.platform }}
+          path: ${{ steps.package.outputs.archive_directory }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: production-logs-${{ matrix.platform }}
+          path: .build/logs/**
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14
+  complete:
+    needs: [admission, regression, test-gate, production]
+    if: always() && needs.admission.outputs.admitted == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      statuses: write
+      actions: read
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.admission.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: admission
+          path: .build/ci
+      - if: needs.production.result == 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: production-*
+          path: .build/ci/qualified
+      - if: needs.production.result == 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: regression-*
+          path: .build/ci/qualified
+          merge-multiple: true
+      - name: Verify retained qualification, then record its actual outcome
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REGRESSION: ${{ needs.regression.result }}
+          TEST_GATE: ${{ needs.test-gate.result }}
+          PRODUCTION: ${{ needs.production.result }}
+        run: |
+          $outcome = 'failed'
+          try {
+            if ($env:REGRESSION -eq 'success' -and $env:TEST_GATE -eq 'success' -and $env:PRODUCTION -eq 'success') {
+              ./.ci-engine/Tools/Test-Qualification.ps1 -Directory .build/ci/qualified -Descriptor .build/ci/batch.json -Phase Complete
+              $outcome = 'succeeded'
+            } elseif ('cancelled' -in @($env:REGRESSION,$env:TEST_GATE,$env:PRODUCTION)) { $outcome = 'cancelled' }
+          } finally {
+            ./.ci-engine/Tools/Complete-Batch.ps1 -Descriptor .build/ci/batch.json -Root . -Outcome $outcome
+          }
+          if ($outcome -ne 'succeeded') { throw "Native qualification $outcome; retained evidence must be reviewed." }

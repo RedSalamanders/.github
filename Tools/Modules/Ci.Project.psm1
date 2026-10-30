@@ -19,6 +19,8 @@ function New-CiProjectContext {
         if ($env:CI_NATIVE_BUILDS_DISABLED -eq 'true') { throw 'Native compilation is forbidden in the PR/static lane.' }
         if ($env:GITHUB_ACTIONS -cne 'true' -or $env:RUNNER_ENVIRONMENT -cne 'github-hosted') { throw 'Use the canonical local build/test commands; this adapter is a hosted qualification entry point.' }
         $hostArchitecture = [Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
+        $processArchitecture = [Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString()
+        if($hostArchitecture -cne $processArchitecture){throw 'Native qualification cannot run through an emulated PowerShell host.'}
         if (($Platform -eq 'ARM64' -and $hostArchitecture -cne 'Arm64') -or ($Platform -eq 'x64' -and $hostArchitecture -cne 'X64')) { throw 'Native qualification requires the matching native host architecture.' }
     }
     $batch = $null
@@ -30,6 +32,7 @@ function New-CiProjectContext {
             $batch.nativeDigest -cne $actual.nativeDigest -or $batch.engine.ref -cne $project.engine.ref -or
             $batch.buildNumber -ne $actual.buildNumber -or $batch.version -cne $actual.version) { throw 'Frozen native input/version identity mismatch.' }
         if ($env:GITHUB_REPOSITORY -cne $project.repository) { throw 'Native adapter repository mismatch.' }
+        if ((Invoke-CiGit $Root @('status','--porcelain','--untracked-files=normal')).stdout.Trim()) { throw 'Native qualification requires a clean exact source checkout.' }
     }
     [ordered]@{ root = [IO.Path]::GetFullPath($Root); engineRoot = [IO.Path]::GetFullPath($EngineRoot);
         project = $project; batch = $batch; platform = $Platform; phase = $Phase; development = [bool]$DevelopmentEngine }
@@ -50,7 +53,7 @@ function Invoke-CiProjectScript {
     }
     $hostPath = (Get-Process -Id $PID).Path
     $commandArguments = @('-NoProfile','-NonInteractive','-File',$path) + $Arguments
-    $result = Invoke-CiProcess -FilePath $hostPath -Arguments $commandArguments -WorkingDirectory $Context.root -TimeoutSeconds $TimeoutSeconds -Stream
+    $result = Invoke-CiProcess -FilePath $hostPath -Arguments $commandArguments -WorkingDirectory $Context.root -TimeoutSeconds $TimeoutSeconds -Stream -AllowFailure
     if ($result.exitCode -ne 0) { throw "Project command failed: $Script ($($result.exitCode))." }
 }
 
@@ -66,6 +69,36 @@ function Test-CiProjectConfiguration {
     }
     $adapter = Assert-CiContainedPath $Context.root (Join-Path $Context.root $project.adapter)
     if (-not (Test-Path -LiteralPath $adapter -PathType Leaf)) { throw 'The declared project adapter is missing.' }
+    $lf=[string][char]10
+    $crlf=[string][char]13+$lf
+    $templates=Get-ChildItem -LiteralPath (Join-Path $Context.engineRoot 'Templates') -Filter '*.yml' -File
+    $core=@($templates.Name)
+    foreach($template in $templates){
+        $operations=if($project.kind -ceq 'sdk'){'Prepare, Release'}else{'Prepare, Release, Winget'}
+        $expected=[IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$project.engine.ref).Replace('@OPERATIONS@',$operations).Replace($crlf,$lf).TrimEnd()
+        $path=Join-Path $Context.root ('.github/workflows/'+$template.Name)
+        if(-not(Test-Path -LiteralPath $path) -or [IO.File]::ReadAllText($path).Replace($crlf,$lf).TrimEnd() -cne $expected){
+            throw "The common workflow or engine pin diverged: $($template.Name)"
+        }
+    }
+    $extensions=(Get-Content (Join-Path $Context.engineRoot 'Policy/extensions.json') -Raw|ConvertFrom-Json -AsHashtable)[$project.repository.Split('/')[1]]
+    foreach($workflow in Get-ChildItem -LiteralPath (Join-Path $Context.root '.github/workflows') -Filter '*.yml' -File){
+        if($workflow.Name -cin $core){continue}
+        $text=[IO.File]::ReadAllText($workflow.FullName).Replace($crlf,$lf)
+        if($extensions.sealedDisabled.Contains($workflow.Name)){
+            if((Get-CiSha256 $text) -cne $extensions.sealedDisabled[$workflow.Name]){throw 'The sealed disabled workflow bytes changed.'}
+            continue
+        }
+        if($extensions.metadata.Contains($workflow.Name)){
+            if((Get-CiSha256 $text) -cne $extensions.metadata[$workflow.Name]){throw 'Scheduled metadata workflow changed; review its no-build dependency closure before updating policy.'}
+            continue
+        }
+        if($workflow.Name -cnotin $extensions.manual){throw "Workflow has no reviewed owner/routing classification: $($workflow.Name)"}
+        if($text -match '(?m)^  (?:push|pull_request|pull_request_target|schedule|workflow_run|release|repository_dispatch):'){
+            throw "Extended native workflow has a forbidden automatic trigger: $($workflow.Name)"
+        }
+        if($extensions.sealed.Contains($workflow.Name) -and (Get-CiSha256 $text) -cne $extensions.sealed[$workflow.Name]){throw 'A sealed historical workflow changed.'}
+    }
     $files = (Invoke-CiGit $Context.root @('ls-files', '-z', '--', '*.ps1', '*.psm1', '*.props', '*.targets', '*.vcxproj')).stdout.Split([char]0)
     foreach ($path in $files) {
         if (-not $path -or $path -match '^(Specs/TestRuns|Specs/Plans/Done|Measurements|legacy|ThirdParty|External)/') { continue }
@@ -112,10 +145,15 @@ function Write-CiRegressionReceipt {
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Context,
         [Parameter(Mandatory)][int]$Discovered, [Parameter(Mandatory)][int]$Executed,
         [Parameter(Mandatory)][bool]$AssertionProbePassed, [Parameter(Mandatory)][object[]]$Artifacts,
-        [Parameter(Mandatory)][string]$EvidenceDirectory, [Parameter(Mandatory)][object[]]$CanonicalEvidence)
+        [Parameter(Mandatory)][string]$EvidenceDirectory, [Parameter(Mandatory)][object[]]$CanonicalEvidence,
+        [ValidateSet('case','required-case','suite','scenario')][string]$CountUnit='case',
+        [int]$Registered=0,[int]$ExpectedSkipped=0)
     if ($Discovered -le 0 -or $Executed -ne $Discovered -or -not $AssertionProbePassed -or -not $CanonicalEvidence.Count) { throw 'Incomplete native regression execution; no passing receipt can be written.' }
+    Assert-CiSourceFrozen $Context
+    if($Registered -eq 0){$Registered=$Discovered+$ExpectedSkipped}
     $receipt = [ordered]@{ schemaVersion = 1; repository = $Context.batch.repository; commit = $Context.batch.commit;
         nativeDigest = $Context.batch.nativeDigest; platform = $Context.platform; role = 'ReleaseTest'; passed = $true;
+        countUnit=$CountUnit;registered=$Registered;expectedSkipped=$ExpectedSkipped;
         discovered = $Discovered; executed = $Executed; failed = 0; unexpectedSkipped = 0;
         assertionProbePassed = $AssertionProbePassed; artifacts = $Artifacts; canonicalEvidence = $CanonicalEvidence;
         runId = $env:GITHUB_RUN_ID; completedAt = [DateTimeOffset]::UtcNow.ToString('o') }
@@ -132,6 +170,13 @@ function Write-CiProductionReceipt {
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Context, [Parameter(Mandatory)][string[]]$Archives,
         [Parameter(Mandatory)][bool]$TestModeDisabled, [Parameter(Mandatory)][bool]$SmokePassed)
     if (-not $TestModeDisabled -or -not $SmokePassed -or -not $Archives.Count) { throw 'Production mode and native smoke are required before retaining a distributable ZIP.' }
+    Assert-CiSourceFrozen $Context
+    if($Context.project.kind -ceq 'application'){
+        $binary=Join-Path $Context.root ".build/$($Context.platform)/Release/$($Context.project.winget.executable)"
+        $version=[Diagnostics.FileVersionInfo]::GetVersionInfo($binary)
+        $actual="$($version.FileMajorPart).$($version.FileMinorPart).$($version.FileBuildPart)"
+        if($actual -cne $Context.batch.version){throw 'Production executable and frozen batch version differ.'}
+    }
     $rows = [Collections.Generic.List[object]]::new()
     $stage = Assert-CiContainedPath $Context.root (Join-Path $Context.root ".build/ci/production/$($Context.platform)")
     [void][IO.Directory]::CreateDirectory($stage)
@@ -156,4 +201,57 @@ function Write-CiProductionReceipt {
     Write-Host "Qualified production ZIP receipt: $path"
 }
 
-Export-ModuleMember -Function New-CiProjectContext, Invoke-CiProjectScript, Test-CiProjectConfiguration, Invoke-CiAssertionProbe, Get-CiBinaryArtifacts, Write-CiRegressionReceipt, Write-CiProductionReceipt
+function Assert-CiSourceFrozen {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][System.Collections.IDictionary]$Context)
+    if ((Resolve-CiCommit $Context.root HEAD) -cne $Context.batch.commit -or
+        (Invoke-CiGit $Context.root @('status','--porcelain','--untracked-files=normal')).stdout.Trim()) {
+        throw 'Source changed during native qualification; no passing receipt can be published.'
+    }
+}
+
+function Get-CiEvidenceReference {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string[]]$Paths)
+    $rows = foreach ($path in $Paths) {
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Canonical evidence is missing: $path" }
+        [ordered]@{ path = [IO.Path]::GetFullPath($path); sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() }
+    }
+    return ,@($rows)
+}
+
+function Get-CiProfileArtifacts {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][System.Collections.IDictionary]$Context)
+    $profile=Assert-CiContainedPath $Context.root (Join-Path $Context.root ".build/$($Context.platform)/Release")
+    $paths=@(Get-ChildItem -LiteralPath $profile -Recurse -File|Where-Object Extension -in @('.exe','.dll','.lib')|
+        ForEach-Object{[IO.Path]::GetRelativePath($Context.root,$_.FullName).Replace('\','/')})
+    if(-not $paths.Count){throw 'No native profile artifacts were produced.'}
+    return Get-CiBinaryArtifacts -Context $Context -Paths $paths
+}
+
+function Get-CiSuiteEvidence {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][System.Collections.IDictionary]$Context, [Parameter(Mandatory)][DateTime]$StartedAt)
+    $root = Join-Path $Context.root '.build/evidence/test-runs'
+    $files = @(Get-ChildItem -LiteralPath $root -Recurse -Filter 'normal-suites.json' -File |
+        Where-Object { $_.LastWriteTimeUtc -ge $StartedAt })
+    if (-not $files.Count) { throw 'No fresh canonical native suite summary was produced.' }
+    $total = 0; $references = [Collections.Generic.List[string]]::new()
+    foreach ($file in $files) {
+        $completed = Join-Path (Split-Path -Parent $file.DirectoryName) 'completed.json'
+        $completion = Get-Content -LiteralPath $completed -Raw | ConvertFrom-Json -AsHashtable
+        $receipt = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json -AsHashtable
+        if ($completion.outcome -cne 'passed' -or $receipt.passed -isnot [bool] -or -not $receipt.passed -or
+            $receipt.filtered -ne $false -or $receipt.platform -cne $Context.platform -or $receipt.configuration -cne 'Release' -or
+            @($receipt.discovered).Count -eq 0 -or @($receipt.discovered).Count -ne @($receipt.executed).Count -or
+            (@($receipt.discovered | Sort-Object -Unique) -join ',') -cne (@($receipt.executed | Sort-Object -Unique) -join ',')) {
+            throw 'Canonical native suites are incomplete, filtered or do not match this Release profile.'
+        }
+        $total += @($receipt.executed).Count
+        $references.Add($file.FullName); $references.Add($completed)
+    }
+    [ordered]@{ countUnit = 'suite'; discovered = $total; executed = $total; evidence = (Get-CiEvidenceReference $references.ToArray()) }
+}
+
+Export-ModuleMember -Function New-CiProjectContext, Invoke-CiProjectScript, Test-CiProjectConfiguration, Invoke-CiAssertionProbe, Get-CiBinaryArtifacts, Get-CiProfileArtifacts, Write-CiRegressionReceipt, Write-CiProductionReceipt, Get-CiEvidenceReference, Get-CiSuiteEvidence

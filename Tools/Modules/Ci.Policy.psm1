@@ -34,7 +34,12 @@ function Invoke-CiProcess {
         $result = [pscustomobject]@{ exitCode = $child.ExitCode;
             stdout = $(if ($Stream) { '' } else { $stdout.GetAwaiter().GetResult() });
             stderr = $(if ($Stream) { '' } else { $stderr.GetAwaiter().GetResult() }) }
-        if ($result.exitCode -ne 0 -and -not $AllowFailure) { throw "$FilePath failed ($($result.exitCode)): $($result.stderr.Trim())" }
+        if ($result.exitCode -ne 0 -and -not $AllowFailure) {
+            $diagnostic=($result.stderr+$result.stdout).Trim()
+            foreach($secret in @($env:GH_TOKEN,$env:WINGET_TOKEN)){if($secret){$diagnostic=$diagnostic.Replace($secret,'<credential>')}}
+            if($diagnostic.Length -gt 8000){$diagnostic=$diagnostic.Substring($diagnostic.Length-8000)}
+            throw "$FilePath failed ($($result.exitCode)): $diagnostic"
+        }
         return $result
     } finally { $child.Dispose() }
 }
@@ -205,15 +210,18 @@ function Test-CiRegressionReceipt {
     [CmdletBinding()]
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Receipt,
         [Parameter(Mandatory)][System.Collections.IDictionary]$Descriptor, [Parameter(Mandatory)][string]$Platform)
-    foreach ($field in @('schemaVersion','repository','commit','nativeDigest','platform','role','passed','discovered','executed','failed','unexpectedSkipped','assertionProbePassed','artifacts')) {
+    foreach ($field in @('schemaVersion','repository','commit','nativeDigest','runId','platform','role','passed','countUnit','registered','expectedSkipped','discovered','executed','failed','unexpectedSkipped','assertionProbePassed','artifacts')) {
         if (-not $Receipt.Contains($field)) { throw "Missing regression receipt field: $field" }
     }
     if ($Receipt.schemaVersion -ne 1 -or $Receipt.repository -cne $Descriptor.repository -or $Receipt.commit -cne $Descriptor.commit -or
-        $Receipt.nativeDigest -cne $Descriptor.nativeDigest -or $Receipt.platform -cne $Platform -or $Receipt.role -cne 'ReleaseTest') { throw 'Regression receipt identity mismatch.' }
+        $Receipt.nativeDigest -cne $Descriptor.nativeDigest -or $Receipt.runId -cne $Descriptor.runId -or
+        $Receipt.platform -cne $Platform -or $Receipt.role -cne 'ReleaseTest') { throw 'Regression receipt identity mismatch.' }
     if ($Receipt.passed -isnot [bool] -or -not $Receipt.passed -or $Receipt.assertionProbePassed -isnot [bool] -or -not $Receipt.assertionProbePassed) { throw 'Regression or active-assertion probe did not pass.' }
-    foreach ($field in @('discovered','executed','failed','unexpectedSkipped')) {
+    foreach ($field in @('registered','expectedSkipped','discovered','executed','failed','unexpectedSkipped')) {
         if ($Receipt[$field] -isnot [int] -and $Receipt[$field] -isnot [long]) { throw "Invalid regression count: $field" }
     }
+    if($Receipt.countUnit -cnotin @('case','required-case','suite','scenario') -or $Receipt.expectedSkipped -lt 0 -or
+        $Receipt.registered -ne ($Receipt.discovered+$Receipt.expectedSkipped)){throw 'Regression discovery/skip accounting is invalid.'}
     if ($Receipt.discovered -le 0 -or $Receipt.executed -ne $Receipt.discovered -or $Receipt.failed -ne 0 -or $Receipt.unexpectedSkipped -ne 0 -or @($Receipt.artifacts).Count -eq 0) { throw 'Incomplete regression execution.' }
     foreach ($artifact in $Receipt.artifacts) {
         if (-not $artifact.path -or $artifact.sha256 -notmatch '^[a-f0-9]{64}$') { throw 'Invalid regression artifact identity.' }
@@ -221,4 +229,38 @@ function Test-CiRegressionReceipt {
     return $true
 }
 
-Export-ModuleMember -Function Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt
+
+function Test-CiWorkflowQueues {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Text)
+    $lines=$Text -split [string][char]10
+    for($index=0;$index -lt $lines.Count;$index++){
+        if($lines[$index] -notmatch '^(?<space> *)[''"]?queue[''"]?:\s*(?<value>[^#]+?)\s*(?:#.*)?$'){continue}
+        $indent=$Matches.space.Length
+        $value=$Matches.value.Trim().Trim('''"')
+        if($indent -lt 2 -or $value -cnotin @('max','single')){throw 'Invalid workflow concurrency queue value.'}
+        $parent=$indent-2;$start=-1
+        for($before=$index-1;$before -ge 0;$before--){
+            $line=$lines[$before].TrimEnd()
+            if(-not $line.Trim() -or $line.TrimStart().StartsWith('#')){continue}
+            $width=$line.Length-$line.TrimStart().Length
+            if($width -le $parent){
+                if($width -eq $parent -and $line.Trim() -ceq 'concurrency:'){$start=$before}
+                break
+            }
+        }
+        if($start -lt 0){throw 'queue belongs only to a concurrency mapping.'}
+        for($after=$start+1;$after -lt $lines.Count;$after++){
+            $line=$lines[$after].TrimEnd()
+            if(-not $line.Trim() -or $line.TrimStart().StartsWith('#')){continue}
+            $width=$line.Length-$line.TrimStart().Length
+            if($width -le $parent){break}
+            if($value -ceq 'max' -and $width -eq $indent -and $line.Trim() -match '^cancel-in-progress:\s*(.+)$' -and $Matches[1].Trim() -cne 'false'){
+                throw 'queue:max cannot be combined with cancellation or an unevaluated cancellation expression.'
+            }
+        }
+    }
+    return $true
+}
+
+Export-ModuleMember -Function Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues

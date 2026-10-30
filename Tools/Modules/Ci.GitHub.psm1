@@ -6,7 +6,7 @@ function Invoke-CiApi {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Route, [ValidateSet('GET','POST','PUT','PATCH','DELETE')][string]$Method = 'GET',
         [AllowNull()][object]$Body, [switch]$AllowNotFound)
-    if ($Route -notmatch '^repos/RedSalamanders/(\.github|RedSalamander|DxUi|RedXe|RedPrism|RedTilde|RedMonitor)/[A-Za-z0-9_./?=&%+-]+$') { throw 'API route is outside the reviewed organization/repositories.' }
+    if ($Route -notmatch '^repos/RedSalamanders/(\.github|RedSalamander|DxUi|RedXe|RedPrism|RedTilde|RedMonitor)(?:/[A-Za-z0-9_./?=&%+-]+)?$') { throw 'API route is outside the reviewed organization/repositories.' }
     if (-not $env:GH_TOKEN) { throw 'GH_TOKEN is required for this GitHub operation.' }
     $arguments = @{ Uri = ('https://api.github.com/' + $Route); Method = $Method; TimeoutSec = 60;
         Headers = @{ Authorization = ('Bearer ' + $env:GH_TOKEN); Accept = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2026-03-10' } }
@@ -143,10 +143,13 @@ function Invoke-CiAdmission {
         [string]$CoordinatorRun = '')
     $candidate = New-CiInputDescriptor $Root
     if ($candidate.commit -cne $Commit -or $candidate.engine.ref -cne $EngineRef -or $env:GITHUB_REPOSITORY -cne $candidate.repository) { throw 'Admission source, repository or engine identity mismatch.' }
+    $run = Invoke-CiApi "repos/$($candidate.repository)/actions/runs/$RunId"
+    if ($run.path -cne '.github/workflows/qualify.yml' -or $run.event -cne 'workflow_dispatch' -or
+        $run.head_branch -cne 'main' -or $run.head_sha -cne $Commit) { throw 'Admission requires the exact source of its trusted main workflow.' }
     $head = Get-CiMainHead $candidate.repository
     $record = Read-CiState $candidate.repository
     $state = if ($record.state) { Resolve-CiStateOutcome $record.state } else { $null }
-    $decision = Get-CiAdmissionDecision $candidate $state $head $true -Retry:($Retry -or $Mode -eq 'manual')
+    $decision = Get-CiAdmissionDecision $candidate $state $head $true -Retry:$Retry
     if ($decision.action -ne 'admit') {
         if ($decision.action -eq 'retain') {
             $status = switch ($decision.outcome) { 'succeeded' { 'success' }; 'running' { 'pending' }; default { 'failure' } }
@@ -182,6 +185,7 @@ function Invoke-CiAdmission {
 function Complete-CiBatch {
     [CmdletBinding()]
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Descriptor,
+        [Parameter(Mandatory)][string]$Root,
         [ValidateSet('succeeded','failed','cancelled')][string]$Outcome)
     $record = Read-CiState $Descriptor.repository
     if (-not $record.state -or $record.state.runId -cne $Descriptor.runId -or $record.state.nativeDigest -cne $Descriptor.nativeDigest) { throw 'Batch completion cannot overwrite another admitted run.' }
@@ -191,6 +195,15 @@ function Complete-CiBatch {
     $null = Write-CiState $Descriptor.repository $state $record.head
     $status = if ($Outcome -eq 'succeeded') { 'success' } else { 'failure' }
     Set-CiQualificationStatus $Descriptor.repository $Descriptor.commit $status "Native qualification $Outcome; run $($Descriptor.runId)." ([string]$Descriptor.runId)
+    # Complete a prose-only head's pending status only after matching its native inputs.
+    $head = Get-CiMainHead $Descriptor.repository
+    if ($head -cne $Descriptor.commit) {
+        $null = Invoke-CiGit $Root @('fetch','--no-tags','origin',$head)
+        $current = New-CiInputDescriptor $Root -Ref $head
+        if ($current.nativeDigest -ceq $Descriptor.nativeDigest) {
+            Set-CiQualificationStatus $Descriptor.repository $head $status "Unchanged native inputs; qualification $Outcome." ([string]$Descriptor.runId)
+        }
+    }
 }
 
 Export-ModuleMember -Function Invoke-CiApi, Get-CiMainHead, Read-CiState, Write-CiState, Resolve-CiStateOutcome, Set-CiQualificationStatus, Wait-CiMainQuiet, Invoke-CiCoordinator, Invoke-CiAdmission, Complete-CiBatch
