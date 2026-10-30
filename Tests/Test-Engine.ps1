@@ -318,6 +318,19 @@ if ([OperatingSystem]::IsWindows()) {
         $patch = [IO.File]::ReadAllText($result.patch)
         Assert-True ($patch.Contains('diff --git a/src/main.cpp b/src/main.cpp'))
         Assert-True (-not $patch.Contains('vendor.cpp'))
+        $formatted = Save-Fixture $root 'Explicitly adopt fixture formatting'
+        $clean = Invoke-CiFormatting $root $base
+        Assert-Equal $false $clean.drift
+        Assert-Equal 0 $clean.changedPaths.Count
+        Assert-Equal $formatted (Invoke-CiGit $root @('rev-parse','HEAD')).stdout.Trim()
+        Write-FixtureFile $root 'src/main.cpp' 'int fixture(){return 10;}'
+        Write-FixtureFile $root 'src/second.cpp' 'int second(){return  1;}'
+        $null = Save-Fixture $root 'Two independently changed source files'
+        $multiple = Invoke-CiFormatting $root $formatted
+        Assert-Equal 2 $multiple.checked
+        Assert-Equal 2 $multiple.changedPaths.Count
+        Assert-True ($multiple.changedPaths -ccontains 'src/main.cpp')
+        Assert-True ($multiple.changedPaths -ccontains 'src/second.cpp')
         Assert-Refused { Assert-CiContainedPath $root (Join-Path $root '../outside') }
     }
 }
@@ -388,13 +401,14 @@ Invoke-Case 'winget uses the ZIP nested executable and rejects SDK, missing lice
         try {$entry=$zip.CreateEntry('product/RedMonitor.exe');$stream=$entry.Open();try{$stream.WriteByte(42)}finally{$stream.Dispose()}}finally{$zip.Dispose()}
         @{platform=$platform;file=[IO.Path]::GetFileName($path);path=$path;sha256=(Get-FileHash $path).Hash.ToLowerInvariant();size=(Get-Item $path).Length}
     }
-    $plan=@{project=@{repository='RedSalamanders/RedMonitor';kind='application';winget=@{identifier='RedSalamanders.RedMonitor';executable='RedMonitor.exe';alias='redmonitor';license='MIT'}};
+    $plan=@{project=@{repository='RedSalamanders/RedMonitor';kind='application';winget=@{identifier='RedSalamanders.RedMonitor';executable='RedMonitor.exe';alias='redmonitor';license='MIT';minimumOSVersion='10.0.22000.2600'}};
         batch=@{version='0.1.123'};tag='v0.1.123';assets=@($assets)}
     $directory=Join-Path $root 'manifest'
     $null=New-CiWingetManifest $plan $directory
     $installer=[IO.File]::ReadAllText((Join-Path $directory 'RedSalamanders.RedMonitor.installer.yaml'))
     Assert-True ($installer.Contains("RelativeFilePath: 'product/RedMonitor.exe'"))
     Assert-True ($installer.Contains('Architecture: arm64') -and $installer.Contains('NestedInstallerType: portable'))
+    Assert-True ($installer.Contains('MinimumOSVersion: 10.0.22000.2600') -and $installer.Contains('FileType: launch'))
     foreach($asset in $assets){
         $zip=[IO.Compression.ZipFile]::Open($asset.path,[IO.Compression.ZipArchiveMode]::Update)
         try{$entry=$zip.CreateEntry("product/tools/red.exe");$stream=$entry.Open();try{$stream.WriteByte(43)}finally{$stream.Dispose()}}finally{$zip.Dispose()}

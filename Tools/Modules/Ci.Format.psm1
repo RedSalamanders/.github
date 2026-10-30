@@ -84,9 +84,9 @@ function Invoke-CiFormatting {
         }
     }
     $patch = (Invoke-CiGit $Root @('diff', '--binary', '--no-ext-diff')).stdout
-    $changedAfter = @(Get-CiChangedPaths -Root $Root -Base HEAD -WorkingTree)
+    $changedAfter = Get-CiChangedPaths -Root $Root -Base HEAD -WorkingTree
     foreach ($path in $changedAfter) {
-        if (-not $sources.Contains($path)) { throw 'Formatter changed a path outside its declared source selection.' }
+        if (-not $sources.Contains($path)) { throw "Formatter changed a path outside its declared source selection: $path" }
     }
     $output = Assert-CiContainedPath $Root (Join-Path $Root '.build/ci/format.patch')
     [void][IO.Directory]::CreateDirectory((Split-Path -Parent $output))

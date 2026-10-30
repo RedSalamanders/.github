@@ -116,7 +116,12 @@ function New-CiWingetManifest {
     [void][IO.Directory]::CreateDirectory($Directory)
     $id=$project.winget.identifier;$version=$Plan.batch.version;$name=$project.repository.Split('/')[1]
     $common="PackageIdentifier: $id`nPackageVersion: $version`n"
-    $installer=$common+"InstallerType: zip`nNestedInstallerType: portable`nUpgradeBehavior: uninstallPrevious`nInstallers:`n"
+    $installer=$common+"Platform:`n- Windows.Desktop`n"
+    if($project.winget.Contains('minimumOSVersion')){
+        if($project.winget.minimumOSVersion -cnotmatch '^\d+\.\d+\.\d+\.\d+$'){throw 'Invalid minimum OS version.'}
+        $installer+="MinimumOSVersion: $($project.winget.minimumOSVersion)`n"
+    }
+    $installer+="InstallerType: zip`nNestedInstallerType: portable`nUpgradeBehavior: install`n"
     $commands=@(@{executable=$project.winget.executable;alias=$project.winget.alias})
     if($project.winget.Contains('additionalCommands')){$commands+=@($project.winget.additionalCommands)}
     $aliases=@($commands|ForEach-Object alias)
@@ -126,6 +131,9 @@ function New-CiWingetManifest {
             throw 'Unsafe portable command configuration.'
         }
     }
+    $installer+="Commands:`n"
+    foreach($alias in $aliases){$installer+="- '$alias'`n"}
+    $installer+="Installers:`n"
     foreach($platform in @('x64','ARM64')){
         $assets=@($Plan.assets|Where-Object { $_.platform -ceq $platform -and $_.file -notmatch '(?i)symbols' })
         if($assets.Count -ne 1){throw 'winget requires one portable application ZIP per architecture.'}
@@ -144,6 +152,10 @@ function New-CiWingetManifest {
         $installer+="- Architecture: $arch`n  InstallerUrl: $url`n  InstallerSha256: $($assets[0].sha256.ToUpperInvariant())`n  NestedInstallerFiles:`n"
         foreach($command in $nestedCommands){
             $installer+="  - RelativeFilePath: $($command.path)`n    PortableCommandAlias: $($command.alias)`n"
+        }
+        $installer+="  InstallationMetadata:`n    Files:`n"
+        foreach($command in $nestedCommands){
+            $installer+="    - RelativeFilePath: $($command.path)`n      FileType: launch`n      DisplayName: $($command.alias)`n"
         }
     }
     $installer+="ManifestType: installer`nManifestVersion: 1.12.0`n"
