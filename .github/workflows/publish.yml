@@ -50,6 +50,15 @@ jobs:
           CI_ENGINE: ${{ inputs.engine_ref }}
           CI_OPERATION: ${{ inputs.operation }}
         run: ./.ci-engine/Tools/Invoke-Publication.ps1 -Root . -RunId $env:CI_RUN -EngineRef $env:CI_ENGINE -Operation $env:CI_OPERATION
+      - name: Retain Ghostty publication preflight even when it refuses publication
+        if: always() && github.event.repository.name == 'RedSalamander'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ghostty-publication-preflight
+          path: .build/TerminalEngineStatus/publication/status.json
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: prepared-publication
