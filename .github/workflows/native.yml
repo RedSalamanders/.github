@@ -104,6 +104,23 @@ jobs:
       - uses: ./.github/actions/setup-msvc
         with:
           platform: ${{ matrix.platform }}
+      - name: Resolve canonical Terminal dependency toolchain identity
+        if: github.event.repository.name == 'RedSalamander'
+        id: terminal-toolchain
+        shell: pwsh
+        env:
+          CI_PLATFORM: ${{ matrix.platform }}
+        run: |
+          Import-Module ./Tools/Modules/Build/BuildEvidence.psm1
+          $identity = Get-RSBuildToolchainIdentity -RepoRoot $PWD -MSBuildPath $env:MSBUILD_EXE_PATH -Platform $env:CI_PLATFORM -Configuration Release
+          Add-Content $env:GITHUB_OUTPUT ("digest=" + $identity.Digest)
+      - name: Restore verified Terminal dependency products
+        if: github.event.repository.name == 'RedSalamander'
+        id: terminal-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/TerminalEngine
+          key: ci-terminal-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ inputs.engine_ref }}-${{ steps.terminal-toolchain.outputs.digest }}-${{ hashFiles('Tools/**', 'Build/**', 'External/TerminalEngine/**', 'Specs/Terminal/GhosttyRuntimeLock.schema.json', 'RuntimeDependencies.props', '.github/actions/setup-msvc/**') }}
       - name: Restore dependency binary cache
         id: deps
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -126,6 +143,12 @@ jobs:
         with:
           path: .build/ci/vcpkg-cache
           key: ${{ steps.deps.outputs.cache-primary-key }}
+      - name: Save successfully verified Terminal dependency products
+        if: github.event.repository.name == 'RedSalamander' && steps.build.outcome == 'success' && steps.terminal-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/TerminalEngine
+          key: ${{ steps.terminal-cache.outputs.cache-primary-key }}
       - name: Run actual regression tests and Release assertion probe
         id: tests
         shell: pwsh
@@ -228,6 +251,23 @@ jobs:
       - uses: ./.github/actions/setup-msvc
         with:
           platform: ${{ matrix.platform }}
+      - name: Resolve canonical Terminal dependency toolchain identity
+        if: github.event.repository.name == 'RedSalamander'
+        id: terminal-toolchain
+        shell: pwsh
+        env:
+          CI_PLATFORM: ${{ matrix.platform }}
+        run: |
+          Import-Module ./Tools/Modules/Build/BuildEvidence.psm1
+          $identity = Get-RSBuildToolchainIdentity -RepoRoot $PWD -MSBuildPath $env:MSBUILD_EXE_PATH -Platform $env:CI_PLATFORM -Configuration Release
+          Add-Content $env:GITHUB_OUTPUT ("digest=" + $identity.Digest)
+      - name: Restore verified Terminal dependency products
+        if: github.event.repository.name == 'RedSalamander'
+        id: terminal-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/TerminalEngine
+          key: ci-terminal-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ inputs.engine_ref }}-${{ steps.terminal-toolchain.outputs.digest }}-${{ hashFiles('Tools/**', 'Build/**', 'External/TerminalEngine/**', 'Specs/Terminal/GhosttyRuntimeLock.schema.json', 'RuntimeDependencies.props', '.github/actions/setup-msvc/**') }}
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .build/ci/vcpkg-cache

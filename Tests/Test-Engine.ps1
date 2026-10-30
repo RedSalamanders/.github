@@ -318,6 +318,19 @@ if ([OperatingSystem]::IsWindows()) {
         $patch = [IO.File]::ReadAllText($result.patch)
         Assert-True ($patch.Contains('diff --git a/src/main.cpp b/src/main.cpp'))
         Assert-True (-not $patch.Contains('vendor.cpp'))
+        $formatted = Save-Fixture $root 'Explicitly adopt fixture formatting'
+        $clean = Invoke-CiFormatting $root $base
+        Assert-Equal $false $clean.drift
+        Assert-Equal 0 $clean.changedPaths.Count
+        Assert-Equal $formatted (Invoke-CiGit $root @('rev-parse','HEAD')).stdout.Trim()
+        Write-FixtureFile $root 'src/main.cpp' 'int fixture(){return 10;}'
+        Write-FixtureFile $root 'src/second.cpp' 'int second(){return  1;}'
+        $null = Save-Fixture $root 'Two independently changed source files'
+        $multiple = Invoke-CiFormatting $root $formatted
+        Assert-Equal 2 $multiple.checked
+        Assert-Equal 2 $multiple.changedPaths.Count
+        Assert-True ($multiple.changedPaths -ccontains 'src/main.cpp')
+        Assert-True ($multiple.changedPaths -ccontains 'src/second.cpp')
         Assert-Refused { Assert-CiContainedPath $root (Join-Path $root '../outside') }
     }
 }
@@ -388,13 +401,14 @@ Invoke-Case 'winget uses the ZIP nested executable and rejects SDK, missing lice
         try {$entry=$zip.CreateEntry('product/RedMonitor.exe');$stream=$entry.Open();try{$stream.WriteByte(42)}finally{$stream.Dispose()}}finally{$zip.Dispose()}
         @{platform=$platform;file=[IO.Path]::GetFileName($path);path=$path;sha256=(Get-FileHash $path).Hash.ToLowerInvariant();size=(Get-Item $path).Length}
     }
-    $plan=@{project=@{repository='RedSalamanders/RedMonitor';kind='application';winget=@{identifier='RedSalamanders.RedMonitor';executable='RedMonitor.exe';alias='redmonitor';license='MIT'}};
+    $plan=@{project=@{repository='RedSalamanders/RedMonitor';kind='application';winget=@{identifier='RedSalamanders.RedMonitor';executable='RedMonitor.exe';alias='redmonitor';license='MIT';minimumOSVersion='10.0.22000.2600'}};
         batch=@{version='0.1.123'};tag='v0.1.123';assets=@($assets)}
     $directory=Join-Path $root 'manifest'
     $null=New-CiWingetManifest $plan $directory
     $installer=[IO.File]::ReadAllText((Join-Path $directory 'RedSalamanders.RedMonitor.installer.yaml'))
     Assert-True ($installer.Contains("RelativeFilePath: 'product/RedMonitor.exe'"))
     Assert-True ($installer.Contains('Architecture: arm64') -and $installer.Contains('NestedInstallerType: portable'))
+    Assert-True ($installer.Contains('MinimumOSVersion: 10.0.22000.2600') -and $installer.Contains('FileType: launch'))
     foreach($asset in $assets){
         $zip=[IO.Compression.ZipFile]::Open($asset.path,[IO.Compression.ZipArchiveMode]::Update)
         try{$entry=$zip.CreateEntry("product/tools/red.exe");$stream=$entry.Open();try{$stream.WriteByte(43)}finally{$stream.Dispose()}}finally{$zip.Dispose()}
@@ -529,6 +543,32 @@ Invoke-Case 'winget transport creates one exact manifest PR and reuses it on ret
         & $module {Remove-Item Function:Invoke-RestMethod -ErrorAction SilentlyContinue}
         & $publication {Remove-Item Function:Start-Sleep -ErrorAction SilentlyContinue}
     }
+}
+
+Invoke-Case 'Native architecture checks refuse emulated, malformed and truncated images' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
+    $root=New-Fixture 'native-pe'
+    $file=Join-Path $root 'native.exe'
+    foreach($profile in @(@{platform='x64';machine=0x8664},@{platform='ARM64';machine=0xaa64})){
+        $bytes=[byte[]]::new(256)
+        [BitConverter]::GetBytes([uint16]0x5a4d).CopyTo($bytes,0)
+        [BitConverter]::GetBytes([uint32]128).CopyTo($bytes,0x3c)
+        [BitConverter]::GetBytes([uint32]0x00004550).CopyTo($bytes,128)
+        [BitConverter]::GetBytes([uint16]$profile.machine).CopyTo($bytes,132)
+        [IO.File]::WriteAllBytes($file,$bytes)
+        Assert-CiPeArchitecture $file $profile.platform
+        $other=if($profile.platform -ceq 'x64'){'ARM64'}else{'x64'}
+        Assert-Refused {Assert-CiPeArchitecture $file $other}
+    }
+    [IO.File]::WriteAllBytes($file,[byte[]]::new(3))
+    Assert-Refused {Assert-CiPeArchitecture $file ARM64}
+    $bytes[0]=0
+    [IO.File]::WriteAllBytes($file,$bytes)
+    Assert-Refused {Assert-CiPeArchitecture $file ARM64}
+    $bytes[0]=0x4d
+    [BitConverter]::GetBytes([uint32]255).CopyTo($bytes,0x3c)
+    [IO.File]::WriteAllBytes($file,$bytes)
+    Assert-Refused {Assert-CiPeArchitecture $file ARM64}
 }
 
 Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unreviewed timers' {

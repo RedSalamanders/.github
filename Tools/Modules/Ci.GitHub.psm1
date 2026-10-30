@@ -198,7 +198,7 @@ function Complete-CiBatch {
     # Complete a prose-only head's pending status only after matching its native inputs.
     $head = Get-CiMainHead $Descriptor.repository
     if ($head -cne $Descriptor.commit) {
-        $null = Invoke-CiGit $Root @('fetch','--no-tags','origin',$head)
+        $null = Invoke-CiGit $Root @('-c','credential.helper=','-c','credential.helper=!gh auth git-credential','fetch','--no-tags','origin',$head)
         $current = New-CiInputDescriptor $Root -Ref $head
         if ($current.nativeDigest -ceq $Descriptor.nativeDigest) {
             Set-CiQualificationStatus $Descriptor.repository $head $status "Unchanged native inputs; qualification $Outcome." ([string]$Descriptor.runId)

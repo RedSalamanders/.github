@@ -114,12 +114,31 @@ function Test-CiProjectConfiguration {
     Write-Host "Validated policy $($project.policyVersion), adapter, source syntax and compiler-free PR delegation for $($project.repository)."
 }
 
+function Assert-CiPeArchitecture {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Path,[Parameter(Mandatory)][ValidateSet('x64','ARM64')][string]$Platform)
+    $stream=[IO.File]::OpenRead($Path)
+    $reader=[IO.BinaryReader]::new($stream)
+    try{
+        if($stream.Length -lt 64 -or $reader.ReadUInt16() -ne 0x5a4d){throw 'Native qualification requires a valid PE image.'}
+        $stream.Position=0x3c
+        $pe=$reader.ReadUInt32()
+        if($pe -lt 64 -or [long]$pe+6 -gt $stream.Length){throw 'Invalid PE header boundary.'}
+        $stream.Position=$pe
+        if($reader.ReadUInt32() -ne 0x00004550){throw 'Invalid PE signature.'}
+        $machine=$reader.ReadUInt16()
+        $expected=if($Platform -ceq 'ARM64'){0xaa64}else{0x8664}
+        if($machine -ne $expected){throw 'Native qualification refuses an emulated or wrong-architecture executable.'}
+    }finally{$reader.Dispose();$stream.Dispose()}
+}
+
 function Invoke-CiAssertionProbe {
     [CmdletBinding()]
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Context,
         [Parameter(Mandatory)][string]$Executable, [string[]]$Arguments = @('--ci-assertion-probe'),
         [Parameter(Mandatory)][int]$ExpectedExitCode, [string]$ExpectedMarker = 'CI_ASSERTION_PROBE')
     $path = Assert-CiContainedPath $Context.root (Join-Path $Context.root $Executable)
+    Assert-CiPeArchitecture -Path $path -Platform $Context.platform
     $result = Invoke-CiProcess $path $Arguments $Context.root -TimeoutSeconds 60 -AllowFailure
     $text = $result.stdout + $result.stderr
     if ($result.exitCode -ne $ExpectedExitCode -or $ExpectedExitCode -eq 0 -or
@@ -173,6 +192,7 @@ function Write-CiProductionReceipt {
     Assert-CiSourceFrozen $Context
     if($Context.project.kind -ceq 'application'){
         $binary=Join-Path $Context.root ".build/$($Context.platform)/Release/$($Context.project.winget.executable)"
+        Assert-CiPeArchitecture -Path $binary -Platform $Context.platform
         $version=[Diagnostics.FileVersionInfo]::GetVersionInfo($binary)
         $actual="$($version.FileMajorPart).$($version.FileMinorPart).$($version.FileBuildPart)"
         if($actual -cne $Context.batch.version){throw 'Production executable and frozen batch version differ.'}
@@ -254,4 +274,4 @@ function Get-CiSuiteEvidence {
     [ordered]@{ countUnit = 'suite'; discovered = $total; executed = $total; evidence = (Get-CiEvidenceReference $references.ToArray()) }
 }
 
-Export-ModuleMember -Function New-CiProjectContext, Invoke-CiProjectScript, Test-CiProjectConfiguration, Invoke-CiAssertionProbe, Get-CiBinaryArtifacts, Get-CiProfileArtifacts, Write-CiRegressionReceipt, Write-CiProductionReceipt, Get-CiEvidenceReference, Get-CiSuiteEvidence
+Export-ModuleMember -Function New-CiProjectContext, Invoke-CiProjectScript, Test-CiProjectConfiguration, Assert-CiPeArchitecture, Invoke-CiAssertionProbe, Get-CiBinaryArtifacts, Get-CiProfileArtifacts, Write-CiRegressionReceipt, Write-CiProductionReceipt, Get-CiEvidenceReference, Get-CiSuiteEvidence
