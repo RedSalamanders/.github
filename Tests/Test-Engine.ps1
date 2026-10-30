@@ -545,6 +545,133 @@ Invoke-Case 'winget transport creates one exact manifest PR and reuses it on ret
     }
 }
 
+if ($IsWindows) {
+    Invoke-Case 'Explicit formatting commits use real Git narrow staging and fresh-head dispatch' {
+        Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Format.psm1')
+        $root=New-Fixture 'manual-format-git'
+        Write-FixtureFile $root '.clang-format' 'BasedOnStyle: LLVM'
+        Write-FixtureFile $root '.gitignore' '.build/'
+        $base=Save-Fixture $root 'Trusted formatter configuration'
+        $origin=Join-Path $runRoot 'format-origin.git'
+        $null=Invoke-CiGit $root @('init','--bare',$origin)
+        $null=Invoke-CiGit $root @('remote','add','origin',$origin)
+        $null=Invoke-CiGit $root @('push','origin','main')
+        $null=Invoke-CiGit $root @('checkout','-b','ej/format-fixture')
+        foreach($file in @('src/witness [1].cpp','src/witness [2].cpp')){
+            Write-FixtureFile $root $file ('int Fixture(){return 7;}'+[char]10)
+        }
+        $head=Save-Fixture $root 'Unformatted PR source'
+        $null=Invoke-CiGit $root @('push','origin','HEAD:refs/heads/ej/format-fixture')
+        $null=Invoke-CiGit $root @('checkout','main')
+        $module=Get-Module Ci.Format
+        $original=& $module {(Get-Command Invoke-CiApi).ScriptBlock}
+        $names=@('GITHUB_EVENT_NAME','GITHUB_REF','GITHUB_REPOSITORY')
+        $saved=@{}
+        foreach($name in $names){$saved[$name]=[Environment]::GetEnvironmentVariable($name)}
+        try{
+            $env:GITHUB_EVENT_NAME='workflow_dispatch';$env:GITHUB_REF='refs/heads/main'
+            $env:GITHUB_REPOSITORY='RedSalamanders/RedMonitor'
+            & $module {
+                param($Origin,$Base,$Head)
+                $script:formatOrigin=$Origin;$script:formatBase=$Base;$script:formatHead=$Head
+                $script:formatDispatches=[Collections.Generic.List[object]]::new()
+                $script:formatFork=$false;$script:formatLagServed=$false
+                function script:Invoke-CiApi {
+                    param($Route,$Method='GET',$Body)
+                    if($Route -like '*/pulls/123'){
+                        $sha=(Invoke-CiGit $script:formatOrigin @('rev-parse','refs/heads/ej/format-fixture')).stdout.Trim()
+                        if($sha -cne $script:formatHead -and -not $script:formatLagServed){$sha=$script:formatHead;$script:formatLagServed=$true}
+                        $repo=if($script:formatFork){'fixture/fork'}else{'RedSalamanders/RedMonitor'}
+                        return @{state='open';head=@{repo=@{full_name=$repo};sha=$sha;ref='ej/format-fixture'};base=@{sha=$script:formatBase;ref='main'}}
+                    }
+                    if($Route.EndsWith('/actions/workflows/ci.yml/dispatches') -and $Method -ceq 'POST'){
+                        $script:formatDispatches.Add($Body);return @{}
+                    }
+                    throw "Unexpected formatter API route: $Method $Route"
+                }
+            } $origin $base $head
+            Invoke-CiFormatCommit -Root $root -Repository $env:GITHUB_REPOSITORY -PullRequest 123
+            $formatted=(Invoke-CiGit $origin @('rev-parse','refs/heads/ej/format-fixture')).stdout.Trim()
+            Assert-True ($formatted -cne $head)
+            $changed=(Invoke-CiGit $root @('diff','--name-only',$head,$formatted)).stdout.Trim() -split [char]10
+            Assert-Equal 'src/witness [1].cpp|src/witness [2].cpp' (($changed|Sort-Object)-join '|')
+            $dispatches=@(& $module {$script:formatDispatches.ToArray()})
+            Assert-Equal 1 @($dispatches).Count
+            Assert-Equal $formatted $dispatches[0].inputs.expected_head
+            Assert-Equal 'main' $dispatches[0].ref
+            Assert-Equal $false (Invoke-CiFormatting $root $base).drift
+            Invoke-CiFormatCommit -Root $root -Repository $env:GITHUB_REPOSITORY -PullRequest 123
+            Assert-Equal 1 (& $module {$script:formatDispatches.Count})
+            & $module {$script:formatFork=$true}
+            Assert-Refused {Invoke-CiFormatCommit -Root $root -Repository $env:GITHUB_REPOSITORY -PullRequest 123}
+            Assert-Equal $formatted (Invoke-CiGit $origin @('rev-parse','refs/heads/ej/format-fixture')).stdout.Trim()
+        }finally{
+            foreach($name in $names){[Environment]::SetEnvironmentVariable($name,$saved[$name])}
+            & $module {param($Original) Set-Item Function:script:Invoke-CiApi -Value $Original} $original
+        }
+    }
+}
+
+Invoke-Case 'Production SDK receipts expose distinct real artifact and receipt outputs' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
+    $root=New-Fixture 'sdk-production-outputs'
+    $project=Read-CiProject $root
+    $project.repository='RedSalamanders/DxUi';$project.kind='sdk';$project.winget=$null
+    Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 8)
+    Write-FixtureFile $root '.gitignore' '.build/'
+    $null=Save-Fixture $root 'SDK fixture'
+    $context=@{root=$root;project=$project;platform='x64';batch=(New-CiInputDescriptor $root)}
+    $archive=Join-Path $root '.build/sdk/fixture.zip'
+    [void][IO.Directory]::CreateDirectory((Split-Path $archive))
+    $zip=[IO.Compression.ZipFile]::Open($archive,[IO.Compression.ZipArchiveMode]::Create)
+    try{$null=$zip.CreateEntry('include/Fixture.h')}finally{$zip.Dispose()}
+    $oldOutput=$env:GITHUB_OUTPUT;$oldRun=$env:GITHUB_RUN_ID
+    try{
+        $env:GITHUB_OUTPUT=Join-Path $root '.build/production-outputs.txt';$env:GITHUB_RUN_ID='654'
+        Write-CiProductionReceipt -Context $context -Archives @($archive) -TestModeDisabled $true -SmokePassed $true
+        $lines=@(Get-Content -LiteralPath $env:GITHUB_OUTPUT)
+        Assert-Equal 2 $lines.Count
+        $values=@{}
+        foreach($line in $lines){$key,$value=$line -split '=',2;$values[$key]=$value}
+        Assert-True (Test-Path -LiteralPath $values.receipt_path -PathType Leaf)
+        Assert-True (Test-Path -LiteralPath $values.archive_directory -PathType Container)
+        $receipt=Get-Content -LiteralPath $values.receipt_path -Raw|ConvertFrom-Json
+        Assert-Equal 1 @($receipt.archives).Count
+        Assert-Equal (Get-FileHash -LiteralPath $archive).Hash.ToLowerInvariant() $receipt.archives[0].sha256
+        Assert-True (Test-Path -LiteralPath (Join-Path $values.archive_directory $receipt.archives[0].file))
+    }finally{$env:GITHUB_OUTPUT=$oldOutput;$env:GITHUB_RUN_ID=$oldRun}
+}
+
+Invoke-Case 'Prepare command exports distinct version and directory without release mutation' {
+    $root=New-Fixture 'prepare-command-outputs'
+    $module=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Publication.psm1') -PassThru
+    $original=& $module {(Get-Command Get-CiPublicationPlan).ScriptBlock}
+    $names=@('GITHUB_EVENT_NAME','GITHUB_REF','GITHUB_RUN_ID','GITHUB_OUTPUT')
+    $saved=@{}
+    foreach($name in $names){$saved[$name]=[Environment]::GetEnvironmentVariable($name)}
+    try{
+        $env:GITHUB_EVENT_NAME='workflow_dispatch';$env:GITHUB_REF='refs/heads/main';$env:GITHUB_RUN_ID='987'
+        $env:GITHUB_OUTPUT=Join-Path $root 'prepare-output.txt'
+        & $module {
+            function script:Get-CiPublicationPlan {
+                param($Root,$RunId,$EngineRef,$Directory)
+                [void][IO.Directory]::CreateDirectory($Directory)
+                return @{directory=$Directory;project=@{repository='RedSalamanders/DxUi';winget=$null};batch=@{version='0.1.234'}}
+            }
+        }
+        & (Join-Path $engineRoot 'Tools/Invoke-Publication.ps1') -Root $root -RunId 234 -EngineRef ('a'*40) -Operation Prepare
+        $lines=@(Get-Content -LiteralPath $env:GITHUB_OUTPUT)
+        Assert-Equal 2 $lines.Count
+        $values=@{}
+        foreach($line in $lines){$key,$value=$line -split '=',2;$values[$key]=$value}
+        Assert-Equal '0.1.234' $values.version
+        Assert-True (Test-Path -LiteralPath (Join-Path $values.directory 'publication.json'))
+    }finally{
+        foreach($name in $names){[Environment]::SetEnvironmentVariable($name,$saved[$name])}
+        & $module {param($Original) Set-Item Function:script:Get-CiPublicationPlan -Value $Original} $original
+    }
+}
+
 Invoke-Case 'Manual bot-push rechecks bind all three required checks to the exact new PR head' {
     $root=New-Fixture 'manual-security-reporting'
     $module=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.GitHub.psm1') -PassThru

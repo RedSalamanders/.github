@@ -36,6 +36,6 @@ if($plan.project.winget -and $plan.project.winget.Contains('license') -and $plan
     $null=New-CiWingetManifest $plan (Join-Path $directory 'winget')
 }elseif($Operation -eq 'Winget'){throw 'Explicit product licensing is still required before winget.'}
 $plan|ConvertTo-Json -Depth 25|Set-Content -LiteralPath (Join-Path $directory 'publication.json') -Encoding utf8
-if($env:GITHUB_OUTPUT){Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value @('directory='+$directory,'version='+$plan.batch.version)}
+if($env:GITHUB_OUTPUT){Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value @(('directory='+$directory),('version='+$plan.batch.version))}
 Write-Host "Prepared exact ZIP promotion for $($plan.project.repository) $($plan.batch.version), operation $Operation."
 
