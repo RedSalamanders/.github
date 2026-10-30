@@ -45,6 +45,9 @@ jobs:
       - name: Behavioral policy, admission and formatting controls
         shell: pwsh
         run: ./Tests/Test-Engine.ps1 -TestRoot (Join-Path $env:RUNNER_TEMP 'unified-ci-tests')
+      - name: Compiler-free dependency metadata behavior controls
+        shell: pwsh
+        run: ./Tests/Test-DependencyStatus.ps1
       - name: Preserve engine behavior evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
