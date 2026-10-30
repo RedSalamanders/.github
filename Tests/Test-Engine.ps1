@@ -545,6 +545,32 @@ Invoke-Case 'winget transport creates one exact manifest PR and reuses it on ret
     }
 }
 
+Invoke-Case 'Native architecture checks refuse emulated, malformed and truncated images' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
+    $root=New-Fixture 'native-pe'
+    $file=Join-Path $root 'native.exe'
+    foreach($profile in @(@{platform='x64';machine=0x8664},@{platform='ARM64';machine=0xaa64})){
+        $bytes=[byte[]]::new(256)
+        [BitConverter]::GetBytes([uint16]0x5a4d).CopyTo($bytes,0)
+        [BitConverter]::GetBytes([uint32]128).CopyTo($bytes,0x3c)
+        [BitConverter]::GetBytes([uint32]0x00004550).CopyTo($bytes,128)
+        [BitConverter]::GetBytes([uint16]$profile.machine).CopyTo($bytes,132)
+        [IO.File]::WriteAllBytes($file,$bytes)
+        Assert-CiPeArchitecture $file $profile.platform
+        $other=if($profile.platform -ceq 'x64'){'ARM64'}else{'x64'}
+        Assert-Refused {Assert-CiPeArchitecture $file $other}
+    }
+    [IO.File]::WriteAllBytes($file,[byte[]]::new(3))
+    Assert-Refused {Assert-CiPeArchitecture $file ARM64}
+    $bytes[0]=0
+    [IO.File]::WriteAllBytes($file,$bytes)
+    Assert-Refused {Assert-CiPeArchitecture $file ARM64}
+    $bytes[0]=0x4d
+    [BitConverter]::GetBytes([uint32]255).CopyTo($bytes,0x3c)
+    [IO.File]::WriteAllBytes($file,$bytes)
+    Assert-Refused {Assert-CiPeArchitecture $file ARM64}
+}
+
 Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unreviewed timers' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
     $root=New-Fixture 'workflow-conformance'
