@@ -21,6 +21,7 @@ $ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'Modules/Ci.Publication.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Modules/Ci.Winget.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Modules/Ci.WingetPublication.psm1')
+Import-Module (Join-Path $PSScriptRoot 'Modules/Ci.WingetInstall.psm1')
 if($env:GITHUB_EVENT_NAME -cne 'workflow_dispatch' -or $env:GITHUB_REF -cne 'refs/heads/main'){throw 'winget submission requires an explicit trusted-main dispatch.'}
 $plan=Read-CiPublicationPlan $Directory
 Assert-CiPublicationCurrent $Root $plan
@@ -29,10 +30,7 @@ foreach($platform in @('x64','ARM64')){
     $files=@(Get-ChildItem $InstallEvidence -Recurse -Filter "winget-$platform.json" -File)
     if($files.Count -ne 1){throw 'Both native winget installation receipts are required.'}
     $receipt=Get-Content $files[0].FullName -Raw|ConvertFrom-Json -AsHashtable
-    if($receipt.passed -isnot [bool] -or -not $receipt.passed -or $receipt.platform -cne $platform -or
-        $receipt.commit -cne $plan.batch.commit -or $receipt.nativeDigest -cne $plan.batch.nativeDigest -or
-        $receipt.runId -cne $env:GITHUB_RUN_ID -or $receipt.version -cne $plan.batch.version -or
-        $receipt.manifestDigest -cne $identity.PublicationId -or $receipt.cleanedUp -ne $true){throw 'winget install evidence is stale or incomplete.'}
+    $null=Test-CiWingetInstallReceipt -Receipt $receipt -Plan $plan -Platform $platform -RunId $env:GITHUB_RUN_ID -ManifestDigest $identity.PublicationId
 }
 $result=Submit-CiWinget -Plan $plan -ManifestDirectory (Join-Path $Directory 'winget')
 Write-Host "winget publication: $($result.Url)"
