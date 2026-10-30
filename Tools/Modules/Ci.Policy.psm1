@@ -1,6 +1,12 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function Protect-CiDiagnostic {
+    param([AllowEmptyString()][string]$Text)
+    foreach($secret in @($env:GH_TOKEN,$env:WINGET_TOKEN)){if($secret){$Text=$Text.Replace($secret,'<credential>')}}
+    return $Text
+}
+
 function Invoke-CiProcess {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$FilePath, [string[]]$Arguments = @(),
@@ -33,16 +39,12 @@ function Invoke-CiProcess {
             stdout = $stdout.GetAwaiter().GetResult(); stderr = $stderr.GetAwaiter().GetResult() }
         if ($Stream) {
             foreach ($value in @($result.stdout, $result.stderr)) {
-                $display = $value
-                foreach ($secret in @($env:GH_TOKEN,$env:WINGET_TOKEN)) {
-                    if ($secret) { $display = $display.Replace($secret,'<credential>') }
-                }
+                $display = Protect-CiDiagnostic $value
                 if ($display) { Write-Host $display -NoNewline }
             }
         }
         if ($result.exitCode -ne 0 -and -not $AllowFailure) {
-            $diagnostic=($result.stderr+$result.stdout).Trim()
-            foreach($secret in @($env:GH_TOKEN,$env:WINGET_TOKEN)){if($secret){$diagnostic=$diagnostic.Replace($secret,'<credential>')}}
+            $diagnostic=Protect-CiDiagnostic (($result.stderr+$result.stdout).Trim())
             if($diagnostic.Length -gt 8000){$diagnostic=$diagnostic.Substring($diagnostic.Length-8000)}
             throw "$FilePath failed ($($result.exitCode)): $diagnostic"
         }
@@ -269,4 +271,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues
+Export-ModuleMember -Function Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues

@@ -439,6 +439,123 @@ Invoke-Case 'winget uses the ZIP nested executable and rejects SDK, missing lice
     Assert-Refused { New-CiWingetManifest $plan (Join-Path $root 'sdk-refused') }
 }
 
+function New-InstallFixture([string]$Name) {
+    $root=New-Fixture ('install-'+$Name)
+    $fixture=@{root=$root;installed=$false;initial=$false;mode='';calls=[Collections.Generic.List[object]]::new()}
+    $fixture.plan=@{batch=@{version='1.0.42'};project=@{winget=@{identifier='RedSalamanders.RedXe';executable='RedXeLauncher.exe';alias='RedXe';
+        additionalCommands=@(@{executable='red.exe';alias='red'});
+        smokeTests=@(@{command='RedXe';arguments=@('--self-test','--warp');timeoutSeconds=300})}}}
+    $fixture.readInstalled={
+        param($Identifier)
+        if($fixture.installed -or $fixture.initial){
+            $location=Join-Path $fixture.root $(if($fixture.mode -eq 'foreign'){'foreign'}else{'installed'})
+            return @{identifier=$Identifier;version='1.0.42';location=$location}
+        }
+    }.GetNewClosure()
+    $fixture.readAlias={
+        param($Command,$Platform)
+        if($fixture.installed){
+            if($fixture.mode -eq 'missing-alias'){return $null}
+            $executable=if($Command -eq 'RedXe'){'RedXeLauncher.exe'}else{'red.exe'}
+            $target=Join-Path $fixture.root ('installed/product/'+$executable)
+            if($fixture.mode -eq 'wrong-target'){$target=Join-Path $fixture.root 'elsewhere/RedXeLauncher.exe'}
+            return @{path=(Join-Path $fixture.root ($Command+'.exe'));target=$target;
+                version=$(if($fixture.mode -eq 'wrong-version'){'1.0.41'}else{'1.0.42'})}
+        }
+    }.GetNewClosure()
+    $fixture.execute={
+        param($File,$CommandArguments,$Seconds)
+        $fixture.calls.Add(@{file=$File;arguments=@($CommandArguments);seconds=$Seconds})
+        $exitCode=0
+        if($File -eq 'winget-fixture'){
+            if($CommandArguments[0] -eq 'list'){throw 'An unpublished install must not depend on source-correlated winget list.'}
+            if($CommandArguments[0] -eq 'install'){$fixture.installed=$true;if($fixture.mode -eq 'partial-install'){$exitCode=7}}
+            if($CommandArguments[0] -eq 'uninstall' -and $fixture.mode -ne 'failed-cleanup'){$fixture.installed=$false}
+        }elseif('--self-test' -in $CommandArguments -and $fixture.mode -eq 'timeout'){
+            throw 'Owned smoke timed out.'
+        }elseif($fixture.mode -eq 'probe-failure'){$exitCode=21}
+        return @{exitCode=$exitCode;stdout='fixture output';stderr=''}
+    }.GetNewClosure()
+    return $fixture
+}
+function Run-InstallFixture($Fixture) {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.WingetInstall.psm1')
+    $parameters=@{Plan=$Fixture.plan;Manifest=$Fixture.root;Scratch=$Fixture.root;Platform='x64';Winget='winget-fixture';
+        ReadInstalled=$Fixture.readInstalled;ReadAlias=$Fixture.readAlias;Execute=$Fixture.execute}
+    Invoke-CiOwnedWingetInstall @parameters
+}
+Invoke-Case 'Unpublished winget installation proves every alias, product smoke and manifest-based cleanup without list correlation' {
+    $fixture=New-InstallFixture 'complete'
+    $proof=Run-InstallFixture $fixture
+    Assert-True ($proof.passed -and $proof.cleanedUp -and -not $fixture.installed)
+    Assert-Equal 2 $proof.aliases
+    Assert-Equal 3 $proof.probes
+    $smoke=@($fixture.calls|Where-Object{'--self-test' -in $_.arguments})
+    Assert-Equal 1 $smoke.Count
+    Assert-Equal 300 $smoke[0].seconds
+    $uninstall=@($fixture.calls|Where-Object{$_.arguments[0] -eq 'uninstall'})
+    Assert-Equal 1 $uninstall.Count
+    Assert-True ('--manifest' -in $uninstall[0].arguments -and '--version' -in $uninstall[0].arguments)
+}
+Invoke-Case 'An existing portable product is refused before any install or removal' {
+    $fixture=New-InstallFixture 'existing'
+    $fixture.initial=$true
+    Assert-Refused {Run-InstallFixture $fixture}
+    Assert-Equal 0 $fixture.calls.Count
+}
+Invoke-Case 'Missing, foreign-target and stale-version aliases reject qualification and clean only the owned product' {
+    foreach($mode in @('missing-alias','wrong-target','wrong-version')){
+        $fixture=New-InstallFixture $mode;$fixture.mode=$mode
+        Assert-Refused {Run-InstallFixture $fixture}
+        Assert-True (-not $fixture.installed)
+        Assert-Equal 1 @($fixture.calls|Where-Object{$_.arguments[0] -eq 'uninstall'}).Count
+    }
+}
+Invoke-Case 'A failing or timed-out installed product probe retains failure and still uninstalls its owned package' {
+    foreach($mode in @('probe-failure','timeout')){
+        $fixture=New-InstallFixture $mode;$fixture.mode=$mode
+        Assert-Refused {Run-InstallFixture $fixture}
+        Assert-True (-not $fixture.installed)
+        Assert-Equal 1 @($fixture.calls|Where-Object{$_.arguments[0] -eq 'uninstall'}).Count
+    }
+}
+Invoke-Case 'A partial install is cleaned but a foreign registration is never removed' {
+    $fixture=New-InstallFixture 'partial';$fixture.mode='partial-install'
+    Assert-Refused {Run-InstallFixture $fixture}
+    Assert-True (-not $fixture.installed)
+    $fixture=New-InstallFixture 'foreign';$fixture.mode='foreign'
+    Assert-Refused {Run-InstallFixture $fixture}
+    Assert-True $fixture.installed
+    Assert-Equal 0 @($fixture.calls|Where-Object{$_.arguments[0] -eq 'uninstall'}).Count
+}
+Invoke-Case 'Cleanup failure cannot write a passing native installation proof' {
+    $fixture=New-InstallFixture 'cleanup';$fixture.mode='failed-cleanup'
+    Assert-Refused {Run-InstallFixture $fixture}
+    Assert-True $fixture.installed
+}
+Invoke-Case 'Undeclared or unbounded product smoke commands are refused before installation' {
+    foreach($change in @(@{command='another-app'},@{timeoutSeconds=601})){
+        $fixture=New-InstallFixture ('bad-smoke-'+@($change.Keys)[0])
+        foreach($key in $change.Keys){$fixture.plan.project.winget.smokeTests[0][$key]=$change[$key]}
+        Assert-Refused {Run-InstallFixture $fixture}
+        Assert-Equal 0 $fixture.calls.Count
+    }
+}
+Invoke-Case 'Submission needs source-matching native alias, product probe and actual cleanup counts' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.WingetInstall.psm1')
+    $fixture=New-InstallFixture 'receipt'
+    $plan=$fixture.plan;$plan.batch.commit='a'*40;$plan.batch.nativeDigest='b'*64
+    $receipt=@{schemaVersion=1;passed=$true;cleanedUp=$true;platform='x64';commit=$plan.batch.commit;nativeDigest=$plan.batch.nativeDigest;
+        runId='42';version=$plan.batch.version;manifestDigest='c'*64;aliases=2;probes=3}
+    Assert-True (Test-CiWingetInstallReceipt $receipt $plan x64 '42' ('c'*64))
+    foreach($change in @(@{aliases=1},@{probes=2},@{probes='3'},@{cleanedUp=$false},@{runId='41'},@{platform='ARM64'})){
+        $bad=$receipt.Clone();foreach($key in $change.Keys){$bad[$key]=$change[$key]}
+        Assert-Refused {Test-CiWingetInstallReceipt $bad $plan x64 '42' ('c'*64)}
+    }
+    $bad=$receipt.Clone();$bad.Remove('probes')
+    Assert-Refused {Test-CiWingetInstallReceipt $bad $plan x64 '42' ('c'*64)}
+}
+
 Invoke-Case 'Manual native admission retains a failed input until explicit retry is supplied' {
     $root=New-Fixture 'manual-admission'
     $candidate=New-CiInputDescriptor $root
