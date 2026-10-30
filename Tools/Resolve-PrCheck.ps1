@@ -22,9 +22,27 @@ if($env:GITHUB_EVENT_NAME -cne 'workflow_dispatch' -or $env:GITHUB_REF -cne 'ref
 $repo=$env:GITHUB_REPOSITORY
 $pr=Invoke-CiApi "repos/$repo/pulls/$PullRequest"
 if($pr.state -cne 'open' -or $pr.head.repo.full_name -cne $repo -or $pr.head.sha -cne $ExpectedHead -or $pr.base.ref -cne 'main'){throw 'The expected same-repository PR identity changed.'}
-$check=Invoke-CiApi "repos/$repo/check-runs" -Method POST -Body @{
-    name='checks / ci-gate';head_sha=$ExpectedHead;status='in_progress'
-    details_url="https://github.com/$repo/actions/runs/$($env:GITHUB_RUN_ID)"
-    external_id="format-recheck-$($env:GITHUB_RUN_ID)"}
-if($env:GITHUB_OUTPUT){Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value @("head=$ExpectedHead",("base="+$pr.base.sha),("check_id="+$check.id))}
+$created=[Collections.Generic.List[object]]::new()
+try{
+    foreach($entry in @(
+        @{name='checks / ci-gate';output='check_id'},
+        @{name='security / codeql';output='codeql_id'},
+        @{name='security / dependency-review';output='dependency_id'}
+    )){
+        $check=Invoke-CiApi "repos/$repo/check-runs" -Method POST -Body @{
+            name=$entry.name;head_sha=$ExpectedHead;status='in_progress'
+            details_url="https://github.com/$repo/actions/runs/$($env:GITHUB_RUN_ID)"
+            external_id="format-recheck-$($env:GITHUB_RUN_ID)"}
+        $created.Add(@{id=$check.id;output=$entry.output})
+    }
+}catch{
+    foreach($check in $created){
+        $null=Invoke-CiApi "repos/$repo/check-runs/$($check.id)" -Method PATCH -Body @{status='completed';conclusion='failure'}
+    }
+    throw
+}
+if($env:GITHUB_OUTPUT){
+    Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value @("head=$ExpectedHead",("base="+$pr.base.sha))
+    foreach($check in $created){Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value ($check.output+'='+$check.id)}
+}
 

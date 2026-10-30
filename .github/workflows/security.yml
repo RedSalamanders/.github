@@ -5,6 +5,20 @@ on:
       engine_ref:
         type: string
         required: true
+      head:
+        type: string
+        default: ''
+      base:
+        type: string
+        default: ''
+      pr_number:
+        type: string
+        default: ''
+    outputs:
+      codeql_result:
+        value: ${{ jobs.codeql.outputs.result }}
+      dependency_result:
+        value: ${{ jobs.dependency-review.outputs.result }}
 permissions:
   contents: read
   actions: read
@@ -15,6 +29,8 @@ jobs:
   codeql:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    outputs:
+      result: ${{ steps.result.outputs.result }}
     steps:
       - name: Enable long Windows checkout paths
         if: runner.os == 'Windows'
@@ -22,6 +38,7 @@ jobs:
         run: git config --global core.longpaths true
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.head || github.sha }}
           persist-credentials: false
       - name: Analyze C++ directly without compiler or dependency builds
         uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
@@ -29,13 +46,24 @@ jobs:
           languages: c-cpp
           build-mode: none
           queries: security-extended
-      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
+      - id: analyze
+        uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
         with:
           category: unified-ci/c-cpp
+          ref: ${{ inputs.head != '' && format('refs/pull/{0}/head', inputs.pr_number) || github.ref }}
+          sha: ${{ inputs.head || github.sha }}
+      - id: result
+        if: always()
+        shell: pwsh
+        env:
+          OUTCOME: ${{ steps.analyze.outcome }}
+        run: Add-Content $env:GITHUB_OUTPUT ("result=" + $env:OUTCOME)
   dependency-review:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || inputs.head != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    outputs:
+      result: ${{ steps.result.outputs.result }}
     steps:
       - name: Enable long Windows checkout paths
         if: runner.os == 'Windows'
@@ -43,7 +71,18 @@ jobs:
         run: git config --global core.longpaths true
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.head || github.sha }}
           persist-credentials: false
-      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+      - id: review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
+          base-ref: ${{ inputs.base || github.event.pull_request.base.sha }}
+          head-ref: ${{ inputs.head || github.event.pull_request.head.sha }}
+          comment-summary-in-pr: never
+      - id: result
+        if: always()
+        shell: pwsh
+        env:
+          OUTCOME: ${{ steps.review.outcome }}
+        run: Add-Content $env:GITHUB_OUTPUT ("result=" + $env:OUTCOME)

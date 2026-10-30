@@ -545,6 +545,58 @@ Invoke-Case 'winget transport creates one exact manifest PR and reuses it on ret
     }
 }
 
+Invoke-Case 'Manual bot-push rechecks bind all three required checks to the exact new PR head' {
+    $root=New-Fixture 'manual-security-reporting'
+    $module=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.GitHub.psm1') -PassThru
+    $original=& $module {(Get-Command Invoke-CiApi).ScriptBlock}
+    $names=@('GITHUB_EVENT_NAME','GITHUB_REF','GITHUB_REPOSITORY','GITHUB_RUN_ID','GITHUB_OUTPUT')
+    $saved=@{}
+    foreach($name in $names){$saved[$name]=[Environment]::GetEnvironmentVariable($name)}
+    try{
+        $env:GITHUB_EVENT_NAME='workflow_dispatch';$env:GITHUB_REF='refs/heads/main'
+        $env:GITHUB_REPOSITORY='RedSalamanders/RedMonitor';$env:GITHUB_RUN_ID='777'
+        $env:GITHUB_OUTPUT=Join-Path $root 'check-outputs.txt'
+        & $module {
+            $script:recheckRecords=[Collections.Generic.List[object]]::new()
+            $script:recheckPatches=[Collections.Generic.List[object]]::new()
+            function script:Invoke-CiApi {
+                param($Route,$Method='GET',$Body,[switch]$AllowNotFound)
+                if($Route -like '*/pulls/123'){return @{state='open';head=@{repo=@{full_name='RedSalamanders/RedMonitor'};sha=('a'*40)};base=@{ref='main';sha=('b'*40)}}}
+                if($Route.EndsWith('/check-runs') -and $Method -ceq 'POST'){
+                    $record=@{id=([string](101+$script:recheckRecords.Count));name=$Body.name;head_sha=$Body.head_sha;external_id=$Body.external_id}
+                    $script:recheckRecords.Add($record);return $record
+                }
+                if($Route -match '/check-runs/([0-9]+)$'){
+                    $id=$Matches[1]
+                    if($Method -ceq 'GET'){return @($script:recheckRecords|Where-Object id -ceq $id)[0]}
+                    if($Method -ceq 'PATCH'){$script:recheckPatches.Add(@{id=$id;body=$Body});return @{}}
+                }
+                throw "Unexpected recheck fixture route: $Method $Route"
+            }
+        }
+        & (Join-Path $engineRoot 'Tools/Resolve-PrCheck.ps1') -PullRequest 123 -ExpectedHead ('a'*40)
+        $records=& $module {$script:recheckRecords.ToArray()}
+        Assert-Equal 3 @($records).Count
+        Assert-Equal 'checks / ci-gate|security / codeql|security / dependency-review' (($records.name|Sort-Object)-join '|')
+        Assert-True (@($records|Where-Object head_sha -cne ('a'*40)).Count -eq 0)
+        $command=Join-Path $engineRoot 'Tools/Complete-PrCheck.ps1'
+        & $command -CheckId '101' -Kind CI -Result success
+        Assert-Refused {& $command -CheckId '102' -Kind CodeQL -Result skipped}
+        Assert-Refused {& $command -CheckId '103' -Kind Dependency -Result cancelled}
+        $patches=& $module {$script:recheckPatches.ToArray()}
+        Assert-Equal 'success|failure|cancelled' (($patches|ForEach-Object {$_.body.conclusion})-join '|')
+        Assert-Refused {& $command -CheckId '102' -Kind CI -Result success}
+        Assert-Equal 3 (& $module {$script:recheckPatches.Count})
+        Assert-Refused {& (Join-Path $engineRoot 'Tools/Resolve-PrCheck.ps1') -PullRequest 123 -ExpectedHead ('c'*40)}
+        Assert-Equal 3 (& $module {$script:recheckRecords.Count})
+        $outputs=[IO.File]::ReadAllText($env:GITHUB_OUTPUT)
+        Assert-True ($outputs.Contains('codeql_id=102') -and $outputs.Contains('dependency_id=103'))
+    }finally{
+        foreach($name in $names){[Environment]::SetEnvironmentVariable($name,$saved[$name])}
+        & $module {param($Original) Set-Item Function:script:Invoke-CiApi -Value $Original} $original
+    }
+}
+
 Invoke-Case 'Native architecture checks refuse emulated, malformed and truncated images' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
     $root=New-Fixture 'native-pe'
