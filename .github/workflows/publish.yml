@@ -1,0 +1,168 @@
+name: Publish qualified ZIPs
+on:
+  workflow_call:
+    inputs:
+      engine_ref:
+        type: string
+        required: true
+      qualification_run:
+        type: string
+        required: true
+      operation:
+        type: string
+        default: Prepare
+    secrets:
+      WINGET_TOKEN:
+        required: false
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      version: ${{ steps.prepare.outputs.version }}
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - name: Verify receipts and exact ZIP bytes; perform only the selected manual operation
+        id: prepare
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_RUN: ${{ inputs.qualification_run }}
+          CI_ENGINE: ${{ inputs.engine_ref }}
+          CI_OPERATION: ${{ inputs.operation }}
+        run: ./.ci-engine/Tools/Invoke-Publication.ps1 -Root . -RunId $env:CI_RUN -EngineRef $env:CI_ENGINE -Operation $env:CI_OPERATION
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: prepared-publication
+          path: ${{ steps.prepare.outputs.directory }}
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+  release:
+    needs: prepare
+    if: inputs.operation == 'Release'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: prepared-publication
+          path: .build/prepared
+      - name: Publish immutable ZIP assets without running project code
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./.ci-engine/Tools/Publish-Release.ps1 -Root . -Directory .build/prepared
+  install:
+    needs: prepare
+    if: inputs.operation == 'Winget'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            runner: windows-latest
+          - platform: ARM64
+            runner: windows-11-vs2026-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: prepared-publication
+          path: .build/prepared
+      - name: Validate, install and clean up the exact portable package natively
+        id: install
+        shell: pwsh
+        env:
+          CI_PLATFORM: ${{ matrix.platform }}
+        run: ./.ci-engine/Tools/Invoke-WingetInstall.ps1 -Root . -Directory .build/prepared -Platform $env:CI_PLATFORM
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: winget-install-${{ matrix.platform }}
+          path: ${{ steps.install.outputs.receipt_path }}
+          if-no-files-found: error
+          retention-days: 90
+  submit:
+    needs: [prepare, install]
+    if: inputs.operation == 'Winget'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Enable long Windows checkout paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: prepared-publication
+          path: .build/prepared
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: winget-install-*
+          path: .build/install-evidence
+          merge-multiple: true
+      - name: Submit or recover the exact automation-owned winget publication
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: ./.ci-engine/Tools/Submit-Winget.ps1 -Root . -Directory .build/prepared -InstallEvidence .build/install-evidence

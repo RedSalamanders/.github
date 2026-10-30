@@ -26,7 +26,15 @@
         { "type": "object", "additionalProperties": false, "required": ["identifier", "executable", "alias"], "properties": {
           "identifier": { "type": "string", "pattern": "^[A-Za-z0-9]+\\.[A-Za-z0-9.]+$" },
           "executable": { "type": "string", "pattern": "^[A-Za-z0-9]+\\.exe$" },
-          "alias": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+          "alias": { "type": "string", "pattern": "^[A-Za-z0-9-]+$" },
+          "additionalCommands": {
+            "type": "array", "uniqueItems": true,
+            "items": {"type":"object","additionalProperties":false,"required":["executable","alias"],"properties":{
+              "executable":{"type":"string","pattern":"^[A-Za-z0-9]+\\.exe$"},
+              "alias":{"type":"string","pattern":"^[A-Za-z0-9-]+$"}
+            }}
+          },
+          "license": { "type": "string", "pattern": "^[A-Za-z0-9 .()-]*$" }
         } }
       ]
     }

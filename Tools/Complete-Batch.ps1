@@ -5,6 +5,8 @@ Records the actual final outcome of the admitted native pipeline.
 Retained exact admission descriptor.
 .PARAMETER Outcome
 Succeeded, failed or cancelled after the global native test and production jobs settle.
+.PARAMETER Root
+Exact source checkout, used to propagate the outcome to a prose-only main head.
 .OUTPUTS
 Persistent CI-state revision and main-qualification status.
 .NOTES
@@ -15,10 +17,11 @@ No builds, publication or artifact regeneration. The workflow calls this only af
 #>
 [CmdletBinding()]
 param([Parameter(Mandatory)][string]$Descriptor,
-    [Parameter(Mandatory)][ValidateSet('succeeded','failed','cancelled')][string]$Outcome)
+    [Parameter(Mandatory)][ValidateSet('succeeded','failed','cancelled')][string]$Outcome,
+    [string]$Root = '.')
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Modules/Ci.GitHub.psm1') -ErrorAction Stop
 $batch = Get-Content -LiteralPath $Descriptor -Raw | ConvertFrom-Json -AsHashtable
 if ($env:GITHUB_REPOSITORY -cne $batch.repository -or $env:GITHUB_RUN_ID -cne $batch.runId) { throw 'Completion identity does not match the current GitHub run.' }
-Complete-CiBatch $batch $Outcome
+Complete-CiBatch -Descriptor $batch -Outcome $Outcome -Root $Root

@@ -6,7 +6,8 @@ Existing marked RedSalamander.Perf sandbox, or a hosted RUNNER_TEMP child. Creat
 .OUTPUTS
 Case results and retained results.json beneath the selected root.
 .NOTES
-Requires PowerShell 7.4 and Git. No credentials, network, compiler or desktop input.
+Requires PowerShell 7.4 and Git. No credentials, compiler or desktop input.
+Windows formatting coverage downloads a pinned native formatter when its verified cache is absent.
 Preserves all fixtures and failures. Returns nonzero on a failed case.
 .EXAMPLE
 ./Tests/Test-Engine.ps1 -TestRoot Z:/RedSalamander.Perf
@@ -50,8 +51,9 @@ function Invoke-Case([string]$Name, [scriptblock]$Body) {
         $script:rows.Add([ordered]@{ name = $Name; passed = $true; elapsedMs = $timer.ElapsedMilliseconds })
         Write-Host "PASS $Name"
     } catch {
-        $script:rows.Add([ordered]@{ name = $Name; passed = $false; error = $_.Exception.Message; elapsedMs = $timer.ElapsedMilliseconds })
+        $script:rows.Add([ordered]@{ name = $Name; passed = $false; error = $_.Exception.Message; stack = $_.ScriptStackTrace; elapsedMs = $timer.ElapsedMilliseconds })
         Write-Host "FAIL $Name : $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host $_.ScriptStackTrace
     }
 }
 function Write-FixtureFile([string]$Root, [string]$Path, [string]$Text) {
@@ -225,10 +227,10 @@ Invoke-Case 'Recorded failures survive docs and only an explicit retry readmits 
     Assert-Equal 'superseded' (Get-CiAdmissionDecision $candidate $null 'later-code' $true).action
 }
 Invoke-Case 'Regression gate rejects empty execution, disabled assertions, skips and stale identities' {
-    $descriptor = @{ repository = 'RedSalamanders/RedMonitor'; commit = ('a' * 40); nativeDigest = ('b' * 64) }
+    $descriptor = @{ repository = 'RedSalamanders/RedMonitor'; commit = ('a' * 40); nativeDigest = ('b' * 64); runId = '42' }
     $valid = @{ schemaVersion = 1; repository = $descriptor.repository; commit = $descriptor.commit; nativeDigest = $descriptor.nativeDigest;
         platform = 'x64'; role = 'ReleaseTest'; passed = $true; discovered = 12; executed = 12; failed = 0; unexpectedSkipped = 0;
-        assertionProbePassed = $true; artifacts = @(@{ path = 'MonitorTest.exe'; sha256 = ('c' * 64) }) }
+        countUnit='case';registered=12;expectedSkipped=0;assertionProbePassed = $true; runId = '42'; artifacts = @(@{ path = 'MonitorTest.exe'; sha256 = ('c' * 64) }) }
     Assert-True (Test-CiRegressionReceipt $valid $descriptor 'x64')
     foreach ($mutation in @(@{ discovered = 0 }, @{ executed = 0 }, @{ failed = 1 }, @{ unexpectedSkipped = 1 },
             @{ assertionProbePassed = $false }, @{ passed = 'true' }, @{ commit = ('d' * 40) },
@@ -337,6 +339,227 @@ Invoke-Case 'Streaming child execution preserves a real nonzero exit code' {
     $hostPath = (Get-Process -Id $PID).Path
     $result = Invoke-CiProcess -FilePath $hostPath -Arguments @('-NoProfile','-NonInteractive','-Command','exit 17') -WorkingDirectory $root -Stream -AllowFailure
     Assert-Equal 17 $result.exitCode
+}
+
+Invoke-Case 'Production admission refuses test-role evidence, stale attempts and modified ZIP bytes' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Artifacts.psm1')
+    $root = New-Fixture 'production-bytes'
+    Write-FixtureFile $root 'payload/app.exe' 'qualified synthetic bytes'
+    $zip = Join-Path $root 'RedMonitor-x64.zip'
+    Compress-Archive -LiteralPath (Join-Path $root 'payload/app.exe') -DestinationPath $zip
+    $descriptor = @{ repository='RedSalamanders/RedMonitor';commit=('a'*40);nativeDigest=('b'*64);
+        engine=@{repository='RedSalamanders/.github';ref=('c'*40)};version='0.1.123';buildNumber=123;runId='42' }
+    $valid = @{ schemaVersion=1;repository=$descriptor.repository;commit=$descriptor.commit;nativeDigest=$descriptor.nativeDigest;
+        engine=$descriptor.engine;platform='x64';version=$descriptor.version;buildNumber=123;runId='42';
+        role='ProductionRelease';testModeDisabled=$true;smokePassed=$true;kind='application';
+        archives=@(@{file='RedMonitor-x64.zip';size=(Get-Item $zip).Length;sha256=(Get-FileHash $zip).Hash.ToLowerInvariant()}) }
+    Assert-True (Test-CiProductionReceipt $valid $descriptor 'x64')
+    foreach ($mutation in @(@{role='ReleaseTest'},@{runId='41'},@{testModeDisabled=$false},@{smokePassed='true'},@{kind='sdk'},@{archives=@()})) {
+        $broken=$valid.Clone();foreach($key in $mutation.Keys){$broken[$key]=$mutation[$key]}
+        Assert-Refused { Test-CiProductionReceipt $broken $descriptor 'x64' }
+    }
+    [IO.File]::AppendAllText($zip,'changed')
+    Assert-Refused { Test-CiProductionReceipt $valid $descriptor 'x64' $root }
+}
+Invoke-Case 'The global test gate needs both architecture receipts from the same admitted run' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Artifacts.psm1')
+    $root=New-Fixture 'global-test-gate'
+    $descriptor=@{repository='RedSalamanders/RedMonitor';commit=('a'*40);nativeDigest=('b'*64);runId='42'}
+    foreach($platform in @('x64','ARM64')){
+        $receipt=@{schemaVersion=1;repository=$descriptor.repository;commit=$descriptor.commit;nativeDigest=$descriptor.nativeDigest;runId='42';
+            platform=$platform;role='ReleaseTest';passed=$true;discovered=6;executed=6;failed=0;unexpectedSkipped=0;
+            countUnit='scenario';registered=6;expectedSkipped=0;assertionProbePassed=$true;artifacts=@(@{path='MonitorTest.exe';sha256=('c'*64)})}
+        Write-FixtureFile $root "regression-$platform.json" ($receipt|ConvertTo-Json -Depth 8)
+        if($platform -eq 'x64'){Assert-Refused {Test-CiQualification $root $descriptor Regression}}
+    }
+    Assert-True (Test-CiQualification $root $descriptor Regression)
+    $path=Join-Path $root 'regression-ARM64.json'
+    $receipt=Get-Content $path -Raw|ConvertFrom-Json -AsHashtable
+    $receipt.runId='41'
+    Write-FixtureFile $root 'regression-ARM64.json' ($receipt|ConvertTo-Json -Depth 8)
+    Assert-Refused { Test-CiQualification $root $descriptor Regression }
+}
+Invoke-Case 'winget uses the ZIP nested executable and rejects SDK, missing licensing and unsafe paths' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Publication.psm1')
+    $root=New-Fixture 'winget-nested'
+    $assets=foreach($platform in @('x64','ARM64')){
+        $path=Join-Path $root "RedMonitor-$platform.zip"
+        $zip=[IO.Compression.ZipFile]::Open($path,[IO.Compression.ZipArchiveMode]::Create)
+        try {$entry=$zip.CreateEntry('product/RedMonitor.exe');$stream=$entry.Open();try{$stream.WriteByte(42)}finally{$stream.Dispose()}}finally{$zip.Dispose()}
+        @{platform=$platform;file=[IO.Path]::GetFileName($path);path=$path;sha256=(Get-FileHash $path).Hash.ToLowerInvariant();size=(Get-Item $path).Length}
+    }
+    $plan=@{project=@{repository='RedSalamanders/RedMonitor';kind='application';winget=@{identifier='RedSalamanders.RedMonitor';executable='RedMonitor.exe';alias='redmonitor';license='MIT'}};
+        batch=@{version='0.1.123'};tag='v0.1.123';assets=@($assets)}
+    $directory=Join-Path $root 'manifest'
+    $null=New-CiWingetManifest $plan $directory
+    $installer=[IO.File]::ReadAllText((Join-Path $directory 'RedSalamanders.RedMonitor.installer.yaml'))
+    Assert-True ($installer.Contains("RelativeFilePath: 'product/RedMonitor.exe'"))
+    Assert-True ($installer.Contains('Architecture: arm64') -and $installer.Contains('NestedInstallerType: portable'))
+    foreach($asset in $assets){
+        $zip=[IO.Compression.ZipFile]::Open($asset.path,[IO.Compression.ZipArchiveMode]::Update)
+        try{$entry=$zip.CreateEntry("product/tools/red.exe");$stream=$entry.Open();try{$stream.WriteByte(43)}finally{$stream.Dispose()}}finally{$zip.Dispose()}
+    }
+    $plan.project.winget.additionalCommands=@(@{executable='red.exe';alias='RedCommand'})
+    $multi=Join-Path $root 'multiple-commands'
+    $null=New-CiWingetManifest $plan $multi
+    $text=[IO.File]::ReadAllText((Join-Path $multi 'RedSalamanders.RedMonitor.installer.yaml'))
+    Assert-Equal 2 ([regex]::Matches($text,"PortableCommandAlias: 'RedCommand'").Count)
+    Assert-True ($text.Contains("RelativeFilePath: 'product/tools/red.exe'"))
+    $plan.project.winget.additionalCommands[0].alias='redmonitor'
+    Assert-Refused { New-CiWingetManifest $plan (Join-Path $root 'duplicate-alias') }
+    $plan.project.winget.additionalCommands[0].alias='unsafe:alias'
+    Assert-Refused { New-CiWingetManifest $plan (Join-Path $root 'unsafe-alias') }
+    $plan.project.winget.license=''
+    Assert-Refused { New-CiWingetManifest $plan (Join-Path $root 'missing-license') }
+    $plan.project.kind='sdk';$plan.project.winget=$null
+    Assert-Refused { New-CiWingetManifest $plan (Join-Path $root 'sdk-refused') }
+}
+
+Invoke-Case 'Manual native admission retains a failed input until explicit retry is supplied' {
+    $root=New-Fixture 'manual-admission'
+    $candidate=New-CiInputDescriptor $root
+    $module=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.GitHub.psm1') -PassThru
+    $names=@('Invoke-CiApi','Get-CiMainHead','Read-CiState','Write-CiState','Set-CiQualificationStatus')
+    $originals=& $module {param($Names) $saved=@{};foreach($name in $Names){$saved[$name]=(Get-Command $name).ScriptBlock};return $saved} $names
+    $oldRepository=$env:GITHUB_REPOSITORY
+    try{
+        $env:GITHUB_REPOSITORY=$candidate.repository
+        & $module {
+            param($Candidate)
+            $script:admissionCandidate=$Candidate
+            $script:admissionWrites=[Collections.Generic.List[object]]::new()
+            function script:Invoke-CiApi {
+                param($Route,$Method='GET',$Body,[switch]$AllowNotFound)
+                return @{path='.github/workflows/qualify.yml';event='workflow_dispatch';head_branch='main';head_sha=$script:admissionCandidate.commit}
+            }
+            function script:Get-CiMainHead {param($Repository) return $script:admissionCandidate.commit}
+            function script:Read-CiState {
+                param($Repository)
+                return @{head=('d'*40);state=@{repository=$Repository;nativeDigest=$script:admissionCandidate.nativeDigest;runId='41';outcome='failed'}}
+            }
+            function script:Write-CiState {param($Repository,$State,$ExpectedHead) $script:admissionWrites.Add($State);return ('e'*40)}
+            function script:Set-CiQualificationStatus {param($Repository,$Commit,$Status,$Description,$RunId)}
+        } $candidate
+        $retained=Invoke-CiAdmission -Root $root -Commit $candidate.commit -EngineRef $candidate.engine.ref -RunId '42' -Mode manual
+        Assert-Equal $false $retained.admitted
+        Assert-Equal 'failed' $retained.decision.outcome
+        Assert-Equal 0 (& $module {$script:admissionWrites.Count})
+        $retry=Invoke-CiAdmission -Root $root -Commit $candidate.commit -EngineRef $candidate.engine.ref -RunId '42' -Mode manual -Retry
+        Assert-Equal $true $retry.admitted
+        Assert-Equal 1 (& $module {$script:admissionWrites.Count})
+        Assert-Equal '42' $retry.descriptor.runId
+    }finally{
+        $env:GITHUB_REPOSITORY=$oldRepository
+        & $module {param($Saved) foreach($key in $Saved.Keys){Set-Item ("Function:script:"+$key) -Value $Saved[$key]}} $originals
+    }
+}
+Invoke-Case 'winget transport creates one exact manifest PR and reuses it on retry' {
+    $root=New-Fixture 'winget-transport'
+    $directory=Join-Path $root 'manifests'
+    $id='RedSalamanders.RedMonitor'
+    foreach($suffix in @('.yaml','.installer.yaml','.locale.en-US.yaml')){
+        Write-FixtureFile $root ("manifests/"+$id+$suffix) ("PackageIdentifier: $id"+[char]10+'PackageVersion: 0.1.123'+[char]10+'# Synthetic manifest transport fixture')
+    }
+    $module=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Winget.psm1') -PassThru
+    $publication=Get-Module -All Ci.WingetPublication | Select-Object -First 1
+    if(-not $publication){throw 'The nested idempotency module is unavailable.'}
+    $oldToken=$env:WINGET_TOKEN
+    try{
+        $env:WINGET_TOKEN='synthetic-credential-not-a-token'
+        & $publication {function script:Start-Sleep {throw 'Mocked transport attempted an unexpected visibility retry.'}}
+        & $module {
+            param($Directory)
+            $script:mockDirectory=$Directory
+            $script:mockPr=$null
+            $script:mockCreates=0
+            $script:mockBlobs=@{}
+            $script:mockPaths=@()
+            $script:mockBranch=''
+            function script:Invoke-RestMethod {
+                param($Uri,$Method='GET',$Headers,$TimeoutSec,$ContentType,$Body)
+                $route=$Uri.Replace('https://api.github.com/','')
+                $bodyData=if($Body){$Body|ConvertFrom-Json -AsHashtable}else{@{}}
+                if($route -ceq 'user'){return [pscustomobject]@{login='ci-fixture'}}
+                if($route -ceq 'repos/ci-fixture/winget-pkgs'){return @{fork=$true;parent=@{full_name='microsoft/winget-pkgs'}}}
+                if($route -ceq 'repos/microsoft/winget-pkgs/git/ref/heads/master'){return @{object=@{sha=('a'*40)}}}
+                if($route -like 'repos/microsoft/winget-pkgs/contents/*'){return @()}
+                if($route.StartsWith('repos/microsoft/winget-pkgs/pulls?')){if($script:mockPr){return $script:mockPr};return @()}
+                if($route -ceq ('repos/microsoft/winget-pkgs/git/commits/'+('a'*40))){return @{tree=@{sha=('b'*40)}}}
+                if($route -ceq 'repos/ci-fixture/winget-pkgs/git/blobs'){
+                    $sha=[guid]::NewGuid().ToString('N').PadRight(40,'0')
+                    $script:mockBlobs[$sha]=$bodyData.content
+                    return @{sha=$sha}
+                }
+                if($route -ceq 'repos/ci-fixture/winget-pkgs/git/trees'){$script:mockPaths=@($bodyData.tree);return @{sha=('c'*40)}}
+                if($route -ceq 'repos/ci-fixture/winget-pkgs/git/commits'){return @{sha=('d'*40)}}
+                if($route -ceq 'repos/ci-fixture/winget-pkgs/git/refs'){$script:mockBranch=$bodyData.ref.Replace('refs/heads/','');return @{}}
+                if($route -ceq 'repos/microsoft/winget-pkgs/pulls' -and $Method -eq 'POST'){
+                    ++$script:mockCreates
+                    $script:mockPr=[pscustomobject]@{number=123;state='open';title=$bodyData.title;body=$bodyData.body;
+                        user=[pscustomobject]@{login='ci-fixture'};head=[pscustomobject]@{ref=$script:mockBranch;sha=('d'*40);repo=[pscustomobject]@{full_name='ci-fixture/winget-pkgs'}};
+                        html_url='https://github.com/microsoft/winget-pkgs/pull/123'}
+                    return $script:mockPr
+                }
+                if($route -like 'repos/microsoft/winget-pkgs/pulls/123/files?*'){return @($script:mockPaths|ForEach-Object{[pscustomobject]@{filename=$_.path;status='added'}})}
+                if($route -like 'repos/ci-fixture/winget-pkgs/contents/*'){
+                    $path=[uri]::UnescapeDataString(($route.Split('?')[0] -replace '^repos/ci-fixture/winget-pkgs/contents/',''))
+                    $row=@($script:mockPaths|Where-Object path -ceq $path)
+                    if($row.Count -ne 1){throw 'Mock remote manifest lookup differs.'}
+                    return @{content=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($script:mockBlobs[$row[0].sha]))}
+                }
+                if($route -ceq 'repos/microsoft/winget-pkgs/pulls/123' -and $Method -eq 'PATCH'){
+                    $script:mockPr.title=$bodyData.title;$script:mockPr.body=$bodyData.body;return $script:mockPr
+                }
+                throw "Unexpected mocked winget route $Method $route"
+            }
+        } $directory
+        $plan=@{project=@{repository='RedSalamanders/RedMonitor';winget=@{identifier=$id}};batch=@{version='0.1.123'};tag='v0.1.123'}
+        $first=Submit-CiWinget -Plan $plan -ManifestDirectory $directory
+        Assert-Equal 123 $first.PullRequestNumber
+        Assert-Equal $true $first.Submitted
+        $second=Submit-CiWinget -Plan $plan -ManifestDirectory $directory
+        Assert-Equal 123 $second.PullRequestNumber
+        Assert-Equal $false $second.Submitted
+        Assert-Equal 1 (& $module {$script:mockCreates})
+        Write-FixtureFile $root ("manifests/"+$id+'.installer.yaml') ("PackageIdentifier: $id"+[char]10+'PackageVersion: 0.1.123'+[char]10+'InstallerSha256: changed')
+        Assert-Refused { Submit-CiWinget -Plan $plan -ManifestDirectory $directory }
+        Assert-Equal 1 (& $module {$script:mockCreates})
+    }finally{
+        $env:WINGET_TOKEN=$oldToken
+        & $module {Remove-Item Function:Invoke-RestMethod -ErrorAction SilentlyContinue}
+        & $publication {Remove-Item Function:Start-Sleep -ErrorAction SilentlyContinue}
+    }
+}
+
+Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unreviewed timers' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
+    $root=New-Fixture 'workflow-conformance'
+    $project=Read-CiProject $root
+    Write-FixtureFile $root 'Tools/Invoke-ProjectCi.ps1' '# Fixture adapter; no source execution.'
+    foreach($template in Get-ChildItem (Join-Path $engineRoot 'Templates') -Filter '*.yml'){
+        $text=[IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$project.engine.ref).Replace('@OPERATIONS@','Prepare, Release, Winget')
+        Write-FixtureFile $root ('.github/workflows/'+$template.Name) $text
+    }
+    $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
+    Test-CiProjectConfiguration $context
+    $path=Join-Path $root '.github/workflows/ci.yml'
+    $original=[IO.File]::ReadAllText($path)
+    Write-FixtureFile $root '.github/workflows/ci.yml' ($original+([char]10)+'  native:'+([char]10)+'    runs-on: windows-latest'+([char]10)+'    steps:'+([char]10)+'      - run: ./build.ps1')
+    Assert-Refused { Test-CiProjectConfiguration $context }
+    # A change to the workflow's source/pin must be detected even if it remains valid YAML.
+    Write-FixtureFile $root '.github/workflows/ci.yml' ($original.Replace($project.engine.ref,('b'*40)))
+    Assert-Refused { Test-CiProjectConfiguration $context }
+    Write-FixtureFile $root '.github/workflows/ci.yml' $original
+    Write-FixtureFile $root '.github/workflows/nightly.yml' ('on:'+([char]10)+'  schedule:'+([char]10)+'    - cron: "* * * * *"')
+    Assert-Refused { Test-CiProjectConfiguration $context }
+}
+Invoke-Case 'Queue compatibility validates the official value and noncancellation rules' {
+    $lf=[string][char]10
+    Assert-True (Test-CiWorkflowQueues ("concurrency:"+$lf+"  group: native"+$lf+"  cancel-in-progress: false"+$lf+"  queue: max"))
+    Assert-True (Test-CiWorkflowQueues ("jobs:"+$lf+"  native:"+$lf+"    concurrency:"+$lf+"      group: one"+$lf+"      queue: max"))
+    Assert-Refused { Test-CiWorkflowQueues ("concurrency:"+$lf+"  queue: unlimited") }
+    Assert-Refused { Test-CiWorkflowQueues ("concurrency:"+$lf+"  queue: max"+$lf+"  cancel-in-progress: true") }
+    Assert-Refused { Test-CiWorkflowQueues ("jobs:"+$lf+"  queue: max") }
 }
 
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count

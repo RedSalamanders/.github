@@ -1,0 +1,57 @@
+{
+  "RedSalamander": {
+    "manual": [
+      "asan.yml",
+      "nightly-ci.yml",
+      "nightly-flake.yml",
+      "ghostty-runtime-product-qualification.yml",
+      "ghostty-runtime-native-qualification.yml",
+      "terminal-engine-round4-closeout.yml",
+      "build-reusable.yml"
+    ],
+    "metadata": {
+      "ghostty-runtime-status.yml": "4d38cf8b84a7178fd7d8c64cdef741470c2677c0dc8e533016b9de71ba792269"
+    },
+    "sealedDisabled": {
+      "terminal-engine-gate0.yml": "e6f15b6fef9c0d367e12dc7f43cb769106dc982934658f501120728599f32d1c"
+    },
+    "sealed": {
+      "terminal-engine-round4-closeout.yml": "3c21b1250e34caf8d30f9cc88c11ecb79630f7a379ec1347fe3611a67c4b2a80"
+    }
+  },
+  "DxUi": {
+    "manual": [
+      "benchmark.yml",
+      "gallery.yml"
+    ],
+    "metadata": {},
+    "sealedDisabled": {},
+    "sealed": {}
+  },
+  "RedXe": {
+    "manual": [],
+    "metadata": {},
+    "sealedDisabled": {},
+    "sealed": {}
+  },
+  "RedPrism": {
+    "manual": [
+      "native-arm64-feasibility.yml"
+    ],
+    "metadata": {},
+    "sealedDisabled": {},
+    "sealed": {}
+  },
+  "RedTilde": {
+    "manual": [],
+    "metadata": {},
+    "sealedDisabled": {},
+    "sealed": {}
+  },
+  "RedMonitor": {
+    "manual": [],
+    "metadata": {},
+    "sealedDisabled": {},
+    "sealed": {}
+  }
+}
