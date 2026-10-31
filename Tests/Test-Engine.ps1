@@ -783,7 +783,7 @@ Invoke-Case 'Prepare command exports distinct version and directory without rele
             function script:Get-CiPublicationPlan {
                 param($Root,$RunId,$EngineRef,$Directory)
                 [void][IO.Directory]::CreateDirectory($Directory)
-                return @{directory=$Directory;project=@{repository='RedSalamanders/DxUi';winget=$null};batch=@{version='0.1.234'}}
+                return @{directory=$Directory;project=(Read-CiProject $Root);batch=@{version='0.1.234'}}
             }
         }
         & (Join-Path $engineRoot 'Tools/Invoke-Publication.ps1') -Root $root -RunId 234 -EngineRef ('a'*40) -Operation Prepare
@@ -898,6 +898,83 @@ Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unrev
     Write-FixtureFile $root '.github/workflows/ci.yml' $original
     Write-FixtureFile $root '.github/workflows/nightly.yml' ('on:'+([char]10)+'  schedule:'+([char]10)+'    - cron: "* * * * *"')
     Assert-Refused { Test-CiProjectConfiguration $context }
+}
+Invoke-Case 'SDK conformance retains qualification and rejects every hosted publication route' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
+    $root=New-Fixture 'sdk-no-publication'
+    $project=Read-CiProject $root
+    $project.repository='RedSalamanders/DxUi';$project.kind='sdk';$project.winget=$null
+    Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 12)
+    Write-FixtureFile $root 'Tools/Invoke-ProjectCi.ps1' '# Fixture adapter.'
+    foreach($template in Get-CiProjectWorkflowTemplates $project){
+        Write-FixtureFile $root ('.github/workflows/'+$template.Name) ([IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$project.engine.ref))
+    }
+    $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
+    Test-CiProjectConfiguration $context
+    Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/qualify.yml'))
+    Assert-Equal 5 @(Get-CiProjectWorkflowTemplates $project).Count
+    Write-FixtureFile $root '.github/workflows/publish.yml' 'on: workflow_dispatch'
+    Assert-Refused {Test-CiProjectConfiguration $context}
+    Remove-Item -LiteralPath (Join-Path $root '.github/workflows/publish.yml')
+    foreach($name in @('gallery.yml','release.yml')){
+        Write-FixtureFile $root ('.github/workflows/'+$name) 'on: workflow_dispatch'
+        Assert-Refused {Test-CiProjectConfiguration $context}
+        Remove-Item -LiteralPath (Join-Path $root ('.github/workflows/'+$name))
+    }
+}
+Invoke-Case 'SDK publication APIs refuse before downloads, remote calls or output creation' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Publication.psm1')
+    $root=New-Fixture 'sdk-publication-refusal'
+    $project=Read-CiProject $root
+    $project.repository='RedSalamanders/DxUi';$project.kind='sdk';$project.winget=$null
+    Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 12)
+    $directory=Join-Path $root 'must-not-exist'
+    $plan=@{project=$project}
+    foreach($operation in @(
+        {Get-CiPublicationPlan -Root $root -RunId 42 -EngineRef $project.engine.ref -Directory $directory},
+        {Publish-CiGitHubRelease -Plan $plan},
+        {Assert-CiPublicationCurrent -Root $root -Plan $plan}
+    )){
+        $message=''
+        try{& $operation|Out-Null}catch{$message=$_.Exception.Message}
+        Assert-Equal 'SDK ZIPs remain internal qualification artifacts; publication is disabled.' $message
+    }
+    Assert-True (-not(Test-Path -LiteralPath $directory))
+}
+Invoke-Case 'Pin migration removes only the generated SDK publisher and preserves custom changes' {
+    # Exercise the real maintenance command from a clean engine fixture, not a mocked file writer.
+    $fixtureEngine=New-Fixture 'pin-migration-engine'
+    foreach($path in @('Tools/Update-ProjectPin.ps1','Tools/Modules/Ci.Policy.psm1','Schemas/project.schema.json')){
+        Write-FixtureFile $fixtureEngine $path ([IO.File]::ReadAllText((Join-Path $engineRoot $path)))
+    }
+    foreach($template in Get-ChildItem (Join-Path $engineRoot 'Templates') -File){
+        Write-FixtureFile $fixtureEngine ('Templates/'+$template.Name) ([IO.File]::ReadAllText($template.FullName))
+    }
+    $engineCommit=Save-Fixture $fixtureEngine 'Clean maintenance engine'
+    $hostPath=(Get-Process -Id $PID).Path
+    foreach($kind in @('application','sdk','custom-sdk')){
+        $root=New-Fixture ('pin-migration-'+$kind)
+        $project=Read-CiProject $root
+        if($kind -cne 'application'){$project.repository='RedSalamanders/DxUi';$project.kind='sdk';$project.winget=$null}
+        Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 12)
+        $operations=if($kind -ceq 'application'){'Prepare, Release, Winget'}else{'Prepare, Release'}
+        $oldCaller=[IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/publish.yml')).Replace('@ENGINE@',$project.engine.ref).Replace('@OPERATIONS@',$operations)
+        if($kind -ceq 'custom-sdk'){$oldCaller+=([string][char]10+'# Preserve this custom workflow for review.')}
+        Write-FixtureFile $root '.github/workflows/publish.yml' $oldCaller
+        $oldManifest=[IO.File]::ReadAllText((Join-Path $root '.ci/project.json'))
+        $result=Invoke-CiProcess $hostPath @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure
+        if($kind -ceq 'custom-sdk'){
+            Assert-True ($result.exitCode -ne 0 -and $result.stderr.Contains('custom changes'))
+            Assert-Equal $oldManifest ([IO.File]::ReadAllText((Join-Path $root '.ci/project.json')))
+            Assert-Equal $oldCaller ([IO.File]::ReadAllText((Join-Path $root '.github/workflows/publish.yml')))
+            Assert-True (-not(Test-Path -LiteralPath (Join-Path $root '.github/workflows/qualify.yml')))
+        }else{
+            Assert-Equal 0 $result.exitCode
+            Assert-Equal $engineCommit (Read-CiProject $root).engine.ref
+            Assert-Equal ($kind -ceq 'application') (Test-Path -LiteralPath (Join-Path $root '.github/workflows/publish.yml'))
+            Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/qualify.yml'))
+        }
+    }
 }
 Invoke-Case 'Queue compatibility validates the official value and noncancellation rules' {
     $lf=[string][char]10

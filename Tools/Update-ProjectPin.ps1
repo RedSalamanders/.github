@@ -6,7 +6,8 @@ One RedSalamanders project checkout.
 .PARAMETER EngineRef
 Exact clean engine commit currently checked out beside this command.
 .OUTPUTS
-Updated .ci/project.json and canonical CI caller files. No commit, push or native build.
+Updated .ci/project.json and canonical CI caller files. Removes an SDK's unchanged legacy publication caller.
+No commit, push or native build.
 .NOTES
 Requires PowerShell 7.4 and Git. Explicit maintenance command; review the diff and run compiler-free
 adapter checks before submitting the pin update. Dependabot ignores this multi-file engine dependency.
@@ -26,11 +27,22 @@ if((Resolve-CiCommit $engine HEAD) -cne $EngineRef -or (Invoke-CiGit $engine @('
 $old=$project.engine.ref
 $project.engine.ref=$EngineRef
 $rootPath=[IO.Path]::GetFullPath($Root)
-foreach($template in Get-ChildItem (Join-Path $engine 'Templates') -Filter '*.yml'){
-    $operations=if($project.kind -ceq 'sdk'){'Prepare, Release'}else{'Prepare, Release, Winget'}
-    $content=[IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$EngineRef).Replace('@OPERATIONS@',$operations)
+$legacyPublication=Assert-CiContainedPath $rootPath (Join-Path $rootPath '.github/workflows/publish.yml')
+if($project.kind -ceq 'sdk' -and (Test-Path -LiteralPath $legacyPublication)){
+    # Only the old generated caller is an owned migration input. Preserve custom work for review.
+    $lf=[string][char]10;$crlf=[string][char]13+$lf
+    $expected=[IO.File]::ReadAllText((Join-Path $engine 'Templates/publish.yml')).Replace('@ENGINE@',$old).Replace('@OPERATIONS@','Prepare, Release').Replace($crlf,$lf).TrimEnd()
+    if([IO.File]::ReadAllText($legacyPublication).Replace($crlf,$lf).TrimEnd() -cne $expected){
+        throw 'SDK publication caller has custom changes; review it before removing the workflow.'
+    }
+}
+foreach($template in Get-CiProjectWorkflowTemplates -Project $project){
+    $content=[IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$EngineRef).Replace('@OPERATIONS@','Prepare, Release, Winget')
     $path=Assert-CiContainedPath $rootPath (Join-Path $rootPath ('.github/workflows/'+$template.Name))
     [IO.File]::WriteAllText($path,$content,[Text.UTF8Encoding]::new($false))
+}
+if($project.kind -ceq 'sdk' -and (Test-Path -LiteralPath $legacyPublication)){
+    Remove-Item -LiteralPath $legacyPublication
 }
 # Historical sealed and metadata-only definitions retain their reviewed bytes.
 foreach($name in @('asan.yml','nightly-ci.yml')){

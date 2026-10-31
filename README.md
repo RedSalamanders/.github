@@ -2,7 +2,7 @@
 
 One versioned CI engine serves RedSalamander, DxUi, RedXe, RedPrism, RedTilde and RedMonitor. Each project pins its reusable workflows and engine checkout to the same immutable commit and supplies a reviewed `.ci/project.json` adapter manifest.
 
-PRs run formatting and compiler-free tooling. Main changes are classified cumulatively and admitted after five quiet minutes. Native x64 and ARM64 Release test builds must both execute and pass their regressions before either production Release build starts. Qualified ZIPs remain internal artifacts until an explicit publication action promotes their unchanged bytes. DxUi publishes an SDK ZIP and has no winget application.
+PRs run formatting and compiler-free tooling. Main changes are classified cumulatively and admitted after five quiet minutes. Native x64 and ARM64 Release test builds must both execute and pass their regressions before either production Release build starts. Qualified application ZIPs remain internal artifacts until an explicit publication action promotes their unchanged bytes. DxUi retains SDK ZIPs as internal qualification artifacts and has no publication workflow or winget application.
 
 Long benchmarks, repeated stress, Debug and ASan qualification are explicit manual actions. Dependency and security monitoring remain automated without native builds.
 
@@ -12,9 +12,9 @@ The normative contract is [Specs/CI.md](Specs/CI.md). Engine behavior tests use 
 ./Tests/Test-Engine.ps1 -TestRoot Z:/RedSalamander.Perf
 ```
 
-Implementation and live acceptance are tracked by [RedSalamander I55](https://github.com/RedSalamanders/RedSalamander/blob/main/Specs/Plans/WIP/CI_OrganizationStandardization_2026-10-29.md). A local test pass is not native project qualification.
+Implementation is recorded by [RedSalamander I55](https://github.com/RedSalamanders/RedSalamander/blob/main/Specs/Plans/Done/CI_OrganizationStandardization_2026-10-29.md); remaining live acceptance is owned by [I56](https://github.com/RedSalamanders/RedSalamander/blob/main/Specs/Plans/WIP/CI_HostedAcceptance_2026-10-31.md). A local test pass is not native project qualification.
 
-Each product has six canonical callers: compiler-free PR/main coordination, serialized main qualification, manual formatting, manual diagnostic qualification, compiler-free security, and manual publication. Tools/Update-ProjectPin.ps1 updates the manifest and callers together from a clean, exact engine checkout. A moving branch or a workflow-only pin update is refused by project conformance checks.
+All six projects have canonical callers for compiler-free PR/main coordination, serialized main qualification, manual formatting, manual diagnostic qualification and compiler-free security. The five applications additionally have a manual publication caller. Tools/Update-ProjectPin.ps1 updates the manifest and callers together from a clean, exact engine checkout; it removes an SDK's unchanged legacy publication caller and refuses to discard custom workflow changes. Conformance refuses SDK publication routes, moving pins and workflow-only pin updates.
 
 Operator actions start from the product's main branch. Formatting names an open same-repository PR and explicitly requests new checks after its narrow fast-forward commit. Manual native retry requires retry=true for already admitted inputs. Extended qualification selects Debug, ASan Debug or Release and Normal or Full scope; it cannot qualify a public release. Publication selects an original successful main qualification run and defaults to Prepare. Release promotes its ZIPs, and Winget requires the published anonymous URLs and native install evidence before submitting manifests with the dedicated credential.
 

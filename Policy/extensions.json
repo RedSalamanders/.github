@@ -7,6 +7,7 @@
       "ghostty-runtime-product-qualification.yml",
       "ghostty-runtime-native-qualification.yml",
       "terminal-engine-round4-closeout.yml",
+      "promote-publication-credential.yml",
       "build-reusable.yml"
     ],
     "metadata": {
@@ -21,8 +22,7 @@
   },
   "DxUi": {
     "manual": [
-      "benchmark.yml",
-      "gallery.yml"
+      "benchmark.yml"
     ],
     "metadata": {},
     "sealedDisabled": {},
