@@ -63,17 +63,24 @@ jobs:
         run: |
           $manifest = Get-Content .ci/project.json -Raw | ConvertFrom-Json
           & (Join-Path $PWD $manifest.adapter) -Phase Qualification -Configuration $env:CI_CONFIGURATION -QualificationScope $env:CI_QUALIFICATION_SCOPE -Platform $env:CI_PLATFORM -EngineRoot (Join-Path $PWD '.ci-engine') -Descriptor .build/ci/manual.json
-      - if: always()
+      - if: always() && steps.qualification.outputs.evidence_directory != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: qualification-${{ matrix.platform }}-${{ inputs.configuration }}
+          path: ${{ steps.qualification.outputs.evidence_directory }}
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: qualification-workspace-${{ matrix.platform }}-${{ inputs.configuration }}
           path: |
             .build/logs/**
             .build/reports/**
             .build/evidence/**
             .build/test-runs/**
             .build/test-artifacts/**
-            ${{ steps.qualification.outputs.evidence_directory }}
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30

@@ -976,6 +976,26 @@ Invoke-Case 'Pin migration removes only the generated SDK publisher and preserve
         }
     }
 }
+Invoke-Case 'Sandbox evidence and workspace logs retain separate artifact roots' {
+    function Assert-IsolatedEvidence([string]$Text,[string]$Step) {
+        $expression='${{ steps.'+$Step+'.outputs.evidence_directory }}'
+        $paths=@([regex]::Matches($Text,'(?m)^\s+path: ([^\r\n]*evidence_directory[^\r\n]*)\r?$'))
+        Assert-Equal 1 $paths.Count
+        Assert-Equal $expression $paths[0].Groups[1].Value.Trim()
+        Assert-True ($Text.Contains("if: always() && steps.$Step.outputs.evidence_directory != ''"))
+        Assert-True ($Text -match '(?m)^\s+name: (workspace-evidence|qualification-workspace)-')
+        Assert-True ($Text.Contains('.build/logs/**'))
+    }
+    foreach($item in @(@('native.yml','tests'),@('qualification.yml','qualification'))){
+        $text=[IO.File]::ReadAllText((Join-Path $engineRoot ('.github/workflows/'+$item[0])))
+        Assert-IsolatedEvidence $text $item[1]
+        $expression='${{ steps.'+$item[1]+'.outputs.evidence_directory }}'
+        $mixed=$text.Replace(('path: '+$expression),('path: |'+[char]10+'            .build/logs/**'+[char]10+'            '+$expression))
+        Assert-Refused {Assert-IsolatedEvidence $mixed $item[1]}
+        $unguarded=$text.Replace(("if: always() && steps."+$item[1]+".outputs.evidence_directory != ''"),'if: always()')
+        Assert-Refused {Assert-IsolatedEvidence $unguarded $item[1]}
+    }
+}
 Invoke-Case 'Queue compatibility validates the official value and noncancellation rules' {
     $lf=[string][char]10
     Assert-True (Test-CiWorkflowQueues ("concurrency:"+$lf+"  group: native"+$lf+"  cancel-in-progress: false"+$lf+"  queue: max"))
