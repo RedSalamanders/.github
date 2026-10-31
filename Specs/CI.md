@@ -1,6 +1,6 @@
 # Unified CI contract
 
-Policy version: 1. Status: implementation in progress.
+Policy version: 1. Implementation and hosted acceptance are tracked separately in the organization rollout record.
 
 ## Source and input identity
 
@@ -30,7 +30,11 @@ Native production/package smoke is required on both architectures. Application Z
 
 Manual extended qualification retains existing Debug/ASan, stress and paired-performance obligations; removing timers does not waive them. The common action offers Normal and Full scope; a project whose normal suite is already Full uses that same canonical suite. RedSalamander's automatic normal suite is CI and its explicit Full remains separate. Paired-performance diagnostic A/A is not qualification. Product release and winget publication require an explicit default-branch action. Publication verifies a successful qualified batch and promotes the exact existing ZIPs without rebuilding or restamping. Missing or expired evidence refuses publication. Retries cannot overwrite an existing asset or create duplicate winget changes.
 
-ZIP publication covers all six products. Winget covers the five applications and requires anonymous installer URLs and a suitable publication credential. Private visibility, account billing and licensed security availability are external acceptance prerequisites, never empty green checks.
+ZIP publication and winget cover the five applications. DxUi has no hosted publication workflow, including gallery publication or Prepare; its qualified SDK ZIPs remain internal artifacts. Shared maintenance generates only the five non-publication callers for SDK projects and removes only an unchanged old generated publisher. Both workflow conformance and publication entrypoints refuse SDK publication. Local gallery generation remains available for reviewed documentation changes.
+
+Application winget requires anonymous installer URLs and a suitable publication credential. The organization WINGET_TOKEN is selected for RedSalamander, RedXe, RedMonitor, RedPrism and RedTilde; DxUi receives no publication credential. A maintainer may explicitly promote the existing RedSalamander repository token through its trusted-main promote-publication-credential.yml action. It encrypts the token directly from the runner environment into the organization secret without logging its value, verifies the five selected repository identities and retains metadata only. The token must already have organization Actions-secret administration permission; failure leaves the credential prerequisite open rather than widening permissions automatically. Existing repository overrides are retained. Secret-name availability is distinct from proven authentication or permission to publish.
+
+Private visibility, account billing and licensed security availability are external acceptance prerequisites, never empty green checks. Closing implementation does not qualify failed or unavailable native runs; the separate hosted-acceptance plan retains those gates.
 
 Dependency monitoring covers Actions and engine pins, vcpkg baselines/floors and source locks without automatic consumer adoption. Scheduled CodeQL uses explicit C/C++ build mode none. Default and advanced setup must not create duplicate scans. Supported dependency alerts, secret scanning and push protection are enabled consistently; unsupported capabilities stay visibly open.
 

@@ -101,6 +101,13 @@ function Test-CiGlob {
     [regex]::IsMatch($Path, '^' + $expression + '$', [Text.RegularExpressions.RegexOptions]::CultureInvariant -bor [Text.RegularExpressions.RegexOptions]::IgnoreCase)
 }
 
+function Get-CiProjectWorkflowTemplates {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][System.Collections.IDictionary]$Project)
+    Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot '../../Templates') -Filter '*.yml' -File |
+        Where-Object { $Project.kind -cne 'sdk' -or $_.Name -cne 'publish.yml' }
+}
+
 function Assert-CiContainedPath {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$Path)
@@ -271,4 +278,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues
+Export-ModuleMember -Function Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues

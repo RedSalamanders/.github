@@ -71,11 +71,13 @@ function Test-CiProjectConfiguration {
     if (-not (Test-Path -LiteralPath $adapter -PathType Leaf)) { throw 'The declared project adapter is missing.' }
     $lf=[string][char]10
     $crlf=[string][char]13+$lf
-    $templates=Get-ChildItem -LiteralPath (Join-Path $Context.engineRoot 'Templates') -Filter '*.yml' -File
+    if ($project.kind -ceq 'sdk' -and (Test-Path -LiteralPath (Join-Path $Context.root '.github/workflows/publish.yml'))) {
+        throw 'SDK ZIPs are internal qualification artifacts; a publication workflow is forbidden.'
+    }
+    $templates=@(Get-CiProjectWorkflowTemplates -Project $project)
     $core=@($templates.Name)
     foreach($template in $templates){
-        $operations=if($project.kind -ceq 'sdk'){'Prepare, Release'}else{'Prepare, Release, Winget'}
-        $expected=[IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$project.engine.ref).Replace('@OPERATIONS@',$operations).Replace($crlf,$lf).TrimEnd()
+        $expected=[IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$project.engine.ref).Replace('@OPERATIONS@','Prepare, Release, Winget').Replace($crlf,$lf).TrimEnd()
         $path=Join-Path $Context.root ('.github/workflows/'+$template.Name)
         if(-not(Test-Path -LiteralPath $path) -or [IO.File]::ReadAllText($path).Replace($crlf,$lf).TrimEnd() -cne $expected){
             throw "The common workflow or engine pin diverged: $($template.Name)"

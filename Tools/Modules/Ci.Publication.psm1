@@ -4,12 +4,20 @@ Import-Module (Join-Path $PSScriptRoot 'Ci.Policy.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.GitHub.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.Artifacts.psm1')
 
+function Assert-CiApplicationPublication {
+    param([Parameter(Mandatory)][System.Collections.IDictionary]$Project)
+    if($Project.kind -cne 'application' -or $Project.repository -ceq 'RedSalamanders/DxUi'){
+        throw 'SDK ZIPs remain internal qualification artifacts; publication is disabled.'
+    }
+}
+
 function Get-CiPublicationPlan {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Root,[Parameter(Mandatory)][string]$RunId,[Parameter(Mandatory)][string]$EngineRef,
         [Parameter(Mandatory)][string]$Directory)
     if($RunId -cnotmatch '^[1-9][0-9]*$' -or $EngineRef -cnotmatch '^[a-f0-9]{40}$'){throw 'Invalid qualification run or engine identity.'}
     $project=Read-CiProject $Root
+    Assert-CiApplicationPublication $project
     if($project.engine.ref -cne $EngineRef){throw 'Publication engine and trusted main pin differ.'}
     $run=Invoke-CiApi "repos/$($project.repository)/actions/runs/$RunId"
     if($run.status -cne 'completed' -or $run.conclusion -cne 'success' -or $run.path -cne '.github/workflows/qualify.yml' -or
@@ -64,6 +72,7 @@ function Assert-CiReleaseAsset {
 function Publish-CiGitHubRelease {
     [CmdletBinding()]
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Plan,[switch]$RequireExisting,[switch]$Anonymous,[string]$EligibilityRoot='')
+    Assert-CiApplicationPublication $Plan.project
     if($EligibilityRoot){Assert-CiPublicationCurrent -Root $EligibilityRoot -Plan $Plan}
     $repo=$Plan.project.repository;$tag=$Plan.tag
     $release=Invoke-CiApi "repos/$repo/releases/tags/$tag" -AllowNotFound
@@ -171,6 +180,7 @@ function Read-CiPublicationPlan {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Directory)
     $plan=Get-Content -LiteralPath (Join-Path $Directory 'publication.json') -Raw|ConvertFrom-Json -AsHashtable
+    Assert-CiApplicationPublication $plan.project
     $plan.directory=[IO.Path]::GetFullPath($Directory)
     $null=Test-CiQualification -Directory $Directory -Descriptor $plan.batch -Phase Complete
     foreach($asset in $plan.assets){
@@ -183,6 +193,7 @@ function Read-CiPublicationPlan {
 function Assert-CiPublicationCurrent {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Root,[Parameter(Mandatory)][System.Collections.IDictionary]$Plan)
+    Assert-CiApplicationPublication $Plan.project
     $head=Get-CiMainHead $Plan.project.repository
     $known=Invoke-CiGit $Root @('cat-file','-e',($head+'^{commit}')) -AllowFailure
     if($known.exitCode -ne 0){
