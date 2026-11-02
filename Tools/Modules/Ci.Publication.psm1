@@ -170,8 +170,10 @@ function New-CiWingetManifest {
     $installer+="ManifestType: installer`nManifestVersion: 1.12.0`n"
     $locale=$common+"PackageLocale: en-US`nPublisher: RedSalamanders`nPackageName: $name`nLicense: $($project.winget.license)`nShortDescription: $name Windows application`nPackageUrl: https://github.com/$($project.repository)`nManifestType: defaultLocale`nManifestVersion: 1.12.0`n"
     $versionFile=$common+"DefaultLocale: en-US`nManifestType: version`nManifestVersion: 1.12.0`n"
-    foreach($pair in @(@("$id.yaml",$versionFile),@("$id.installer.yaml",$installer),@("$id.locale.en-US.yaml",$locale))){
-        [IO.File]::WriteAllText((Join-Path $Directory $pair[0]),$pair[1],[Text.UTF8Encoding]::new($false))
+    # winget validate exits nonzero with a warning when a manifest lacks its schema header.
+    foreach($pair in @(@("$id.yaml",'version',$versionFile),@("$id.installer.yaml",'installer',$installer),@("$id.locale.en-US.yaml",'defaultLocale',$locale))){
+        $header='# yaml-language-server: $schema=https://aka.ms/winget-manifest.'+$pair[1]+".1.12.0.schema.json`n"
+        [IO.File]::WriteAllText((Join-Path $Directory $pair[0]),$header+$pair[2],[Text.UTF8Encoding]::new($false))
     }
     return $Directory
 }
