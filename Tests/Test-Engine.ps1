@@ -402,7 +402,7 @@ Invoke-Case 'The global test gate needs both architecture receipts from the same
     Write-FixtureFile $root 'regression-ARM64.json' ($receipt|ConvertTo-Json -Depth 8)
     Assert-Refused { Test-CiQualification $root $descriptor Regression }
 }
-Invoke-Case 'winget uses the ZIP nested executable and rejects SDK, missing licensing and unsafe paths' {
+Invoke-Case 'winget manifests carry schema headers, use the ZIP nested executable and reject SDK, missing licensing and unsafe paths' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Publication.psm1')
     $root=New-Fixture 'winget-nested'
     $assets=foreach($platform in @('x64','ARM64')){
@@ -419,6 +419,11 @@ Invoke-Case 'winget uses the ZIP nested executable and rejects SDK, missing lice
     Assert-True ($installer.Contains("RelativeFilePath: 'product/RedMonitor.exe'"))
     Assert-True ($installer.Contains('Architecture: arm64') -and $installer.Contains('NestedInstallerType: portable'))
     Assert-True ($installer.Contains('MinimumOSVersion: 10.0.22000.2600') -and $installer.Contains('FileType: launch'))
+    foreach($manifest in @(@('','version'),@('.installer','installer'),@('.locale.en-US','defaultLocale'))){
+        $lines=[IO.File]::ReadAllLines((Join-Path $directory "RedSalamanders.RedMonitor$($manifest[0]).yaml"))
+        Assert-Equal ('# yaml-language-server: $schema=https://aka.ms/winget-manifest.'+$manifest[1]+'.1.12.0.schema.json') $lines[0]
+        Assert-Equal ('ManifestType: '+$manifest[1]) @($lines|Where-Object {$_.StartsWith('ManifestType: ')})[0]
+    }
     foreach($asset in $assets){
         $zip=[IO.Compression.ZipFile]::Open($asset.path,[IO.Compression.ZipArchiveMode]::Update)
         try{$entry=$zip.CreateEntry("product/tools/red.exe");$stream=$entry.Open();try{$stream.WriteByte(43)}finally{$stream.Dispose()}}finally{$zip.Dispose()}
