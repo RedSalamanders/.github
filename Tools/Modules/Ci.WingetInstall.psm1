@@ -67,11 +67,17 @@ function Invoke-CiOwnedWingetInstall {
     }
     if(@(& $ReadInstalled $package).Count){throw 'The exact package must be absent before this owned operation.'}
     foreach($command in $commands){if(& $ReadAlias $command.alias $Platform){throw "Portable alias already exists: $($command.alias)"}}
-    function Run-Owned([string]$File,[string[]]$Arguments,[int]$Seconds,[string]$LogName){
+    function Run-Owned([string]$File,[string[]]$Arguments,[int]$Seconds,[string]$LogName,[int[]]$Accept=@(0)){
         try {$result=& $Execute $File $Arguments $Seconds}
         catch {[IO.File]::WriteAllText((Join-Path $Scratch $LogName),(Protect-CiDiagnostic $_.Exception.Message));throw}
-        [IO.File]::WriteAllText((Join-Path $Scratch $LogName),(Protect-CiDiagnostic ($result.stdout+$result.stderr)))
-        if($result.exitCode -ne 0){throw "Owned install/probe command failed with exit $($result.exitCode); see $LogName"}
+        $log=Protect-CiDiagnostic ($result.stdout+$result.stderr)
+        [IO.File]::WriteAllText((Join-Path $Scratch $LogName),$log)
+        if($result.exitCode -ne 0){
+            # A failed job uploads no scratch evidence, so the hosted log must carry the diagnostic.
+            $display=$log.Trim();if($display.Length -gt 8000){$display=$display.Substring($display.Length-8000)}
+            Write-Host "$LogName exit $($result.exitCode):`n$display"
+        }
+        if($result.exitCode -notin $Accept){throw "Owned install/probe command failed with exit $($result.exitCode); see $LogName"}
         return $result
     }
     $installRoot=[IO.Path]::GetFullPath((Join-Path $Scratch 'installed')).TrimEnd('\','/')
@@ -84,8 +90,10 @@ function Invoke-CiOwnedWingetInstall {
     }
     $owned=$false;$passed=$false;$probes=0
     try{
+        Write-Host "winget $((Run-Owned $Winget @('--version') 60 'version.log').stdout.Trim())"
         $null=Run-Owned $Winget @('settings','--enable','LocalManifestFiles') 180 'settings.log'
-        $null=Run-Owned $Winget @('validate','--manifest',[IO.Path]::GetFullPath($Manifest)) 180 'validate.log'
+        # 0x8A150028 is APPINSTALLER_CLI_ERROR_MANIFEST_VALIDATION_WARNING: validation succeeded and its warnings are printed.
+        $null=Run-Owned $Winget @('validate','--manifest',[IO.Path]::GetFullPath($Manifest)) 180 'validate.log' @(0,-1978335192)
         $owned=$true
         $null=Run-Owned $Winget @('install','--manifest',[IO.Path]::GetFullPath($Manifest),'--location',$installRoot,'--scope','user',
             '--accept-package-agreements','--accept-source-agreements','--disable-interactivity') 600 'install.log'

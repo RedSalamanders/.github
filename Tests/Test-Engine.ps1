@@ -474,6 +474,8 @@ function New-InstallFixture([string]$Name) {
         $exitCode=0
         if($File -eq 'winget-fixture'){
             if($CommandArguments[0] -eq 'list'){throw 'An unpublished install must not depend on source-correlated winget list.'}
+            if($CommandArguments[0] -eq 'validate' -and $fixture.mode -eq 'validate-warning'){$exitCode=-1978335192}
+            if($CommandArguments[0] -eq 'validate' -and $fixture.mode -eq 'validate-failure'){$exitCode=1}
             if($CommandArguments[0] -eq 'install'){$fixture.installed=$true;if($fixture.mode -eq 'partial-install'){$exitCode=7}}
             if($CommandArguments[0] -eq 'uninstall' -and $fixture.mode -ne 'failed-cleanup'){$fixture.installed=$false}
         }elseif('--self-test' -in $CommandArguments -and $fixture.mode -eq 'timeout'){
@@ -501,6 +503,17 @@ Invoke-Case 'Unpublished winget installation proves every alias, product smoke a
     $uninstall=@($fixture.calls|Where-Object{$_.arguments[0] -eq 'uninstall'})
     Assert-Equal 1 $uninstall.Count
     Assert-True ('--manifest' -in $uninstall[0].arguments -and '--version' -in $uninstall[0].arguments)
+}
+Invoke-Case 'winget validation warnings are accepted and logged, while other validation failures refuse before install' {
+    $fixture=New-InstallFixture 'validate-warning';$fixture.mode='validate-warning'
+    $proof=Run-InstallFixture $fixture
+    Assert-True ($proof.passed -and $proof.cleanedUp -and -not $fixture.installed)
+    Assert-Equal 'fixture output' ([IO.File]::ReadAllText((Join-Path $fixture.root 'validate.log')))
+    Assert-Equal 1 @($fixture.calls|Where-Object{$_.arguments[0] -eq '--version'}).Count
+    $fixture=New-InstallFixture 'validate-failure';$fixture.mode='validate-failure'
+    Assert-Refused {Run-InstallFixture $fixture}
+    Assert-Equal 0 @($fixture.calls|Where-Object{$_.arguments[0] -in 'install','uninstall'}).Count
+    Assert-Equal 'fixture output' ([IO.File]::ReadAllText((Join-Path $fixture.root 'validate.log')))
 }
 Invoke-Case 'An existing portable product is refused before any install or removal' {
     $fixture=New-InstallFixture 'existing'
