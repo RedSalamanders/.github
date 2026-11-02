@@ -57,3 +57,29 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 14
+  hosted-winget:
+    name: hosted winget (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # The publication install runners; Windows 11 images need App Installer registration.
+        runner: [windows-latest, windows-11-vs2026-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    steps:
+      - name: Enable long Windows checkout paths
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Resolve winget without downloading it and enable local manifests
+        shell: pwsh
+        run: |
+          Import-Module ./Tools/Modules/Ci.WingetInstall.psm1
+          $scratch=(New-Item -ItemType Directory -Force -Path (Join-Path $env:RUNNER_TEMP 'hosted-winget')).FullName
+          $winget=Resolve-CiWinget -Scratch $scratch
+          foreach($arguments in @(@('--version'),@('settings','--enable','LocalManifestFiles'))){
+            & $winget @arguments
+            if($LASTEXITCODE){throw "winget $($arguments -join ' ') exited $LASTEXITCODE"}
+          }

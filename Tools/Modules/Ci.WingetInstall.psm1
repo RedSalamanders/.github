@@ -28,6 +28,48 @@ function Read-CiInstalledAlias {
     return @{path=$path;target=$target.FullName;version=("$($version.FileMajorPart).$($version.FileMinorPart).$($version.FileBuildPart)")}
 }
 
+function Resolve-CiWinget {
+    <#
+    .SYNOPSIS
+        Locate winget, registering the image's inbox App Installer for this account when absent.
+    .DESCRIPTION
+        Windows Server images put winget on PATH. Windows 11 images provision App Installer
+        without registering it for the runner account, so its alias is missing until it is
+        registered. Nothing is downloaded; an image without the provisioned package still fails.
+        Provider parameters exist for deterministic tests; the hosted CLI uses native providers.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Scratch,
+        [scriptblock]$Find={
+            $command=Get-Command winget.exe -ErrorAction SilentlyContinue|Select-Object -First 1
+            if($command){return $command.Source}
+            $alias=Join-Path $env:LOCALAPPDATA 'Microsoft/WindowsApps/winget.exe'
+            if(Test-Path -LiteralPath $alias){return $alias}
+        },
+        [scriptblock]$Register={
+            param($Directory)
+            $shell=Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
+            Invoke-CiProcess -FilePath $shell -Arguments @('-NoProfile','-NonInteractive','-Command',
+                'Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe') -WorkingDirectory $Directory -TimeoutSeconds 300 -AllowFailure
+        },
+        [int]$WaitSeconds=60)
+    $path=& $Find
+    if($path){return $path}
+    $result=& $Register $Scratch
+    $log=Protect-CiDiagnostic ($result.stdout+$result.stderr)
+    [IO.File]::WriteAllText((Join-Path $Scratch 'appinstaller-register.log'),$log)
+    Write-Host "Registered inbox App Installer for this account with exit $($result.exitCode)."
+    if($result.exitCode -ne 0){Write-Host $log.Trim();throw 'winget is unavailable and inbox App Installer registration failed.'}
+    # The app execution alias can appear shortly after registration returns.
+    $deadline=[DateTime]::UtcNow.AddSeconds($WaitSeconds)
+    while($true){
+        $path=& $Find
+        if($path){return $path}
+        if([DateTime]::UtcNow -ge $deadline){throw 'winget is unavailable after registering the inbox App Installer.'}
+        Start-Sleep -Seconds 2
+    }
+}
+
 function Invoke-CiOwnedWingetInstall {
     <#
     .SYNOPSIS
@@ -153,4 +195,4 @@ function Test-CiWingetInstallReceipt {
     return $true
 }
 
-Export-ModuleMember -Function Invoke-CiOwnedWingetInstall, Test-CiWingetInstallReceipt
+Export-ModuleMember -Function Resolve-CiWinget, Invoke-CiOwnedWingetInstall, Test-CiWingetInstallReceipt

@@ -515,6 +515,29 @@ Invoke-Case 'winget validation warnings are accepted and logged, while other val
     Assert-Equal 0 @($fixture.calls|Where-Object{$_.arguments[0] -in 'install','uninstall'}).Count
     Assert-Equal 'fixture output' ([IO.File]::ReadAllText((Join-Path $fixture.root 'validate.log')))
 }
+Invoke-Case 'winget resolution registers the inbox App Installer only when its alias is absent, and refuses when it stays absent' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.WingetInstall.psm1')
+    $root=New-Fixture 'winget-resolution'
+    $state=@{path='winget-present';registrations=0;exitCode=0;appears=$true}
+    $find={$state.path}.GetNewClosure()
+    $register={
+        param($Directory)
+        $state.registrations++
+        if($state.appears){$state.path='winget-registered'}
+        return @{exitCode=$state.exitCode;stdout='registration output';stderr=''}
+    }.GetNewClosure()
+    Assert-Equal 'winget-present' (Resolve-CiWinget -Scratch $root -Find $find -Register $register -WaitSeconds 0)
+    Assert-Equal 0 $state.registrations
+    $state.path=$null
+    Assert-Equal 'winget-registered' (Resolve-CiWinget -Scratch $root -Find $find -Register $register -WaitSeconds 0)
+    Assert-Equal 1 $state.registrations
+    Assert-Equal 'registration output' ([IO.File]::ReadAllText((Join-Path $root 'appinstaller-register.log')))
+    foreach($change in @(@{exitCode=1;appears=$false},@{exitCode=0;appears=$false})){
+        $state.path=$null;foreach($key in $change.Keys){$state[$key]=$change[$key]}
+        Assert-Refused {Resolve-CiWinget -Scratch $root -Find $find -Register $register -WaitSeconds 0}
+    }
+    Assert-Equal 3 $state.registrations
+}
 Invoke-Case 'An existing portable product is refused before any install or removal' {
     $fixture=New-InstallFixture 'existing'
     $fixture.initial=$true
