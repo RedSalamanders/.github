@@ -44,7 +44,7 @@ if($plan.project.repository -ceq 'RedSalamanders/RedSalamander'){
     $scratch=Assert-CiContainedPath $Root (Join-Path $Root ('.build/winget-install/'+[guid]::NewGuid().ToString('N')))
     [void][IO.Directory]::CreateDirectory($scratch)
 }
-$winget=(Get-Command winget.exe -ErrorAction Stop).Source
+$winget=Resolve-CiWinget -Scratch $scratch
 $proof=Invoke-CiOwnedWingetInstall -Plan $plan -Manifest $manifest -Scratch $scratch -Platform $Platform -Winget $winget
 $path=Join-Path $scratch "winget-$Platform.json"
 [ordered]@{schemaVersion=1;passed=$true;platform=$Platform;commit=$plan.batch.commit;nativeDigest=$plan.batch.nativeDigest;
