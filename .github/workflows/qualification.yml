@@ -11,18 +11,40 @@ on:
       scope:
         type: string
         default: Normal
+      platform:
+        type: string
+        default: All
 permissions:
   contents: read
 jobs:
+  select-platforms:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - name: Select the requested qualification architectures
+        id: select
+        shell: pwsh
+        env:
+          CI_QUALIFICATION_PLATFORM: ${{ inputs.platform }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $platforms = switch -CaseSensitive ($env:CI_QUALIFICATION_PLATFORM) {
+            'All' { @('x64','ARM64') }
+            'x64' { @('x64') }
+            'ARM64' { @('ARM64') }
+            default { throw 'Qualification platform must be All, x64 or ARM64.' }
+          }
+          $entries = @($platforms | ForEach-Object {
+            @{ platform=$_; runner=$(if ($_ -ceq 'x64') {'windows-2025-vs2026'} else {'windows-11-vs2026-arm'}) }
+          })
+          $matrix = @{ include=$entries } | ConvertTo-Json -Depth 3 -Compress
+          "matrix=$matrix" | Out-File -LiteralPath $env:GITHUB_OUTPUT -Encoding utf8 -Append
   native:
+    needs: select-platforms
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - platform: x64
-            runner: windows-2025-vs2026
-          - platform: ARM64
-            runner: windows-11-vs2026-arm
+      matrix: ${{ fromJSON(needs.select-platforms.outputs.matrix) }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
     steps:
