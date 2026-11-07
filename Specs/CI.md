@@ -32,6 +32,12 @@ Native and manual qualification upload the adapter's evidence directory separate
 
 Manual extended qualification retains existing Debug/ASan, stress and paired-performance obligations; removing timers does not waive them. The common action offers Normal and Full scope; a project whose normal suite is already Full uses that same canonical suite. RedSalamander's automatic normal suite is CI and its explicit Full remains separate. Paired-performance diagnostic A/A is not qualification. Product release and winget publication require an explicit default-branch action. Publication verifies a successful qualified batch and promotes the exact existing ZIPs without rebuilding or restamping. Missing or expired evidence refuses publication. Retries cannot overwrite an existing asset or create duplicate winget changes.
 
+Manual diagnostic qualification additionally selects All (the compatibility default), x64 or ARM64. A compiler-free
+selection job validates that exact value and emits only the selected runner entries; invalid values fail before
+checkout or native setup. Single-architecture diagnostic evidence establishes only its recorded scope and never
+advances the two-architecture Release/production gate. Project delivery plans may explicitly select x64 runtime
+tests and ARM64 compilation while keeping ARM64 runtime claims outside that delivery's acceptance.
+
 ZIP publication and winget cover the five applications. DxUi has no hosted publication workflow, including gallery publication or Prepare; its qualified SDK ZIPs remain internal artifacts. Shared maintenance generates only the five non-publication callers for SDK projects and removes only an unchanged old generated publisher. Both workflow conformance and publication entrypoints refuse SDK publication. Local gallery generation remains available for reviewed documentation changes.
 
 Application winget requires anonymous installer URLs and a suitable publication credential. The owner's 2026-10-31 policy selects the current public organization repositories except DxUi for organization WINGET_TOKEN access. Private applications remain excluded until their separate public transition; reconcile selected access after visibility or repository inventory changes. GitHub Free does not make organization secrets available to private repositories. The five applications retain publication support, while visibility/account restrictions remain acceptance gates.

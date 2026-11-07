@@ -347,6 +347,50 @@ Invoke-Case 'Static project command selection refuses compiler-dependent entry p
     $context = @{ root = $root; phase = 'Static'; project = @{ repository = 'RedSalamanders/RedMonitor' } }
     Assert-Refused { Invoke-CiProjectScript $context 'build.ps1' }
 }
+Invoke-Case 'Manual qualification selects only the requested architectures before native setup' {
+    $root = New-Fixture 'qualification-platforms'
+    $workflow = [IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/qualification.yml'))
+    $job = [regex]::Match($workflow, '(?ms)^  select-platforms:\r?\n(?<job>.*?)^  native:\r?\n')
+    Assert-True $job.Success 'The qualification selector job is missing.'
+    $inline = [regex]::Match($job.Groups['job'].Value, '(?ms)^        run: \|\r?\n(?<body>(?:          [^\r\n]*\r?\n)+)')
+    Assert-True $inline.Success 'The actual qualification selector script is missing.'
+    $scriptText = [regex]::Replace($inline.Groups['body'].Value, '(?m)^          ', '')
+    Write-FixtureFile $root 'select-platforms.ps1' $scriptText
+    $hostPath = (Get-Process -Id $PID).Path
+    $oldPlatform = $env:CI_QUALIFICATION_PLATFORM
+    $oldOutput = $env:GITHUB_OUTPUT
+    try {
+        foreach ($selection in @('All', 'x64', 'ARM64')) {
+            $env:CI_QUALIFICATION_PLATFORM = $selection
+            $env:GITHUB_OUTPUT = Join-Path $root ($selection + '.output')
+            $result = Invoke-CiProcess -FilePath $hostPath -Arguments @('-NoProfile', '-NonInteractive', '-File', (Join-Path $root 'select-platforms.ps1')) -WorkingDirectory $root
+            Assert-Equal 0 $result.exitCode
+            $lines = @([IO.File]::ReadAllLines($env:GITHUB_OUTPUT))
+            Assert-Equal 1 $lines.Count
+            Assert-True ($lines[0].StartsWith('matrix=', [StringComparison]::Ordinal))
+            $matrix = $lines[0].Substring(7) | ConvertFrom-Json -AsHashtable
+            $expected = @(if ($selection -ceq 'All') { 'x64'; 'ARM64' } else { $selection })
+            Assert-Equal $expected.Count @($matrix.include).Count
+            for ($index = 0; $index -lt $expected.Count; ++$index) {
+                Assert-Equal $expected[$index] $matrix.include[$index].platform
+                $runner = if ($expected[$index] -ceq 'x64') { 'windows-2025-vs2026' } else { 'windows-11-vs2026-arm' }
+                Assert-Equal $runner $matrix.include[$index].runner
+            }
+        }
+        $index = 0
+        foreach ($selection in @('', 'all', 'X64', 'x64,ARM64', 'x64;throw "input executed"')) {
+            $env:CI_QUALIFICATION_PLATFORM = $selection
+            $env:GITHUB_OUTPUT = Join-Path $root ("invalid-$index.output")
+            $result = Invoke-CiProcess -FilePath $hostPath -Arguments @('-NoProfile', '-NonInteractive', '-File', (Join-Path $root 'select-platforms.ps1')) -WorkingDirectory $root -AllowFailure
+            Assert-True ($result.exitCode -ne 0) "Invalid platform '$selection' was admitted."
+            Assert-True (-not (Test-Path -LiteralPath $env:GITHUB_OUTPUT)) 'A refused selector must not publish a native matrix.'
+            ++$index
+        }
+    } finally {
+        $env:CI_QUALIFICATION_PLATFORM = $oldPlatform
+        $env:GITHUB_OUTPUT = $oldOutput
+    }
+}
 Invoke-Case 'Windowless child diagnostics preserve both output streams and the real exit code' {
     $root = New-Fixture 'streaming-exit'
     $hostPath = (Get-Process -Id $PID).Path
