@@ -34,6 +34,15 @@ Native and manual qualification upload the adapter's evidence directory separate
 
 ## Manual operations and security
 
+`sdk-artifact-access.yml` is a manual compiler-free capability diagnostic, restricted to trusted main. It uses
+only the caller repository's read-only GITHUB_TOKEN to inspect an existing successful DxUi main qualification
+and request download authorization for one exact production SDK artifact. It never follows, persists or logs
+the signed download URL, downloads SDK contents, creates credentials or grants cache/qualification acceptance.
+It retains a credential-free capability record and fails visibly when access is unavailable. Source builds
+remain the fallback until distribution and immutable SDK acceptance are implemented. A successful personal-token
+lookup does not establish workflow-token access: [GITHUB_TOKEN is repository-scoped](https://docs.github.com/en/actions/concepts/security/github_token),
+and [artifact download requires target Actions read access](https://docs.github.com/en/rest/actions/artifacts#download-an-artifact).
+
 Manual extended qualification retains existing Debug/ASan, stress and paired-performance obligations; removing timers does not waive them. The common action offers Normal and Full scope; a project whose normal suite is already Full uses that same canonical suite. RedSalamander's automatic normal suite is CI and its explicit Full remains separate. Paired-performance diagnostic A/A is not qualification. Product release and winget publication require an explicit default-branch action. Publication verifies a successful qualified batch and promotes the exact existing ZIPs without rebuilding or restamping. Missing or expired evidence refuses publication. Retries cannot overwrite an existing asset or create duplicate winget changes.
 
 Manual diagnostic qualification additionally selects All (the compatibility default), x64 or ARM64. A compiler-free

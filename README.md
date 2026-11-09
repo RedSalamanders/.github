@@ -9,6 +9,12 @@ Manual diagnostic qualification accepts `platform=x64`, `platform=ARM64` or the 
 The chosen architecture is recorded by its native evidence; single-architecture diagnostics do not advance Release publication.
 Normal and manual native jobs reuse repository-scoped vcpkg package archives, including compatible fallback caches after engine/tooling changes. The pinned package manager still checks package ABI identity; product builds and test evidence remain independently required.
 
+Before implementing cross-repository SDK distribution, the manual `sdk-artifact-access.yml` diagnostic checks
+the engine repository's ordinary read-only workflow token against an existing successful DxUi main qualification
+artifact. For example: `gh workflow run sdk-artifact-access.yml --ref main -f producer_run=42442938301 -f artifact_name=production-x64`.
+It requests download authorization without downloading SDK contents or logging signed URLs. Its retained result
+establishes only that caller's access capability; it is not SDK or native qualification and creates no credentials.
+
 Organization-owned implementation plans are indexed in [Specs/Plans/WIP](Specs/Plans/WIP/README.md). Completed plans move to [Specs/Plans/Done](Specs/Plans/Done/README.md) under the [plan lifecycle rule](AGENTS.md#plan-lifecycle), after implementation, validation and normative documentation closeout.
 
 The normative contract is [Specs/CI.md](Specs/CI.md). Engine behavior tests use actual temporary Git histories and deterministic coordinator events:
