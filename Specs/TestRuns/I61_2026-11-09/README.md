@@ -243,7 +243,17 @@ the extracted real resolver script pass within 57 engine controls; ten workflows
 Final local engine evidence is `Z:/RedSalamander.Perf/unified-ci/engine-20261109T200136901Z-6fd07f625f7a41cca8d496c020a0b9cc/results.json`.
 Earlier failed fixtures remain retained. Hosted deployment and both native architectures remain required.
 
-RedSalamander #210 merged at 99624c5385c6c0d42f8d1c6f8be54cbe69f506ef after its required review. Its
+Canonical-checkout bootstrap hardening passes the same 57 engine controls and ten workflow syntax checks.
+The controller's raw maps matched the independently acquired SDK provenance for all three full pinned
+source checkouts and the clean 6c89bb60 tooling checkout (recorded in the local SDK worktree's
+`.build/i61-sdk-canonical-provenance.json`). A real Git fixture preserves size/mtime, hides the mutation
+with assume-unchanged, observes a clean status, and still refuses the changed raw bytes. String-valued
+API revisions also refuse. Final engine evidence:
+`Z:/RedSalamander.Perf/unified-ci/engine-20261109T202241902Z-a180fe185bb64d5596d176688ea78e78/results.json`.
+Canonical checkout bytes are explicit inputs, not a normalization of old proof. Hosted x64 regression
+for DxUi campaign 42682591817 passed; ARM64 remains pending at this observation.
+
+RedSalamander #210 merged at 99624c5385c6c0d42f8d1c6f8be54cbe69f506ef. Its
 49 current Ghostty lifecycle controls include real curl 504 recovery, permanent 404 refusal and bounded
 persistent failure, without relaxing hashes or offline behavior. The separate historical five-notice
 assertion mismatch remains evidence with sealed source bytes unchanged. Prior campaign 42674161785

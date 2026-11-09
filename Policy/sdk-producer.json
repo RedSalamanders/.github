@@ -2,10 +2,11 @@
   "schemaVersion": 1,
   "repository": "RedSalamanders/DxUi",
   "toolingRef": "6c89bb60c01e14ab4008e300ea73b44d206efb24",
+  "toolingContentIdentity": "6d13b943f9bc3580a76d8b5063d9720e493f85c79ef6f05baaa00816aeb349d1",
   "storageEngineRef": "e3c637bd9a44bd409f30b5a1c1f28f155d2319dd",
   "sources": [
-    {"commit":"4cdf1ce52c7785446698e346b8aec058ed6a9283","apiRevision":4},
-    {"commit":"f2e328a0a26a18ca66bf4b2aea77bf010c9515e1","apiRevision":4},
-    {"commit":"21fae0dc66000b04504ba7862169533ac2943be8","apiRevision":5}
+    {"commit":"4cdf1ce52c7785446698e346b8aec058ed6a9283","apiRevision":4,"contentIdentity":"15925973bd8e7bd9934c1c21db7e70a7e20a8919522e7fc435461685a921f698"},
+    {"commit":"f2e328a0a26a18ca66bf4b2aea77bf010c9515e1","apiRevision":4,"contentIdentity":"fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773"},
+    {"commit":"21fae0dc66000b04504ba7862169533ac2943be8","apiRevision":5,"contentIdentity":"6a6e264296e40b02c87389be76d616e7756f236900b88b5f1020e160acf4082a"}
   ]
 }

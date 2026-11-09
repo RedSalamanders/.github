@@ -13,6 +13,14 @@ checkout must match its full expected commit, remain clean and retain the exact 
 tooling must already be an ancestor of its normally integrated main before native setup. Unsupported
 sources, repositories, events or refs refuse. This is never a PR or scheduled native build route.
 
+Policy also freezes the full raw source and tooling content identities of canonical Windows checkouts
+(`core.autocrlf=true`, with each version's attributes taking precedence). The controller verifies these
+bytes before importing producer code. Its small bootstrap hash adapter deliberately mirrors the SDK's
+ordinal path/raw SHA-256 map: invoking unverified producer code to establish its own trust would be circular.
+Full checkouts are required; sparse, missing, reparse or mutated inputs refuse, including mutations hidden
+from Git status or preserving file size and timestamps. Other checkout bytes remain different identities;
+existing receipts are never relabeled to match this canonical producer.
+
 The producer supports only pinned Release/MD/stdcpplatest/full GL-LTCG/enabled-annotation SDK inputs.
 It preserves each original source/dependency pin, uses the reviewed producer's existing build/profile/
 zero-warning/process guards, and executes every SDK extraction/header/license/symbol/warning control

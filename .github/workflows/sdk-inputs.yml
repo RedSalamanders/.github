@@ -55,9 +55,13 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
     steps:
-      - name: Enable long Windows checkout paths
+      - name: Select canonical Windows SDK checkout bytes
         shell: pwsh
-        run: git config --global core.longpaths true
+        run: |
+          git config --global core.longpaths true
+          if($LASTEXITCODE){throw 'Could not configure long SDK paths.'}
+          git config --global core.autocrlf true
+          if($LASTEXITCODE){throw 'Could not configure canonical SDK checkout bytes.'}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}

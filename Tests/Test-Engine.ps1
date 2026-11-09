@@ -1176,6 +1176,8 @@ Invoke-Case 'Pinned SDK admission is manual main only and preserves independent 
             $r=Resolve-CiSdkProducerRequest -Repository RedSalamanders/DxUi -Ref refs/heads/main -Event workflow_dispatch -SourceCommit $source.commit -RunId 123 -Platform $platform
             Assert-Equal $source.apiRevision $r.apiRevision
             Assert-Equal $policy.toolingRef $r.toolingRef
+            Assert-Equal $policy.toolingContentIdentity $r.toolingContentIdentity
+            Assert-Equal $source.contentIdentity $r.sourceContentIdentity
             Assert-Equal $policy.storageEngineRef $r.storageEngineRef
             Assert-Equal $(if($platform -ceq 'All'){2}else{1}) @($r.matrix.include).Count
             if($platform -cne 'All'){Assert-Equal $platform $r.matrix.include[0].platform}
@@ -1203,20 +1205,42 @@ Invoke-Case 'SDK producer checks actual clean Git identities, main ancestry, API
     Write-FixtureFile $source 'capabilities.json' '{"apiRevision":4}'
     $sourceHead=Save-Fixture $source 'Synthetic source API'
     $null=Invoke-CiGit $tooling @('update-ref','refs/remotes/origin/main',$toolingHead)
-    $request=@{toolingRef=$toolingHead;sourceCommit=$sourceHead;storageEngineRef=$storageHead;apiRevision=4}
+    $request=@{toolingRef=$toolingHead;sourceCommit=$sourceHead;storageEngineRef=$storageHead;apiRevision=4;
+        toolingContentIdentity=(Get-CiSdkCheckoutContentIdentity $tooling);sourceContentIdentity=(Get-CiSdkCheckoutContentIdentity $source)}
     Assert-CiSdkProducerCheckouts $request $tooling $source $storage
     $bad=$request.Clone();$bad.sourceCommit='1'*40
     Assert-Refused {Assert-CiSdkProducerCheckouts $bad $tooling $source $storage}
     Write-FixtureFile $source 'untracked.txt' 'mutation witness'
     Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
     Remove-Item -LiteralPath (Join-Path $source 'untracked.txt')
+    # Git's clean report is insufficient: preserve size/mtime and hide a real byte mutation from its index.
+    $capabilities=Join-Path $source 'capabilities.json'
+    $original=[IO.File]::ReadAllBytes($capabilities);$mtime=[IO.File]::GetLastWriteTimeUtc($capabilities)
+    $null=Invoke-CiGit $source @('update-index','--assume-unchanged','capabilities.json')
+    try{
+        [IO.File]::WriteAllText($capabilities,'{"apiRevision":5}',[Text.UTF8Encoding]::new($false))
+        [IO.File]::SetLastWriteTimeUtc($capabilities,$mtime)
+        Assert-Equal $original.Length ([IO.File]::ReadAllBytes($capabilities)).Length
+        Assert-Equal '' (Invoke-CiGit $source @('status','--porcelain')).stdout.Trim()
+        Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
+    }finally{
+        [IO.File]::WriteAllBytes($capabilities,$original);[IO.File]::SetLastWriteTimeUtc($capabilities,$mtime)
+        $null=Invoke-CiGit $source @('update-index','--no-assume-unchanged','capabilities.json')
+    }
+    Assert-CiSdkProducerCheckouts $request $tooling $source $storage
     Write-FixtureFile $tooling 'README.md' 'Reviewed but not integrated synthetic tooling'
     $request.toolingRef=Save-Fixture $tooling 'Synthetic future tooling'
+    $request.toolingContentIdentity=Get-CiSdkCheckoutContentIdentity $tooling
     Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
     $null=Invoke-CiGit $tooling @('update-ref','refs/remotes/origin/main',$request.toolingRef)
     Assert-CiSdkProducerCheckouts $request $tooling $source $storage
     Write-FixtureFile $source 'capabilities.json' '{"apiRevision":5}'
     $request.sourceCommit=Save-Fixture $source 'Synthetic changed API'
+    $request.sourceContentIdentity=Get-CiSdkCheckoutContentIdentity $source
+    Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
+    Write-FixtureFile $source 'capabilities.json' '{"apiRevision":"4"}'
+    $request.sourceCommit=Save-Fixture $source 'Synthetic mistyped API'
+    $request.sourceContentIdentity=Get-CiSdkCheckoutContentIdentity $source
     Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
 }
 Invoke-Case 'Actual SDK workflow resolver writes five independent outputs without compilation' {
@@ -1257,7 +1281,7 @@ Invoke-Case 'SDK workflow keeps reviewed tooling separate, read-only tokens and 
     function Assert-SdkProducerWorkflow([string]$Text){
         foreach($required in @("github.event_name == 'workflow_dispatch'","github.ref == 'refs/heads/main'",'contents: read','actions: read',
             'ref: ${{ needs.resolve.outputs.tooling }}','ref: ${{ needs.resolve.outputs.source }}','ref: ${{ needs.resolve.outputs.storage_engine }}',
-            'Assert-CiSdkProducerCheckouts','if: steps.build.outcome == ''success''','-${{ github.run_attempt }}',
+            'Assert-CiSdkProducerCheckouts','git config --global core.autocrlf true','if: steps.build.outcome == ''success''','-${{ github.run_attempt }}',
             '-SdkStoreRoot','-ProductionOnly','-SmokeRoot $env:RUNNER_TEMP')){Assert-True ($Text.Contains($required))}
         Assert-True (-not($Text.Contains('contents: write') -or $Text.Contains('statuses: write') -or $Text.Contains('secrets: inherit')))
         Assert-True ($Text.IndexOf('Assert-CiSdkProducerCheckouts') -lt $Text.IndexOf('uses: ./.build/sdk-producer/.github/actions/setup-msvc'))
@@ -1267,7 +1291,8 @@ Invoke-Case 'SDK workflow keeps reviewed tooling separate, read-only tokens and 
     Assert-SdkProducerWorkflow $text
     foreach($bad in @($text.Replace("github.event_name == 'workflow_dispatch'",'true'),
         $text.Replace('contents: read','contents: write'),$text.Replace("if: steps.build.outcome == 'success'",'if: always()'),
-        $text.Replace('-${{ github.run_attempt }}',''),$text.Replace('Assert-CiSdkProducerCheckouts','UncheckedSdkInputs'))){Assert-Refused {Assert-SdkProducerWorkflow $bad}}
+        $text.Replace('-${{ github.run_attempt }}',''),$text.Replace('core.autocrlf true','core.autocrlf false'),
+        $text.Replace('Assert-CiSdkProducerCheckouts','UncheckedSdkInputs'))){Assert-Refused {Assert-SdkProducerWorkflow $bad}}
 }
 
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count
