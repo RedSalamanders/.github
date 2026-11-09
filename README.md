@@ -7,6 +7,9 @@ PRs run formatting and compiler-free tooling. Main changes are classified cumula
 Long benchmarks, repeated stress, Debug and ASan qualification are explicit manual actions. Dependency and security monitoring remain automated without native builds.
 Manual diagnostic qualification accepts `platform=x64`, `platform=ARM64` or the compatibility default `platform=All`.
 The chosen architecture is recorded by its native evidence; single-architecture diagnostics do not advance Release publication.
+Normal and manual native jobs reuse repository-scoped vcpkg package archives, including compatible fallback caches after engine/tooling changes. The pinned package manager still checks package ABI identity; product builds and test evidence remain independently required.
+
+Organization-owned implementation plans are indexed in [Specs/Plans/WIP](Specs/Plans/WIP/README.md). Completed plans move to [Specs/Plans/Done](Specs/Plans/Done/README.md) under the [plan lifecycle rule](AGENTS.md#plan-lifecycle), after implementation, validation and normative documentation closeout.
 
 The normative contract is [Specs/CI.md](Specs/CI.md). Engine behavior tests use actual temporary Git histories and deterministic coordinator events:
 

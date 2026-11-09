@@ -1,0 +1,209 @@
+{
+  "observedUtc": "2026-11-09T13:03:04.7277601Z",
+  "organization": "RedSalamanders",
+  "repositories": [
+    {
+      "repository": "RedSalamanders/RedSalamander",
+      "commit": "348b44363dc126843d39ba5dfb6162afe92ac489",
+      "engine": "e32cf9f9b29f4e817decb09e1be44be7fc1a94de",
+      "dxui": {
+        "repository": "https://github.com/RedSalamanders/DxUi",
+        "commit": "4cdf1ce52c7785446698e346b8aec058ed6a9283",
+        "apiRevision": 4,
+        "targets": [
+          "DxUi"
+        ]
+      },
+      "nativePrCoverage": [],
+      "scopes": [
+        "PR",
+        "Commands",
+        "Compare",
+        "FileOps",
+        "Tooling"
+      ],
+      "requiredChecks": [
+        "checks / ci-gate",
+        "security / codeql",
+        "security / dependency-review"
+      ],
+      "requiresMergeQueue": false,
+      "strictBase": false,
+      "rulesApiAvailable": true
+    },
+    {
+      "repository": "RedSalamanders/DxUi",
+      "commit": "0d12c464638ddc41f48d521a4a598a50870117d2",
+      "engine": "570351e14d469f2b1cefa7762fc64c1c24a4adf7",
+      "dxui": null,
+      "nativePrCoverage": [],
+      "scopes": [
+        "Foundation",
+        "Embedded",
+        "Grid",
+        "Theme",
+        "Control",
+        "MenuExitLifetime",
+        "NewControls",
+        "EditorControls",
+        "TextField",
+        "MultilineText",
+        "ReadOnly",
+        "ComboBox",
+        "Tree",
+        "Tooltip",
+        "Rendering",
+        "Animation",
+        "Accessibility",
+        "WindowHost",
+        "InteractiveLease",
+        "Tooling"
+      ],
+      "requiredChecks": [
+        "checks / ci-gate",
+        "security / codeql",
+        "security / dependency-review"
+      ],
+      "requiresMergeQueue": false,
+      "strictBase": false,
+      "rulesApiAvailable": true
+    },
+    {
+      "repository": "RedSalamanders/RedPrism",
+      "commit": "4c6b17ceb6a9ebb0c59a202350d2972705de742e",
+      "engine": "19710a8aeac979a82e83bec82e8b866cee3d3deb",
+      "dxui": {
+        "repository": "https://github.com/RedSalamanders/DxUi",
+        "commit": "f2e328a0a26a18ca66bf4b2aea77bf010c9515e1",
+        "apiRevision": 4,
+        "targets": [
+          "DxUi"
+        ]
+      },
+      "nativePrCoverage": [],
+      "scopes": [
+        "Host",
+        "Document",
+        "IO",
+        "Composition",
+        "Runtime",
+        "Stress",
+        "Performance",
+        "Captures",
+        "Tooling",
+        "Format"
+      ],
+      "requiredChecks": [],
+      "requiresMergeQueue": false,
+      "strictBase": false,
+      "rulesApiAvailable": true
+    },
+    {
+      "repository": "RedSalamanders/RedTilde",
+      "commit": "a35a9c82814e079f9e1f69610bd69dedcc2aab92",
+      "engine": "570351e14d469f2b1cefa7762fc64c1c24a4adf7",
+      "dxui": {
+        "repository": "https://github.com/RedSalamanders/DxUi",
+        "commit": "21fae0dc66000b04504ba7862169533ac2943be8",
+        "apiRevision": 5,
+        "targets": [
+          "DxUi"
+        ]
+      },
+      "nativePrCoverage": [],
+      "scopes": [
+        "Storage",
+        "Settings",
+        "Recovery",
+        "Editor",
+        "Preferences",
+        "RecoveryRestart",
+        "Performance",
+        "Captures",
+        "Crash",
+        "Sanitizer",
+        "Tooling",
+        "Format"
+      ],
+      "requiredChecks": [
+        "checks / ci-gate",
+        "security / codeql",
+        "security / dependency-review"
+      ],
+      "requiresMergeQueue": false,
+      "strictBase": false,
+      "rulesApiAvailable": true
+    },
+    {
+      "repository": "RedSalamanders/RedXe",
+      "commit": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18",
+      "engine": "e32cf9f9b29f4e817decb09e1be44be7fc1a94de",
+      "dxui": {
+        "repository": "https://github.com/RedSalamanders/DxUi",
+        "commit": "f2e328a0a26a18ca66bf4b2aea77bf010c9515e1",
+        "apiRevision": 4,
+        "targets": [
+          "DxUi"
+        ]
+      },
+      "nativePrCoverage": [],
+      "scopes": [
+        "LauncherAlias",
+        "Packaging",
+        "PluginContract",
+        "AVControl",
+        "SystemData",
+        "SystemDataPhase0",
+        "StudioClock",
+        "DeskClock",
+        "Launcher",
+        "Weather",
+        "Logicon",
+        "Zoom",
+        "Settings",
+        "HostPlugin",
+        "HostSmoke",
+        "BuildProcess"
+      ],
+      "requiredChecks": [
+        "checks / ci-gate",
+        "security / codeql",
+        "security / dependency-review"
+      ],
+      "requiresMergeQueue": false,
+      "strictBase": false,
+      "rulesApiAvailable": true
+    },
+    {
+      "repository": "RedSalamanders/RedMonitor",
+      "commit": "9140b9e94406a88e5c18bef23a9f3195d7a305ae",
+      "engine": "1a42715d4f113bab0836558a05c86f70a7d78619",
+      "dxui": {
+        "repository": "https://github.com/RedSalamanders/DxUi",
+        "commit": "f2e328a0a26a18ca66bf4b2aea77bf010c9515e1",
+        "apiRevision": 4,
+        "targets": [
+          "DxUi"
+        ]
+      },
+      "nativePrCoverage": [],
+      "scopes": [],
+      "requiredChecks": [
+        "checks / ci-gate",
+        "security / codeql",
+        "security / dependency-review"
+      ],
+      "requiresMergeQueue": false,
+      "strictBase": false,
+      "rulesApiAvailable": true
+    }
+  ],
+  "note": "Source and remote configuration inventory, not native qualification.",
+  "sharedEngine": {
+    "repository": "RedSalamanders/.github",
+    "commit": "570351e14d469f2b1cefa7762fc64c1c24a4adf7",
+    "workflows": 8,
+    "engineFixtureCases": 50,
+    "nativeQualification": false
+  }
+}

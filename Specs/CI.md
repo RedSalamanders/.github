@@ -2,6 +2,8 @@
 
 Policy version: 1. Implementation and hosted acceptance are tracked separately in the organization rollout record.
 
+Organization-owned implementation work is indexed in [Plans/WIP](Plans/WIP/README.md); completed work is indexed in [Plans/Done](Plans/Done/README.md). The canonical [plan lifecycle rule](../AGENTS.md#plan-lifecycle) governs implementation/validation closeout and migration of durable requirements into this contract or the other owning specifications. WIP proposals do not change active CI policy.
+
 ## Source and input identity
 
 Every project uses the same strict manifest schema. Explicit runtime/build/test input exceptions precede reviewed prose/folder exclusions. Unknown paths are meaningful. Complete Git comparisons include both rename paths and deleted inputs. Full native input identity hashes the ordered meaningful Git tree entries, manifest and engine pin. It is cumulative; a later documentation commit cannot consume an earlier code obligation.
@@ -23,6 +25,8 @@ Persistent state lives on the project's `ci-state` branch, outside product sourc
 Admission freezes source, dependency inputs, engine policy, product version and build number. Native x64 and ARM64 Release test builds execute the project's declared normal regression suites against their exact built binaries. Required compiler-dependent tooling is a batch prerequisite. Empty discovery, disabled assertions, stale binaries, timeout, cancellation and unexpected skips fail the gate. Named negative controls must prove active Release failure detection.
 
 Both architecture branches and required prerequisites must pass before either production Release job starts. Production outputs have clean test-disabled identity. Test snapshots remain immutable. Dependency cache reuse requires compatible compiler, SDK, CRT, architecture and dependency inputs; test object reuse cannot contaminate production.
+
+The normal and explicit diagnostic workflows retain vcpkg's ABI-indexed binary packages in the repository-scoped Actions cache. Exact engine/input keys remain the preferred lookup; a fallback may supply older package archives within the same runner OS, host architecture and target platform. The pinned vcpkg restore still computes each requested package's ABI and installs only the matching entry or builds it. This fallback never restores product objects, SDK build outputs, build receipts or test results, and never changes source/dependency pins. Successful diagnostic qualification may save a newly populated exact cache key; failed qualification does not save it. Cache availability and hits do not change any qualification or production gate. See [vcpkg binary caching](https://learn.microsoft.com/en-us/vcpkg/users/binarycaching).
 
 Native production/package smoke is required on both architectures. Application ZIPs and DxUi SDK ZIPs retain source, profile, version, evidence and SHA-256 manifests. The SDK includes public headers, Release libraries, supported integration, redistributable dependencies and licenses, and must build/run an extracted-SDK consumer without the producer checkout.
 
