@@ -19,6 +19,12 @@ top-level Templates YAML files may become callers; ignored untracked templates c
 
 PR checks never compile, including compiler-dependent tooling fixtures. Classification errors fail the static gate. Formatting drift retains a patch and fails the check. An explicitly dispatched trusted formatter may commit a narrow change to the verified same-repository PR head, then explicitly dispatch fresh compiler-free checks for that exact new head. Because token pushes suppress ordinary workflow events, that dispatch also runs CodeQL with the exact pull-head ref/SHA and dependency review with the verified base/head SHAs. A trusted reporter completes each of the three separately required checks on that source; skipped, failed or cancelled security work cannot pass.
 
+DxUi's reviewed compiler-free subset additionally admits Tools/tests/Test-ScopedTesting.ps1. Its Git,
+recording-process and fixture-byte controls exercise planning before an expensive native build; they run
+with CI_NATIVE_BUILDS_DISABLED and do not compile or establish native acceptance. Simulated local children
+isolate their CI markers, while dedicated hosted controls require fresh execution and refuse local baselines.
+This command is not admitted for another project's adapter. Compiler-dependent tooling remains in native qualification.
+
 The manual writer accepts only main-targeting PRs, stages literal NUL-delimited paths, and uses a normal fast-forward push. It tolerates bounded lag from the old PR metadata head to its own new commit; another head, closed PR or changed target refuses confirmation. The artifact and publication commands expose each workflow output as a separate key/value line so upload/promotion cannot silently lose its archive path or version.
 
 Native child commands always capture stdout/stderr, including on windowless Windows hosts. Requested console diagnostics forward both captured streams after completion with publication credentials masked; the actual exit code and raw evidence remain intact. Timeouts fail and terminate only the process tree launched by that invocation.
