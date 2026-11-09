@@ -1087,7 +1087,7 @@ Invoke-Case 'Pin migration removes only the generated SDK publisher and preserve
     Write-FixtureFile $fixtureEngine 'Templates/unreviewed.yml' 'name: unreviewed'
     $result=Invoke-CiProcess $hostPath @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure
     Write-FixtureFile $runRoot 'untracked-template-refusal-result.json' ($result|ConvertTo-Json -Depth 6)
-    $plainError=[regex]::Replace($result.stderr,'\x1B\[[0-?]*[ -/]*[@-~]','') -replace '\s+',' '
+    $plainError=[regex]::Replace($result.stderr,'\x1B\[[0-?]*[ -/]*[@-~]','') -replace '(?m)^\s*\|\s*','' -replace '\s+',' '
     Assert-True ($result.exitCode -ne 0 -and $plainError.Contains('mutable development checkout')) ("Untracked engine did not refuse before mutation: "+$result.stderr)
     Assert-Equal $oldManifest ([IO.File]::ReadAllText((Join-Path $root '.ci/project.json')))
     Assert-Equal $originalCi ([IO.File]::ReadAllText((Join-Path $root '.github/workflows/ci.yml')))
