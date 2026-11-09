@@ -3,7 +3,7 @@
 Status: **ACTIVE — implementation in progress across the organization; first changes locally validated, native/hosted rollout and overall acceleration targets remain open.**
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 5, organization implementation authorized on 2026-11-09.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 6, organization implementation authorized on 2026-11-09.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -277,14 +277,16 @@ The [implementation evidence record](../../TestRuns/I61_2026-11-09/README.md) ow
 | Slice | Current state | Implemented and remaining |
 |---|---|---|
 | S0 | IN_PROGRESS | Refreshed all seven repositories and six client source/pin/scope/effective-main-rule inventories. Hosted native candidate checks and merge-queue/base requirements are absent in the observed rules. Full warm/cold cost accounting and pilot acceptance remain open. |
-| S1 | LOCALLY_VALIDATED (transport subpart) | Canonical create-only summary reference, early schema readiness, strict final identity/count checks, adapter consumption and isolated negative controls implemented. Native hosted x64/ARM64 handoff acceptance remains open. |
+| S1 | IN_PROGRESS | RedSalamander #209 merged as c883bbf55aad0b56eef8e600349adeb80b6d9cf5. Canonical create-only summary reference, early schema readiness, strict final identity/count checks, adapter consumption and isolated negative controls are integrated. The first main workflow and its retry failed at GitHub startup without native jobs. Fresh manual campaign 42674161785 has admitted the same source; native x64/ARM64 handoff acceptance remains open until its actual outcomes are inspected. |
 | S2 | IN_PROGRESS | DxUi PR #230 integrated evaluated target-union routing and coverage-bound receipts. Cold x64 Release built exactly library/Foundation/Embedded with zero warnings/errors; both native suites passed, Embedded observed 583,358 checks. Default selected build and public/direct Foundation execution passed; actual Full and added-Grid requests refused before native work. Full final tooling passed. Other projects/profiles and overall elapsed acceptance remain open. |
-| S3 | IN_PROGRESS | Shared normal/manual vcpkg ABI-cache fallback integrated through engine PR #19 and five client PRs. RedMonitor, RedTilde, RedXe and RedPrism passed both first-wave native regression and production roles. Shared workflow-token SDK download authorization was confirmed by manual run 42641065137 after engine PR #21; this is access capability only. Engine PR #22 merged the immutable SDK storage/schema foundation after 12 local controls and Windows/Ubuntu hosted acceptance. Native identity acquisition, producer/distribution, local candidate seam and all-consumer acceptance remain open. No consumer uses a cached SDK yet. |
+| S3 | IN_PROGRESS | Shared vcpkg ABI-cache fallback and immutable SDK storage/schema foundation are integrated. Engine #25 and DxUi #232 merged current-run/attempt Release library input handoff with full v2 source/profile/toolchain and library/compiler-PDB verification, source fallback, and no imported test verdict. A local x64 observation measured 159,241ms source build versus 65,551ms combined export/import; extracted native SDK smoke and all negative controls passed. DxUi #233 merged byte-equivalent metadata queries with 12 real profile comparisons and complete tooling validation. Separate pinned-source producer tooling has locally built and packaged the oldest API4 pin without advancing source/dependencies; it is not yet delivered. Cross-repository identity acquisition, authenticated distribution, local candidate seam and all-consumer acceptance remain open. No application consumes a cached SDK yet. |
 | S4 | IN_PROGRESS | RedSalamander immutable pattern compilation cache measured with identical decisions. Rejected hashing and sibling pattern-cache experiments were removed. DxUi PR #230 integrated profile iteration baselines with 43 scoped and 43 build-policy cases and complete tooling validation passing. RedTilde PR #100 integrated old-baseline failure/interruption revocation and profile leases (57 cases/all validators passed); RedPrism PR #11 merged the same controls after 30 scoped and 76 ARM refusal controls, complete validation and hosted checks passed. Dependency-scoped native-result reuse remains open. |
 | S5 | IN_PROGRESS | DxUi scoped parallel option/identity and exact local filter/watchdog preflight reuse integrated in PR #229. Same-binary x64 Release serial/parallel-2 runs passed the same 1,726 named cases and 19 suites with zero skips; one pair improved elapsed time by 24.1%. Local prerequisite reuse measured about 1s versus 23s fresh in two alternating pairs. Hosted architecture acceptance remains open and hosted scheduling remains serial. |
-| S6A | IN_PROGRESS | Root valid Changes-fragment mapping is locally validated in PR #209, awaiting Entire review/integration; a separate successor worktree preserves that reviewed head. RedXe #78 merged owned-prose classification and runtime Markdown byte identity after 35 scoped cases/full tooling. RedMonitor #40 merged its prose-only affected route after full tooling and 10 actual public-wrapper controls. RedTilde #101 merged the shipped-example ownership correction after 58 scoped cases/full validation. Engine #23/#24 and DxUi #231, RedXe #79, RedPrism #12, RedTilde #101 and RedMonitor #41 deployed matching 904a8cb engine pins/callers after hosted compiler-free checks passed. Exact source-bound native acceptance is retained separately; root integration remains open. |
+| S6A | IN_PROGRESS | Root valid Changes-fragment mapping merged in #209; its coordinated engine/prose follow-up remains prepared separately. RedXe #78, RedMonitor #40 and RedTilde #101 integrated owned-prose routing while preserving runtime Markdown/example bytes. Engine #23/#24 and five clients deployed matching 904a8cb pins/callers; DxUi subsequently adopted e3c637b in #232. RedXe, RedTilde and RedMonitor adoption campaigns passed both native roles/architectures. RedMonitor #33 merged with identical native inputs and preserved its previous successful outcome without rebuilding. RedPrism's genuine ARM64 timeout remains red; a prose commit must preserve that outcome. |
 | S6B | NOT_STARTED | Case-level narrowing and broader historical/seeded failure comparison remain required. |
-| S7–S10 | NOT_STARTED | Trusted required candidate gate, main adoption, cadence acceptance and final rollout/closeout remain required. Local and main native obligations have not been removed. |
+| S7 | NOT_STARTED | Trusted required candidate native gate and branch-policy enforcement remain required. Local native obligations have not been removed. |
+| S8 | IN_PROGRESS | Same-run DxUi Release library inputs can avoid duplicate compilation while preserving actual regression and production SDK smoke. RedMonitor #33 demonstrates existing exact-input main outcome reuse. Adoption of trusted pre-merge candidate test results remains unimplemented. |
+| S9–S10 | NOT_STARTED | Cadence acceptance, controlled organization-wide speed/detection measurements and final rollout/closeout remain required. |
 
 Operational corrections during execution: generated `.ci-engine` checkouts in DxUi, RedTilde and RedXe were stale relative to their already-consistent source pins; restored those generated checkouts to their existing exact pins and reran the scoped checks. No producer dependency pin was advanced to hide a fixture failure.
 
@@ -300,14 +302,17 @@ inherited hosted CI environment flags. PR #231 isolates only the fixture child's
 an explicit hosted refusal case; real hosted execution still cannot adopt or publish local iteration baselines.
 All 43 scoped controls passed with CI/GITHUB_ACTIONS/compiler-free flags enabled, complete tooling passed and
 the exact static adapter now executes that compiler-free suite before native work. Engine #24 admits only this
-reviewed DxUi command. The current 0cc1ac0 campaign is pending; neither earlier failed campaign is relabelled.
+reviewed DxUi command. Both native regression architectures passed at 0cc1ac0 in run 42659996089;
+GitHub subsequently reported an internal server error and never started production. The campaign remains
+failed, with production qualification unproved; neither earlier failed campaign is relabelled.
 
-The next S3/S8 subpart is a same-run/attempt DxUi library/PDB input handoff, implemented in the current engine
-and DxUi branches. It binds complete canonical v2 inputs and exact bytes, cannot grant Full/test results,
-and retains source fallback and all extracted-SDK gates. Eleven synthetic product controls, actual evaluated
-x64 Release profile admission, 53 shared engine controls and workflow syntax checks pass locally. Native
-producer/transfer/package timings and x64/ARM64 hosted acceptance remain required before enabling or claiming
-savings. This does not yet supply pinned SDKs to any of the five product consumers.
+The same-run/attempt DxUi library/PDB input handoff merged in engine #25 and DxUi #232. It binds complete
+canonical v2 inputs and exact bytes, cannot grant Full/test results, and retains source fallback and every
+extracted-SDK gate. Eleven synthetic product controls, actual x64 producer/transfer/package execution,
+53 shared engine controls and all workflow syntax checks passed. Source-bound timings and limitations live
+in the DxUi measurement record. Final main 63ffc056151095e1776fab3a0fea6f22cb709e17 did not start native jobs
+because of another GitHub internal error; both hosted architectures remain required. This does not yet
+supply pinned SDKs to any of the five product consumers.
 
 S3 acquisition facts refreshed after the access probe: the five consumers currently use three distinct SDK pins:
 RedSalamander 4cdf1ce52c7785446698e346b8aec058ed6a9283 (API 4), RedXe/RedPrism/RedMonitor
