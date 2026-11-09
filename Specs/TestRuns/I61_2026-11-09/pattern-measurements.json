@@ -1,0 +1,866 @@
+[
+  {
+    "repository": "RedSalamander",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 1426.193,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 384.3821,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 310.4924,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 1306.5355,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 1175.0493,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 276.1076,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 278.7474,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 1153.6229,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 1190.3304,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 315.4897,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 305.1264,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 1193.1873,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 1167.161,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 295.8366,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 268.2964,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "RedSalamander",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 1255.9002,
+    "matches": 452,
+    "comparisons": 10248,
+    "source": "348b44363dc126843d39ba5dfb6162afe92ac489"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 355.6234,
+    "matches": 176,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 352.4324,
+    "matches": 176,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 280.5154,
+    "matches": 176,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 282.5961,
+    "matches": 176,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 284.4346,
+    "matches": 176,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 265.5129,
+    "matches": 176,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 263.8663,
+    "matches": 176,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 337.6737,
+    "matches": 176,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 285.7561,
+    "matches": 175,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 276.6837,
+    "matches": 175,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 293.4517,
+    "matches": 175,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 277.7345,
+    "matches": 175,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 291.8489,
+    "matches": 175,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 339.9643,
+    "matches": 175,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 278.3866,
+    "matches": 175,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "DxUi",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 284.5567,
+    "matches": 175,
+    "comparisons": 10080,
+    "source": "0d12c464638ddc41f48d521a4a598a50870117d2"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 132.8699,
+    "matches": 355,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 149.6128,
+    "matches": 355,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 121.7112,
+    "matches": 355,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 134.1631,
+    "matches": 355,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 119.9134,
+    "matches": 355,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 117.7163,
+    "matches": 355,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 125.8696,
+    "matches": 355,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 140.487,
+    "matches": 355,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 138.3826,
+    "matches": 354,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 147.5583,
+    "matches": 354,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 125.4597,
+    "matches": 354,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 120.2206,
+    "matches": 354,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 123.8296,
+    "matches": 354,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 128.8646,
+    "matches": 354,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 120.2324,
+    "matches": 354,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedPrism",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 151.304,
+    "matches": 354,
+    "comparisons": 5040,
+    "source": "4c6b17ceb6a9ebb0c59a202350d2972705de742e"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 231.1204,
+    "matches": 267,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 230.1058,
+    "matches": 267,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 232.7619,
+    "matches": 267,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 254.8755,
+    "matches": 267,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 230.9569,
+    "matches": 267,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 225.6877,
+    "matches": 267,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 244.9525,
+    "matches": 267,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 228.7117,
+    "matches": 267,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 241.2844,
+    "matches": 266,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 258.5872,
+    "matches": 266,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 223.1504,
+    "matches": 266,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 226.5906,
+    "matches": 266,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 247.0452,
+    "matches": 266,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 239.4812,
+    "matches": 266,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 224.0775,
+    "matches": 266,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedTilde",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 232.2189,
+    "matches": 266,
+    "comparisons": 9072,
+    "source": "a35a9c82814e079f9e1f69610bd69dedcc2aab92"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 177.0138,
+    "matches": 204,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 193.5571,
+    "matches": 204,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 175.1539,
+    "matches": 204,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 171.3841,
+    "matches": 204,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 171.5759,
+    "matches": 204,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 181.3786,
+    "matches": 204,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 193.5124,
+    "matches": 204,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 174.0494,
+    "matches": 204,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 175.2764,
+    "matches": 203,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 169.7855,
+    "matches": 203,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 194.4356,
+    "matches": 203,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 192.0372,
+    "matches": 203,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 195.9469,
+    "matches": 203,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 171.5739,
+    "matches": 203,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 173.2673,
+    "matches": 203,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedXe",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 207.8662,
+    "matches": 203,
+    "comparisons": 6720,
+    "source": "ce3f62b773bb6b83b01b9fdec71f8a6b69f21d18"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 39.936,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 38.9908,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 34.8517,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 46.0287,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 45.4287,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 34.524,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "en-US",
+    "kind": "after",
+    "elapsedMs": 35.1249,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "en-US",
+    "kind": "before",
+    "elapsedMs": 36.4796,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 41.4035,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 34.7314,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 47.4673,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 63.3252,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 42.0804,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 35.0209,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "tr-TR",
+    "kind": "after",
+    "elapsedMs": 36.1982,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  },
+  {
+    "repository": "RedSalamanders.CI",
+    "culture": "tr-TR",
+    "kind": "before",
+    "elapsedMs": 39.7639,
+    "matches": 79,
+    "comparisons": 1430,
+    "source": "570351e14d469f2b1cefa7762fc64c1c24a4adf7"
+  }
+]

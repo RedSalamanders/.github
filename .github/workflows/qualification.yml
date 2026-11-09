@@ -73,6 +73,14 @@ jobs:
           $batch.runId = $env:GITHUB_RUN_ID
           New-Item -ItemType Directory -Path .build/ci -Force | Out-Null
           $batch | ConvertTo-Json -Depth 15 | Set-Content -LiteralPath .build/ci/manual.json -Encoding utf8
+      - name: Restore ABI-indexed dependency packages
+        id: deps
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/ci/vcpkg-cache
+          key: ci-deps-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ inputs.engine_ref }}-${{ hashFiles('.ci/project.json', 'Build/**', 'Tools/**', '*.ps1', '**/*.props', '**/*.targets', '**/vcpkg*.json', '**/*lock.json', '.github/actions/setup-msvc/**') }}
+          restore-keys: |
+            ci-deps-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-
       - name: Build and execute the selected native diagnostic profile
         id: qualification
         shell: pwsh
@@ -82,9 +90,16 @@ jobs:
           CI_QUALIFICATION_SCOPE: ${{ inputs.scope }}
           CI_PLATFORM: ${{ matrix.platform }}
           CI: 'true'
+          VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.build/ci/vcpkg-cache,readwrite
         run: |
           $manifest = Get-Content .ci/project.json -Raw | ConvertFrom-Json
           & (Join-Path $PWD $manifest.adapter) -Phase Qualification -Configuration $env:CI_CONFIGURATION -QualificationScope $env:CI_QUALIFICATION_SCOPE -Platform $env:CI_PLATFORM -EngineRoot (Join-Path $PWD '.ci-engine') -Descriptor .build/ci/manual.json
+      - name: Save dependency packages after successful diagnostic qualification
+        if: steps.qualification.outcome == 'success' && steps.deps.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/ci/vcpkg-cache
+          key: ${{ steps.deps.outputs.cache-primary-key }}
       - if: always() && steps.qualification.outputs.evidence_directory != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
