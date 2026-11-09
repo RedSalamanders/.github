@@ -1318,7 +1318,7 @@ Invoke-Case 'SDK compilation checks the actual live reader handle across process
     try{
         Assert-CiSdkConsumerLease -ProjectRoot $root -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release
         $actual=Invoke-CiProcess (Get-Process -Id $PID).Path $arguments $root -TimeoutSeconds 30 -AllowFailure
-        Assert-Equal 0 $actual.exitCode
+        Assert-True ($actual.exitCode -eq 0) ('SDK reader child refused: '+$actual.stderr+' '+$actual.stdout)
         foreach($wrong in @(@($payload,'ARM64','Release'),@($payload,'x64','Debug'),@((Join-Path $root '.build/other'),'x64','Release'))){
             Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $root -LeasePath $witness.Path -SdkRoot $wrong[0] -Platform $wrong[1] -Configuration $wrong[2]}
         }
