@@ -73,7 +73,7 @@ function New-Fixture([string]$Name) {
     $manifest = [ordered]@{ schemaVersion = 1; policyVersion = '1'; repository = 'RedSalamanders/RedMonitor';
         engine = @{ repository = 'RedSalamanders/.github'; ref = ('a' * 40) }; kind = 'application';
         adapter = 'Tools/Invoke-ProjectCi.ps1'; include = @('Specs/runtime.json', 'Tests/fixtures/**');
-        exclude = @('**/*.md', 'docs/**', 'Specs/Plans/**', 'Changes/**'); formatRoots = @('src');
+        exclude = @('README.md','AGENTS.md','CLAUDE.md','CHANGELOG.md','Specs/**/*.md','docs/**','Specs/Plans/**','Changes/**'); formatRoots = @('src');
         versionBase = '0.1'; winget = @{ identifier = 'RedSalamanders.RedMonitor'; executable = 'RedMonitor.exe'; alias = 'redmonitor' } }
     Write-FixtureFile $root '.ci/project.json' ($manifest | ConvertTo-Json -Depth 8)
     Write-FixtureFile $root 'src/main.cpp' 'int fixture() { return 0; }'
@@ -97,6 +97,21 @@ Invoke-Case 'Prose changes create zero native obligation and retain native input
     $after = New-CiInputDescriptor $root
     Assert-Equal $before.nativeDigest $after.nativeDigest
     Assert-True (-not (Get-CiChangeDecision $root $before.commit).meaningful)
+}
+Invoke-Case 'Current conformance refuses extension-wide Markdown exclusions without invalidating historical manifest reads' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
+    $root=New-Fixture 'markdown-conformance'
+    $project=Read-CiProject $root
+    $project.exclude=@('**/*.md','docs/**')
+    Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 8)
+    $legacy=Save-Fixture $root 'Historical broad exclusion'
+    Assert-Equal '**/*.md' (Read-CiProject $root -Ref $legacy).exclude[0]
+    foreach($pattern in @('**/*.md','**/*.MD','*.md','**.md','*/*.md')){
+        $project.exclude=@($pattern)
+        $message=''
+        try{Test-CiProjectConfiguration @{root=$root;project=$project;development=$false}}catch{$message=$_.Exception.Message}
+        Assert-True ($message.Contains('extension-wide exclusion')) "Unexpected conformance result: $message"
+    }
 }
 Invoke-Case 'A code merge followed by docs still carries the cumulative code obligation' {
     $root = New-Fixture 'cumulative'
@@ -1041,6 +1056,7 @@ Invoke-Case 'Pin migration removes only the generated SDK publisher and preserve
         $root=New-Fixture ('pin-migration-'+$kind)
         $project=Read-CiProject $root
         if($kind -cne 'application'){$project.repository='RedSalamanders/DxUi';$project.kind='sdk';$project.winget=$null}
+        $project.exclude=@('**/*.md','docs/**','Specs/Plans/**','Changes/**')
         Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 12)
         $operations=if($kind -ceq 'application'){'Prepare, Release, Winget'}else{'Prepare, Release'}
         $oldCaller=[IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/publish.yml')).Replace('@ENGINE@',$project.engine.ref).Replace('@OPERATIONS@',$operations)
@@ -1056,10 +1072,30 @@ Invoke-Case 'Pin migration removes only the generated SDK publisher and preserve
         }else{
             Assert-Equal 0 $result.exitCode
             Assert-Equal $engineCommit (Read-CiProject $root).engine.ref
+            $migrated=Read-CiProject $root
+            Assert-True ('**/*.md' -cnotin $migrated.exclude)
+            foreach($path in @('Tests/Data/README.md','src/resource.md','Unknown/native.md')){Assert-True (Get-CiPathDisposition $path $migrated).native}
+            Assert-True (-not (Get-CiPathDisposition 'README.md' $migrated).native)
             Assert-Equal ($kind -ceq 'application') (Test-Path -LiteralPath (Join-Path $root '.github/workflows/publish.yml'))
             Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/qualify.yml'))
         }
     }
+    $root=New-Fixture 'pin-migration-untracked-engine'
+    $originalCi=[IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/ci.yml')).Replace('@ENGINE@',('a'*40))
+    Write-FixtureFile $root '.github/workflows/ci.yml' $originalCi
+    $oldManifest=[IO.File]::ReadAllText((Join-Path $root '.ci/project.json'))
+    Write-FixtureFile $fixtureEngine 'Templates/unreviewed.yml' 'name: unreviewed'
+    $result=Invoke-CiProcess $hostPath @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure
+    Assert-True ($result.exitCode -ne 0 -and $result.stderr.Contains('mutable development checkout'))
+    Assert-Equal $oldManifest ([IO.File]::ReadAllText((Join-Path $root '.ci/project.json')))
+    Assert-Equal $originalCi ([IO.File]::ReadAllText((Join-Path $root '.github/workflows/ci.yml')))
+    Assert-True (-not(Test-Path -LiteralPath (Join-Path $root '.github/workflows/qualify.yml')))
+    # An ignored untracked template is not a committed workflow input and is never executed/copied.
+    Write-FixtureFile $fixtureEngine '.git/info/exclude' "Templates/unreviewed.yml`n"
+    $result=Invoke-CiProcess $hostPath @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure
+    Write-FixtureFile $runRoot 'ignored-template-migration-result.json' ($result|ConvertTo-Json -Depth 6)
+    Assert-True ($result.exitCode -eq 0) ("Ignored template control failed: "+$result.stderr)
+    Assert-True (-not(Test-Path -LiteralPath (Join-Path $root '.github/workflows/unreviewed.yml')))
 }
 Invoke-Case 'Sandbox evidence and workspace logs retain separate artifact roots' {
     function Assert-IsolatedEvidence([string]$Text,[string]$Step) {

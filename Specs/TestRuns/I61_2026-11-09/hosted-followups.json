@@ -1,0 +1,4761 @@
+{
+  "schemaVersion": 1,
+  "observedUtc": "2026-11-09T16:02:26.8013685Z",
+  "kind": "point-in-time hosted phase snapshot; no controlled speedup inference",
+  "runs": [
+    {
+      "repository": "RedSalamanders/RedMonitor",
+      "runId": 42626422908,
+      "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42626422908",
+      "source": "b6814c1264dd5b1911c8c0d13281171bdf1b8c8c",
+      "status": "completed",
+      "conclusion": "success",
+      "createdUtc": "2026-11-09T13:32:51Z",
+      "startedUtc": "2026-11-09T13:32:51Z",
+      "updatedUtc": "2026-11-09T14:07:31Z",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "id": 129191287184,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:32:56Z",
+          "completedUtc": "2026-11-09T13:33:15Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:57Z",
+              "completedUtc": "2026-11-09T13:32:58Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:32:58Z",
+              "completedUtc": "2026-11-09T13:32:58Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:58Z",
+              "completedUtc": "2026-11-09T13:32:59Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:59Z",
+              "completedUtc": "2026-11-09T13:33:00Z"
+            },
+            {
+              "name": "Run $commit = (git rev-parse HEAD).Trim()",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:00Z",
+              "completedUtc": "2026-11-09T13:33:11Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:11Z",
+              "completedUtc": "2026-11-09T13:33:12Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:12Z",
+              "completedUtc": "2026-11-09T13:33:12Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:12Z",
+              "completedUtc": "2026-11-09T13:33:13Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:13Z",
+              "completedUtc": "2026-11-09T13:33:13Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "id": 129191463233,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:33:18Z",
+          "completedUtc": "2026-11-09T13:46:03Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:19Z",
+              "completedUtc": "2026-11-09T13:33:20Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:20Z",
+              "completedUtc": "2026-11-09T13:33:21Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:21Z",
+              "completedUtc": "2026-11-09T13:33:28Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:28Z",
+              "completedUtc": "2026-11-09T13:33:33Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:33Z",
+              "completedUtc": "2026-11-09T13:33:35Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:35Z",
+              "completedUtc": "2026-11-09T13:38:24Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:38:24Z",
+              "completedUtc": "2026-11-09T13:38:24Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:38:24Z",
+              "completedUtc": "2026-11-09T13:38:24Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:38:24Z",
+              "completedUtc": "2026-11-09T13:38:26Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:38:26Z",
+              "completedUtc": "2026-11-09T13:44:37Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:44:37Z",
+              "completedUtc": "2026-11-09T13:44:38Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:44:38Z",
+              "completedUtc": "2026-11-09T13:44:38Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:44:38Z",
+              "completedUtc": "2026-11-09T13:45:33Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:45:33Z",
+              "completedUtc": "2026-11-09T13:45:34Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:45:34Z",
+              "completedUtc": "2026-11-09T13:45:34Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:45:34Z",
+              "completedUtc": "2026-11-09T13:45:45Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:45:45Z",
+              "completedUtc": "2026-11-09T13:45:56Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:45:56Z",
+              "completedUtc": "2026-11-09T13:45:58Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:45:58Z",
+              "completedUtc": "2026-11-09T13:45:59Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:45:59Z",
+              "completedUtc": "2026-11-09T13:46:00Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "id": 129191463388,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:33:19Z",
+          "completedUtc": "2026-11-09T13:51:01Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:20Z",
+              "completedUtc": "2026-11-09T13:33:24Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:24Z",
+              "completedUtc": "2026-11-09T13:33:25Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:25Z",
+              "completedUtc": "2026-11-09T13:33:37Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:37Z",
+              "completedUtc": "2026-11-09T13:33:47Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:47Z",
+              "completedUtc": "2026-11-09T13:33:49Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:49Z",
+              "completedUtc": "2026-11-09T13:42:23Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:42:23Z",
+              "completedUtc": "2026-11-09T13:42:23Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:42:23Z",
+              "completedUtc": "2026-11-09T13:42:23Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:42:23Z",
+              "completedUtc": "2026-11-09T13:42:26Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:42:26Z",
+              "completedUtc": "2026-11-09T13:50:11Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:11Z",
+              "completedUtc": "2026-11-09T13:50:13Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:50:13Z",
+              "completedUtc": "2026-11-09T13:50:13Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:13Z",
+              "completedUtc": "2026-11-09T13:50:18Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:18Z",
+              "completedUtc": "2026-11-09T13:50:19Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:50:19Z",
+              "completedUtc": "2026-11-09T13:50:19Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:19Z",
+              "completedUtc": "2026-11-09T13:50:32Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:32Z",
+              "completedUtc": "2026-11-09T13:50:44Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:44Z",
+              "completedUtc": "2026-11-09T13:50:48Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:48Z",
+              "completedUtc": "2026-11-09T13:50:52Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:52Z",
+              "completedUtc": "2026-11-09T13:50:53Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / test-gate",
+          "id": 129200383925,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:51:04Z",
+          "completedUtc": "2026-11-09T13:51:16Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:05Z",
+              "completedUtc": "2026-11-09T13:51:06Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:51:06Z",
+              "completedUtc": "2026-11-09T13:51:06Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:06Z",
+              "completedUtc": "2026-11-09T13:51:07Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:07Z",
+              "completedUtc": "2026-11-09T13:51:08Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:08Z",
+              "completedUtc": "2026-11-09T13:51:09Z"
+            },
+            {
+              "name": "Run ./.ci-engine/Tools/Test-Qualification.ps1 -Directory evidence -Phase Regression",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:09Z",
+              "completedUtc": "2026-11-09T13:51:13Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:13Z",
+              "completedUtc": "2026-11-09T13:51:13Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:13Z",
+              "completedUtc": "2026-11-09T13:51:13Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "id": 129200508347,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:51:19Z",
+          "completedUtc": "2026-11-09T14:07:10Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:20Z",
+              "completedUtc": "2026-11-09T13:51:22Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:22Z",
+              "completedUtc": "2026-11-09T13:51:23Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:23Z",
+              "completedUtc": "2026-11-09T13:51:35Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:35Z",
+              "completedUtc": "2026-11-09T13:51:46Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:46Z",
+              "completedUtc": "2026-11-09T13:51:47Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:47Z",
+              "completedUtc": "2026-11-09T13:59:55Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:59:55Z",
+              "completedUtc": "2026-11-09T13:59:55Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:59:55Z",
+              "completedUtc": "2026-11-09T13:59:55Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:59:55Z",
+              "completedUtc": "2026-11-09T13:59:58Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:59:58Z",
+              "completedUtc": "2026-11-09T13:59:58Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:59:58Z",
+              "completedUtc": "2026-11-09T13:59:58Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:59:58Z",
+              "completedUtc": "2026-11-09T14:06:48Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:48Z",
+              "completedUtc": "2026-11-09T14:06:50Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:50Z",
+              "completedUtc": "2026-11-09T14:06:51Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:51Z",
+              "completedUtc": "2026-11-09T14:06:55Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:55Z",
+              "completedUtc": "2026-11-09T14:06:59Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:59Z",
+              "completedUtc": "2026-11-09T14:06:59Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "id": 129200508521,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:51:19Z",
+          "completedUtc": "2026-11-09T14:02:37Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:20Z",
+              "completedUtc": "2026-11-09T13:51:21Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:21Z",
+              "completedUtc": "2026-11-09T13:51:22Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:22Z",
+              "completedUtc": "2026-11-09T13:51:30Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:30Z",
+              "completedUtc": "2026-11-09T13:51:34Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:34Z",
+              "completedUtc": "2026-11-09T13:51:35Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:35Z",
+              "completedUtc": "2026-11-09T13:56:39Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:56:39Z",
+              "completedUtc": "2026-11-09T13:56:39Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:56:39Z",
+              "completedUtc": "2026-11-09T13:56:39Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:56:39Z",
+              "completedUtc": "2026-11-09T13:56:41Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:56:41Z",
+              "completedUtc": "2026-11-09T13:56:41Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:56:41Z",
+              "completedUtc": "2026-11-09T13:56:41Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:56:41Z",
+              "completedUtc": "2026-11-09T14:02:27Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:02:27Z",
+              "completedUtc": "2026-11-09T14:02:30Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:02:30Z",
+              "completedUtc": "2026-11-09T14:02:30Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:02:30Z",
+              "completedUtc": "2026-11-09T14:02:32Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:02:32Z",
+              "completedUtc": "2026-11-09T14:02:33Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:02:33Z",
+              "completedUtc": "2026-11-09T14:02:34Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / complete",
+          "id": 129208780668,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:07:13Z",
+          "completedUtc": "2026-11-09T14:07:30Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:13Z",
+              "completedUtc": "2026-11-09T14:07:14Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:07:14Z",
+              "completedUtc": "2026-11-09T14:07:14Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:14Z",
+              "completedUtc": "2026-11-09T14:07:15Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:15Z",
+              "completedUtc": "2026-11-09T14:07:16Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:16Z",
+              "completedUtc": "2026-11-09T14:07:17Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:17Z",
+              "completedUtc": "2026-11-09T14:07:17Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:17Z",
+              "completedUtc": "2026-11-09T14:07:18Z"
+            },
+            {
+              "name": "Verify retained qualification, then record its actual outcome",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:18Z",
+              "completedUtc": "2026-11-09T14:07:28Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:28Z",
+              "completedUtc": "2026-11-09T14:07:29Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:29Z",
+              "completedUtc": "2026-11-09T14:07:29Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:29Z",
+              "completedUtc": "2026-11-09T14:07:29Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedXe",
+      "runId": 42626412604,
+      "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42626412604",
+      "source": "5cf66a545be54a5a3aeaddddd8b46453439a504a",
+      "status": "completed",
+      "conclusion": "success",
+      "createdUtc": "2026-11-09T13:32:47Z",
+      "startedUtc": "2026-11-09T13:32:47Z",
+      "updatedUtc": "2026-11-09T14:28:03Z",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "id": 129191251299,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:32:52Z",
+          "completedUtc": "2026-11-09T13:33:13Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:53Z",
+              "completedUtc": "2026-11-09T13:32:53Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:32:53Z",
+              "completedUtc": "2026-11-09T13:32:53Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:53Z",
+              "completedUtc": "2026-11-09T13:32:55Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:55Z",
+              "completedUtc": "2026-11-09T13:32:56Z"
+            },
+            {
+              "name": "Run $commit = (git rev-parse HEAD).Trim()",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:56Z",
+              "completedUtc": "2026-11-09T13:33:09Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:09Z",
+              "completedUtc": "2026-11-09T13:33:11Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:11Z",
+              "completedUtc": "2026-11-09T13:33:11Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:11Z",
+              "completedUtc": "2026-11-09T13:33:11Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:11Z",
+              "completedUtc": "2026-11-09T13:33:11Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "id": 129191446031,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:33:16Z",
+          "completedUtc": "2026-11-09T14:04:52Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:17Z",
+              "completedUtc": "2026-11-09T13:33:19Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:19Z",
+              "completedUtc": "2026-11-09T13:33:20Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:20Z",
+              "completedUtc": "2026-11-09T13:33:35Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:35Z",
+              "completedUtc": "2026-11-09T13:33:46Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:46Z",
+              "completedUtc": "2026-11-09T13:33:47Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:47Z",
+              "completedUtc": "2026-11-09T13:42:12Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:42:12Z",
+              "completedUtc": "2026-11-09T13:42:12Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:42:12Z",
+              "completedUtc": "2026-11-09T13:42:12Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:42:12Z",
+              "completedUtc": "2026-11-09T13:42:16Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:42:16Z",
+              "completedUtc": "2026-11-09T13:54:15Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:54:15Z",
+              "completedUtc": "2026-11-09T13:54:18Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:54:18Z",
+              "completedUtc": "2026-11-09T13:54:18Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:54:18Z",
+              "completedUtc": "2026-11-09T14:04:27Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:04:27Z",
+              "completedUtc": "2026-11-09T14:04:29Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:04:29Z",
+              "completedUtc": "2026-11-09T14:04:29Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:04:29Z",
+              "completedUtc": "2026-11-09T14:04:31Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:04:31Z",
+              "completedUtc": "2026-11-09T14:04:34Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:04:34Z",
+              "completedUtc": "2026-11-09T14:04:38Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:04:38Z",
+              "completedUtc": "2026-11-09T14:04:42Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:04:42Z",
+              "completedUtc": "2026-11-09T14:04:42Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "id": 129191446118,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:33:16Z",
+          "completedUtc": "2026-11-09T14:08:09Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:17Z",
+              "completedUtc": "2026-11-09T13:33:19Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:19Z",
+              "completedUtc": "2026-11-09T13:33:20Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:20Z",
+              "completedUtc": "2026-11-09T13:33:28Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:28Z",
+              "completedUtc": "2026-11-09T13:33:34Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:34Z",
+              "completedUtc": "2026-11-09T13:33:35Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:35Z",
+              "completedUtc": "2026-11-09T13:38:11Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:38:11Z",
+              "completedUtc": "2026-11-09T13:38:11Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:38:11Z",
+              "completedUtc": "2026-11-09T13:38:11Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:38:11Z",
+              "completedUtc": "2026-11-09T13:38:14Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:38:14Z",
+              "completedUtc": "2026-11-09T13:51:02Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:02Z",
+              "completedUtc": "2026-11-09T13:51:04Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:51:04Z",
+              "completedUtc": "2026-11-09T13:51:04Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:51:04Z",
+              "completedUtc": "2026-11-09T14:07:54Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:54Z",
+              "completedUtc": "2026-11-09T14:07:56Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:07:56Z",
+              "completedUtc": "2026-11-09T14:07:56Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:56Z",
+              "completedUtc": "2026-11-09T14:07:58Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:58Z",
+              "completedUtc": "2026-11-09T14:08:01Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:01Z",
+              "completedUtc": "2026-11-09T14:08:03Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:03Z",
+              "completedUtc": "2026-11-09T14:08:05Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:05Z",
+              "completedUtc": "2026-11-09T14:08:05Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / test-gate",
+          "id": 129209319184,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:08:12Z",
+          "completedUtc": "2026-11-09T14:08:24Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:12Z",
+              "completedUtc": "2026-11-09T14:08:13Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:08:13Z",
+              "completedUtc": "2026-11-09T14:08:13Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:13Z",
+              "completedUtc": "2026-11-09T14:08:14Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:14Z",
+              "completedUtc": "2026-11-09T14:08:16Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:16Z",
+              "completedUtc": "2026-11-09T14:08:17Z"
+            },
+            {
+              "name": "Run ./.ci-engine/Tools/Test-Qualification.ps1 -Directory evidence -Phase Regression",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:17Z",
+              "completedUtc": "2026-11-09T14:08:22Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:22Z",
+              "completedUtc": "2026-11-09T14:08:22Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:22Z",
+              "completedUtc": "2026-11-09T14:08:22Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "id": 129209460228,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:08:27Z",
+          "completedUtc": "2026-11-09T14:27:35Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:28Z",
+              "completedUtc": "2026-11-09T14:08:30Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:30Z",
+              "completedUtc": "2026-11-09T14:08:31Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:31Z",
+              "completedUtc": "2026-11-09T14:08:46Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:46Z",
+              "completedUtc": "2026-11-09T14:08:58Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:58Z",
+              "completedUtc": "2026-11-09T14:08:59Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:59Z",
+              "completedUtc": "2026-11-09T14:18:15Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:18:15Z",
+              "completedUtc": "2026-11-09T14:18:15Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:18:15Z",
+              "completedUtc": "2026-11-09T14:18:15Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:18:15Z",
+              "completedUtc": "2026-11-09T14:18:18Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:18:18Z",
+              "completedUtc": "2026-11-09T14:18:18Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:18:18Z",
+              "completedUtc": "2026-11-09T14:18:18Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:18:18Z",
+              "completedUtc": "2026-11-09T14:27:11Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:11Z",
+              "completedUtc": "2026-11-09T14:27:13Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:13Z",
+              "completedUtc": "2026-11-09T14:27:15Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:15Z",
+              "completedUtc": "2026-11-09T14:27:19Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:19Z",
+              "completedUtc": "2026-11-09T14:27:24Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:24Z",
+              "completedUtc": "2026-11-09T14:27:24Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "id": 129209460677,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:08:27Z",
+          "completedUtc": "2026-11-09T14:22:28Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:28Z",
+              "completedUtc": "2026-11-09T14:08:30Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:30Z",
+              "completedUtc": "2026-11-09T14:08:31Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:31Z",
+              "completedUtc": "2026-11-09T14:08:41Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:41Z",
+              "completedUtc": "2026-11-09T14:08:46Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:46Z",
+              "completedUtc": "2026-11-09T14:08:48Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:08:48Z",
+              "completedUtc": "2026-11-09T14:13:17Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:13:17Z",
+              "completedUtc": "2026-11-09T14:13:17Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:13:17Z",
+              "completedUtc": "2026-11-09T14:13:17Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:13:17Z",
+              "completedUtc": "2026-11-09T14:13:20Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:13:20Z",
+              "completedUtc": "2026-11-09T14:13:20Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:13:20Z",
+              "completedUtc": "2026-11-09T14:13:20Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:13:20Z",
+              "completedUtc": "2026-11-09T14:22:14Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:22:14Z",
+              "completedUtc": "2026-11-09T14:22:18Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:22:18Z",
+              "completedUtc": "2026-11-09T14:22:20Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:22:20Z",
+              "completedUtc": "2026-11-09T14:22:22Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:22:22Z",
+              "completedUtc": "2026-11-09T14:22:25Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:22:25Z",
+              "completedUtc": "2026-11-09T14:22:25Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / complete",
+          "id": 129220278856,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:27:39Z",
+          "completedUtc": "2026-11-09T14:28:02Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:40Z",
+              "completedUtc": "2026-11-09T14:27:41Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:27:41Z",
+              "completedUtc": "2026-11-09T14:27:41Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:41Z",
+              "completedUtc": "2026-11-09T14:27:43Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:43Z",
+              "completedUtc": "2026-11-09T14:27:43Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:43Z",
+              "completedUtc": "2026-11-09T14:27:45Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:45Z",
+              "completedUtc": "2026-11-09T14:27:48Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:48Z",
+              "completedUtc": "2026-11-09T14:27:49Z"
+            },
+            {
+              "name": "Verify retained qualification, then record its actual outcome",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:49Z",
+              "completedUtc": "2026-11-09T14:27:59Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:59Z",
+              "completedUtc": "2026-11-09T14:27:59Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:59Z",
+              "completedUtc": "2026-11-09T14:27:59Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:27:59Z",
+              "completedUtc": "2026-11-09T14:27:59Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedTilde",
+      "runId": 42626411451,
+      "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42626411451",
+      "source": "f87e2b50bcd9ee4f2ab3bb41220b920f87a87ed3",
+      "status": "completed",
+      "conclusion": "success",
+      "createdUtc": "2026-11-09T13:32:47Z",
+      "startedUtc": "2026-11-09T13:32:47Z",
+      "updatedUtc": "2026-11-09T14:34:49Z",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "id": 129191269021,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:32:54Z",
+          "completedUtc": "2026-11-09T13:33:13Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:54Z",
+              "completedUtc": "2026-11-09T13:32:55Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:32:55Z",
+              "completedUtc": "2026-11-09T13:32:55Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:55Z",
+              "completedUtc": "2026-11-09T13:32:58Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:58Z",
+              "completedUtc": "2026-11-09T13:32:59Z"
+            },
+            {
+              "name": "Run $commit = (git rev-parse HEAD).Trim()",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:59Z",
+              "completedUtc": "2026-11-09T13:33:10Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:10Z",
+              "completedUtc": "2026-11-09T13:33:11Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:11Z",
+              "completedUtc": "2026-11-09T13:33:11Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:11Z",
+              "completedUtc": "2026-11-09T13:33:11Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:12Z",
+              "completedUtc": "2026-11-09T13:33:12Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "id": 129191446733,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:33:16Z",
+          "completedUtc": "2026-11-09T13:51:02Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:16Z",
+              "completedUtc": "2026-11-09T13:33:17Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:17Z",
+              "completedUtc": "2026-11-09T13:33:18Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:18Z",
+              "completedUtc": "2026-11-09T13:33:29Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:29Z",
+              "completedUtc": "2026-11-09T13:33:34Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:34Z",
+              "completedUtc": "2026-11-09T13:33:34Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:34Z",
+              "completedUtc": "2026-11-09T13:38:46Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:38:46Z",
+              "completedUtc": "2026-11-09T13:38:46Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:38:46Z",
+              "completedUtc": "2026-11-09T13:38:46Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:38:46Z",
+              "completedUtc": "2026-11-09T13:38:48Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:38:48Z",
+              "completedUtc": "2026-11-09T13:45:51Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:45:51Z",
+              "completedUtc": "2026-11-09T13:45:52Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:45:52Z",
+              "completedUtc": "2026-11-09T13:45:52Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:45:52Z",
+              "completedUtc": "2026-11-09T13:50:46Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:46Z",
+              "completedUtc": "2026-11-09T13:50:47Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:50:47Z",
+              "completedUtc": "2026-11-09T13:50:47Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:47Z",
+              "completedUtc": "2026-11-09T13:50:51Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:51Z",
+              "completedUtc": "2026-11-09T13:50:54Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:54Z",
+              "completedUtc": "2026-11-09T13:50:56Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:56Z",
+              "completedUtc": "2026-11-09T13:50:59Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:50:59Z",
+              "completedUtc": "2026-11-09T13:50:59Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "id": 129191446811,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:33:16Z",
+          "completedUtc": "2026-11-09T14:06:22Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:17Z",
+              "completedUtc": "2026-11-09T13:33:20Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:20Z",
+              "completedUtc": "2026-11-09T13:33:21Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:21Z",
+              "completedUtc": "2026-11-09T13:33:45Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:45Z",
+              "completedUtc": "2026-11-09T13:33:58Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:58Z",
+              "completedUtc": "2026-11-09T13:33:59Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:59Z",
+              "completedUtc": "2026-11-09T13:43:59Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:43:59Z",
+              "completedUtc": "2026-11-09T13:43:59Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:43:59Z",
+              "completedUtc": "2026-11-09T13:43:59Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:43:59Z",
+              "completedUtc": "2026-11-09T13:44:07Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:44:07Z",
+              "completedUtc": "2026-11-09T14:03:52Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:03:52Z",
+              "completedUtc": "2026-11-09T14:03:53Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:03:53Z",
+              "completedUtc": "2026-11-09T14:03:53Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:03:53Z",
+              "completedUtc": "2026-11-09T14:05:51Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:05:51Z",
+              "completedUtc": "2026-11-09T14:05:52Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:05:52Z",
+              "completedUtc": "2026-11-09T14:05:52Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:05:52Z",
+              "completedUtc": "2026-11-09T14:05:56Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:05:56Z",
+              "completedUtc": "2026-11-09T14:06:00Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:00Z",
+              "completedUtc": "2026-11-09T14:06:05Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:05Z",
+              "completedUtc": "2026-11-09T14:06:09Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:09Z",
+              "completedUtc": "2026-11-09T14:06:09Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / test-gate",
+          "id": 129208359038,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:06:25Z",
+          "completedUtc": "2026-11-09T14:06:35Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:26Z",
+              "completedUtc": "2026-11-09T14:06:27Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:06:27Z",
+              "completedUtc": "2026-11-09T14:06:27Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:27Z",
+              "completedUtc": "2026-11-09T14:06:28Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:28Z",
+              "completedUtc": "2026-11-09T14:06:28Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:28Z",
+              "completedUtc": "2026-11-09T14:06:29Z"
+            },
+            {
+              "name": "Run ./.ci-engine/Tools/Test-Qualification.ps1 -Directory evidence -Phase Regression",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:29Z",
+              "completedUtc": "2026-11-09T14:06:33Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:33Z",
+              "completedUtc": "2026-11-09T14:06:34Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:34Z",
+              "completedUtc": "2026-11-09T14:06:34Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "id": 129208466489,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:06:38Z",
+          "completedUtc": "2026-11-09T14:34:27Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:39Z",
+              "completedUtc": "2026-11-09T14:06:41Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:41Z",
+              "completedUtc": "2026-11-09T14:06:43Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:43Z",
+              "completedUtc": "2026-11-09T14:07:06Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:06Z",
+              "completedUtc": "2026-11-09T14:07:17Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:17Z",
+              "completedUtc": "2026-11-09T14:07:19Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:19Z",
+              "completedUtc": "2026-11-09T14:16:13Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:16:13Z",
+              "completedUtc": "2026-11-09T14:16:13Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:16:13Z",
+              "completedUtc": "2026-11-09T14:16:13Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:16:13Z",
+              "completedUtc": "2026-11-09T14:16:20Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:16:20Z",
+              "completedUtc": "2026-11-09T14:16:20Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:16:20Z",
+              "completedUtc": "2026-11-09T14:16:20Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:16:20Z",
+              "completedUtc": "2026-11-09T14:34:06Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:06Z",
+              "completedUtc": "2026-11-09T14:34:09Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:09Z",
+              "completedUtc": "2026-11-09T14:34:10Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:10Z",
+              "completedUtc": "2026-11-09T14:34:15Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:15Z",
+              "completedUtc": "2026-11-09T14:34:19Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:19Z",
+              "completedUtc": "2026-11-09T14:34:20Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "id": 129208466512,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:06:38Z",
+          "completedUtc": "2026-11-09T14:19:08Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:39Z",
+              "completedUtc": "2026-11-09T14:06:42Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:42Z",
+              "completedUtc": "2026-11-09T14:06:53Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:06:53Z",
+              "completedUtc": "2026-11-09T14:07:05Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:05Z",
+              "completedUtc": "2026-11-09T14:07:12Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:12Z",
+              "completedUtc": "2026-11-09T14:07:13Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:07:13Z",
+              "completedUtc": "2026-11-09T14:12:18Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:12:18Z",
+              "completedUtc": "2026-11-09T14:12:18Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:12:18Z",
+              "completedUtc": "2026-11-09T14:12:18Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:12:18Z",
+              "completedUtc": "2026-11-09T14:12:21Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:12:21Z",
+              "completedUtc": "2026-11-09T14:12:21Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:12:21Z",
+              "completedUtc": "2026-11-09T14:12:21Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:12:21Z",
+              "completedUtc": "2026-11-09T14:18:57Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:18:57Z",
+              "completedUtc": "2026-11-09T14:18:59Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:18:59Z",
+              "completedUtc": "2026-11-09T14:19:00Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:19:00Z",
+              "completedUtc": "2026-11-09T14:19:02Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:19:02Z",
+              "completedUtc": "2026-11-09T14:19:05Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:19:05Z",
+              "completedUtc": "2026-11-09T14:19:05Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / complete",
+          "id": 129224200529,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:34:31Z",
+          "completedUtc": "2026-11-09T14:34:49Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:32Z",
+              "completedUtc": "2026-11-09T14:34:32Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:34:32Z",
+              "completedUtc": "2026-11-09T14:34:32Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:32Z",
+              "completedUtc": "2026-11-09T14:34:36Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:36Z",
+              "completedUtc": "2026-11-09T14:34:37Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:37Z",
+              "completedUtc": "2026-11-09T14:34:38Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:38Z",
+              "completedUtc": "2026-11-09T14:34:39Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:39Z",
+              "completedUtc": "2026-11-09T14:34:40Z"
+            },
+            {
+              "name": "Verify retained qualification, then record its actual outcome",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:40Z",
+              "completedUtc": "2026-11-09T14:34:46Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:46Z",
+              "completedUtc": "2026-11-09T14:34:46Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:46Z",
+              "completedUtc": "2026-11-09T14:34:47Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:34:47Z",
+              "completedUtc": "2026-11-09T14:34:47Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedPrism",
+      "runId": 42626407579,
+      "url": "https://github.com/RedSalamanders/RedPrism/actions/runs/42626407579",
+      "source": "98b7a34fe11aa2c9e593e0a69f98b901733858b3",
+      "status": "completed",
+      "conclusion": "success",
+      "createdUtc": "2026-11-09T13:32:45Z",
+      "startedUtc": "2026-11-09T13:32:45Z",
+      "updatedUtc": "2026-11-09T15:42:32Z",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "id": 129191233588,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:32:50Z",
+          "completedUtc": "2026-11-09T13:33:10Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:50Z",
+              "completedUtc": "2026-11-09T13:32:51Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:32:51Z",
+              "completedUtc": "2026-11-09T13:32:51Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:51Z",
+              "completedUtc": "2026-11-09T13:32:54Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:54Z",
+              "completedUtc": "2026-11-09T13:32:55Z"
+            },
+            {
+              "name": "Run $commit = (git rev-parse HEAD).Trim()",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:32:55Z",
+              "completedUtc": "2026-11-09T13:33:06Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:06Z",
+              "completedUtc": "2026-11-09T13:33:08Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:08Z",
+              "completedUtc": "2026-11-09T13:33:08Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:08Z",
+              "completedUtc": "2026-11-09T13:33:08Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:08Z",
+              "completedUtc": "2026-11-09T13:33:08Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "id": 129191421876,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:33:13Z",
+          "completedUtc": "2026-11-09T15:15:54Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:14Z",
+              "completedUtc": "2026-11-09T13:33:19Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:19Z",
+              "completedUtc": "2026-11-09T13:33:21Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:21Z",
+              "completedUtc": "2026-11-09T13:33:40Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:40Z",
+              "completedUtc": "2026-11-09T13:33:51Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:51Z",
+              "completedUtc": "2026-11-09T13:33:52Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:52Z",
+              "completedUtc": "2026-11-09T13:42:41Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:42:41Z",
+              "completedUtc": "2026-11-09T13:42:41Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:42:41Z",
+              "completedUtc": "2026-11-09T13:42:41Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:42:41Z",
+              "completedUtc": "2026-11-09T13:42:44Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:42:44Z",
+              "completedUtc": "2026-11-09T14:15:37Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:15:37Z",
+              "completedUtc": "2026-11-09T14:15:39Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:15:39Z",
+              "completedUtc": "2026-11-09T14:15:39Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:15:39Z",
+              "completedUtc": "2026-11-09T15:15:32Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:32Z",
+              "completedUtc": "2026-11-09T15:15:34Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:15:34Z",
+              "completedUtc": "2026-11-09T15:15:34Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:34Z",
+              "completedUtc": "2026-11-09T15:15:35Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:35Z",
+              "completedUtc": "2026-11-09T15:15:37Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:37Z",
+              "completedUtc": "2026-11-09T15:15:42Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:42Z",
+              "completedUtc": "2026-11-09T15:15:46Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:46Z",
+              "completedUtc": "2026-11-09T15:15:46Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "id": 129191422060,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T13:33:12Z",
+          "completedUtc": "2026-11-09T14:29:35Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:13Z",
+              "completedUtc": "2026-11-09T13:33:14Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:14Z",
+              "completedUtc": "2026-11-09T13:33:15Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:15Z",
+              "completedUtc": "2026-11-09T13:33:26Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:26Z",
+              "completedUtc": "2026-11-09T13:33:31Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:31Z",
+              "completedUtc": "2026-11-09T13:33:32Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:33:32Z",
+              "completedUtc": "2026-11-09T13:38:19Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:38:19Z",
+              "completedUtc": "2026-11-09T13:38:19Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T13:38:19Z",
+              "completedUtc": "2026-11-09T13:38:19Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:38:19Z",
+              "completedUtc": "2026-11-09T13:38:21Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T13:38:21Z",
+              "completedUtc": "2026-11-09T14:14:27Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:14:27Z",
+              "completedUtc": "2026-11-09T14:14:29Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:14:29Z",
+              "completedUtc": "2026-11-09T14:14:29Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:14:29Z",
+              "completedUtc": "2026-11-09T14:29:23Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:29:23Z",
+              "completedUtc": "2026-11-09T14:29:24Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:29:24Z",
+              "completedUtc": "2026-11-09T14:29:24Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:29:24Z",
+              "completedUtc": "2026-11-09T14:29:26Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:29:26Z",
+              "completedUtc": "2026-11-09T14:29:28Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:29:28Z",
+              "completedUtc": "2026-11-09T14:29:30Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:29:30Z",
+              "completedUtc": "2026-11-09T14:29:32Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:29:32Z",
+              "completedUtc": "2026-11-09T14:29:32Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / test-gate",
+          "id": 129248335088,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T15:15:57Z",
+          "completedUtc": "2026-11-09T15:16:07Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:57Z",
+              "completedUtc": "2026-11-09T15:15:58Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:15:58Z",
+              "completedUtc": "2026-11-09T15:15:58Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:58Z",
+              "completedUtc": "2026-11-09T15:15:59Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:59Z",
+              "completedUtc": "2026-11-09T15:16:00Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:00Z",
+              "completedUtc": "2026-11-09T15:16:00Z"
+            },
+            {
+              "name": "Run ./.ci-engine/Tools/Test-Qualification.ps1 -Directory evidence -Phase Regression",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:00Z",
+              "completedUtc": "2026-11-09T15:16:05Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:05Z",
+              "completedUtc": "2026-11-09T15:16:05Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:05Z",
+              "completedUtc": "2026-11-09T15:16:06Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "id": 129248466788,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T15:16:10Z",
+          "completedUtc": "2026-11-09T15:31:00Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:10Z",
+              "completedUtc": "2026-11-09T15:16:11Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:11Z",
+              "completedUtc": "2026-11-09T15:16:12Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:12Z",
+              "completedUtc": "2026-11-09T15:16:21Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:21Z",
+              "completedUtc": "2026-11-09T15:16:26Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:26Z",
+              "completedUtc": "2026-11-09T15:16:26Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:26Z",
+              "completedUtc": "2026-11-09T15:20:53Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:20:53Z",
+              "completedUtc": "2026-11-09T15:20:53Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:20:53Z",
+              "completedUtc": "2026-11-09T15:20:53Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:20:53Z",
+              "completedUtc": "2026-11-09T15:20:54Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:20:54Z",
+              "completedUtc": "2026-11-09T15:20:54Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:20:54Z",
+              "completedUtc": "2026-11-09T15:20:54Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:20:54Z",
+              "completedUtc": "2026-11-09T15:30:52Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:30:52Z",
+              "completedUtc": "2026-11-09T15:30:54Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:30:54Z",
+              "completedUtc": "2026-11-09T15:30:55Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:30:55Z",
+              "completedUtc": "2026-11-09T15:30:56Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:30:56Z",
+              "completedUtc": "2026-11-09T15:30:58Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:30:58Z",
+              "completedUtc": "2026-11-09T15:30:58Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "id": 129248467036,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T15:16:10Z",
+          "completedUtc": "2026-11-09T15:42:01Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:11Z",
+              "completedUtc": "2026-11-09T15:16:13Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:13Z",
+              "completedUtc": "2026-11-09T15:16:14Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:14Z",
+              "completedUtc": "2026-11-09T15:16:36Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:36Z",
+              "completedUtc": "2026-11-09T15:16:47Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:47Z",
+              "completedUtc": "2026-11-09T15:16:48Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:16:48Z",
+              "completedUtc": "2026-11-09T15:25:46Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:25:46Z",
+              "completedUtc": "2026-11-09T15:25:46Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:25:46Z",
+              "completedUtc": "2026-11-09T15:25:46Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:25:46Z",
+              "completedUtc": "2026-11-09T15:25:50Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:25:50Z",
+              "completedUtc": "2026-11-09T15:25:50Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:25:50Z",
+              "completedUtc": "2026-11-09T15:25:50Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:25:50Z",
+              "completedUtc": "2026-11-09T15:41:41Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:41:41Z",
+              "completedUtc": "2026-11-09T15:41:43Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:41:43Z",
+              "completedUtc": "2026-11-09T15:41:44Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:41:44Z",
+              "completedUtc": "2026-11-09T15:41:48Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:41:48Z",
+              "completedUtc": "2026-11-09T15:41:53Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:41:53Z",
+              "completedUtc": "2026-11-09T15:41:53Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / complete",
+          "id": 129263841897,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T15:42:05Z",
+          "completedUtc": "2026-11-09T15:42:31Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:06Z",
+              "completedUtc": "2026-11-09T15:42:07Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:42:07Z",
+              "completedUtc": "2026-11-09T15:42:07Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:07Z",
+              "completedUtc": "2026-11-09T15:42:11Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:11Z",
+              "completedUtc": "2026-11-09T15:42:12Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:12Z",
+              "completedUtc": "2026-11-09T15:42:13Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:13Z",
+              "completedUtc": "2026-11-09T15:42:15Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:15Z",
+              "completedUtc": "2026-11-09T15:42:16Z"
+            },
+            {
+              "name": "Verify retained qualification, then record its actual outcome",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:16Z",
+              "completedUtc": "2026-11-09T15:42:29Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:29Z",
+              "completedUtc": "2026-11-09T15:42:29Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:29Z",
+              "completedUtc": "2026-11-09T15:42:29Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:29Z",
+              "completedUtc": "2026-11-09T15:42:29Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/DxUi",
+      "runId": 42631977298,
+      "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42631977298",
+      "source": "5f65003cd94fdd45bfd47255b17d5a5eac498b11",
+      "status": "completed",
+      "conclusion": "failure",
+      "createdUtc": "2026-11-09T14:09:55Z",
+      "startedUtc": "2026-11-09T14:09:55Z",
+      "updatedUtc": "2026-11-09T15:35:36Z",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "id": 129210311958,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:10:01Z",
+          "completedUtc": "2026-11-09T14:10:34Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:02Z",
+              "completedUtc": "2026-11-09T14:10:08Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:10:08Z",
+              "completedUtc": "2026-11-09T14:10:08Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:08Z",
+              "completedUtc": "2026-11-09T14:10:18Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:18Z",
+              "completedUtc": "2026-11-09T14:10:18Z"
+            },
+            {
+              "name": "Run $commit = (git rev-parse HEAD).Trim()",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:18Z",
+              "completedUtc": "2026-11-09T14:10:31Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:31Z",
+              "completedUtc": "2026-11-09T14:10:32Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:32Z",
+              "completedUtc": "2026-11-09T14:10:32Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:32Z",
+              "completedUtc": "2026-11-09T14:10:32Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:32Z",
+              "completedUtc": "2026-11-09T14:10:32Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "id": 129210670805,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T14:10:38Z",
+          "completedUtc": "2026-11-09T15:35:03Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:39Z",
+              "completedUtc": "2026-11-09T14:10:42Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:42Z",
+              "completedUtc": "2026-11-09T14:10:43Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:43Z",
+              "completedUtc": "2026-11-09T14:11:24Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:11:24Z",
+              "completedUtc": "2026-11-09T14:11:35Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:11:35Z",
+              "completedUtc": "2026-11-09T14:11:36Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:11:36Z",
+              "completedUtc": "2026-11-09T14:21:13Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:21:13Z",
+              "completedUtc": "2026-11-09T14:21:13Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:21:13Z",
+              "completedUtc": "2026-11-09T14:21:13Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:21:13Z",
+              "completedUtc": "2026-11-09T14:21:23Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:21:23Z",
+              "completedUtc": "2026-11-09T15:01:30Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:01:30Z",
+              "completedUtc": "2026-11-09T15:01:32Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:01:32Z",
+              "completedUtc": "2026-11-09T15:01:32Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:01:32Z",
+              "completedUtc": "2026-11-09T15:34:32Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:34:32Z",
+              "completedUtc": "2026-11-09T15:34:33Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:34:33Z",
+              "completedUtc": "2026-11-09T15:34:33Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:34:33Z",
+              "completedUtc": "2026-11-09T15:34:39Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:34:39Z",
+              "completedUtc": "2026-11-09T15:34:45Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:34:45Z",
+              "completedUtc": "2026-11-09T15:34:49Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:34:49Z",
+              "completedUtc": "2026-11-09T15:34:54Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:34:54Z",
+              "completedUtc": "2026-11-09T15:34:54Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "id": 129210670976,
+          "status": "completed",
+          "conclusion": "failure",
+          "startedUtc": "2026-11-09T14:10:38Z",
+          "completedUtc": "2026-11-09T14:48:34Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:39Z",
+              "completedUtc": "2026-11-09T14:10:41Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:41Z",
+              "completedUtc": "2026-11-09T14:10:42Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:42Z",
+              "completedUtc": "2026-11-09T14:10:59Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:10:59Z",
+              "completedUtc": "2026-11-09T14:11:06Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:11:06Z",
+              "completedUtc": "2026-11-09T14:11:07Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:11:07Z",
+              "completedUtc": "2026-11-09T14:16:06Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:16:06Z",
+              "completedUtc": "2026-11-09T14:16:06Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:16:06Z",
+              "completedUtc": "2026-11-09T14:16:06Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:16:06Z",
+              "completedUtc": "2026-11-09T14:16:11Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:16:11Z",
+              "completedUtc": "2026-11-09T14:36:01Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:36:01Z",
+              "completedUtc": "2026-11-09T14:36:02Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:36:02Z",
+              "completedUtc": "2026-11-09T14:36:02Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "failure",
+              "startedUtc": "2026-11-09T14:36:02Z",
+              "completedUtc": "2026-11-09T14:48:25Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:48:25Z",
+              "completedUtc": "2026-11-09T14:48:25Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T14:48:25Z",
+              "completedUtc": "2026-11-09T14:48:25Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:48:25Z",
+              "completedUtc": "2026-11-09T14:48:25Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:48:25Z",
+              "completedUtc": "2026-11-09T14:48:26Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:48:26Z",
+              "completedUtc": "2026-11-09T14:48:28Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:48:28Z",
+              "completedUtc": "2026-11-09T14:48:31Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T14:48:31Z",
+              "completedUtc": "2026-11-09T14:48:31Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / complete",
+          "id": 129259726361,
+          "status": "completed",
+          "conclusion": "failure",
+          "startedUtc": "2026-11-09T15:35:06Z",
+          "completedUtc": "2026-11-09T15:35:35Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:07Z",
+              "completedUtc": "2026-11-09T15:35:07Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:35:07Z",
+              "completedUtc": "2026-11-09T15:35:07Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:07Z",
+              "completedUtc": "2026-11-09T15:35:18Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:18Z",
+              "completedUtc": "2026-11-09T15:35:19Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:19Z",
+              "completedUtc": "2026-11-09T15:35:19Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:35:19Z",
+              "completedUtc": "2026-11-09T15:35:19Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:35:19Z",
+              "completedUtc": "2026-11-09T15:35:19Z"
+            },
+            {
+              "name": "Verify retained qualification, then record its actual outcome",
+              "status": "completed",
+              "conclusion": "failure",
+              "startedUtc": "2026-11-09T15:35:19Z",
+              "completedUtc": "2026-11-09T15:35:33Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:33Z",
+              "completedUtc": "2026-11-09T15:35:34Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:34Z",
+              "completedUtc": "2026-11-09T15:35:34Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:34Z",
+              "completedUtc": "2026-11-09T15:35:34Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / test-gate",
+          "id": 129259726785,
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedUtc": "2026-11-09T15:35:03Z",
+          "completedUtc": "2026-11-09T15:35:03Z",
+          "steps": []
+        },
+        {
+          "name": "qualify / production",
+          "id": 129259728307,
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedUtc": "2026-11-09T15:35:03Z",
+          "completedUtc": "2026-11-09T15:35:03Z",
+          "steps": []
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/DxUi",
+      "runId": 42641495649,
+      "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42641495649",
+      "source": "f73da6db47d0afa198d855e82620a0088daac7ed",
+      "status": "in_progress",
+      "conclusion": "",
+      "createdUtc": "2026-11-09T15:07:50Z",
+      "startedUtc": "2026-11-09T15:07:50Z",
+      "updatedUtc": "2026-11-09T15:36:21Z",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "id": 129260062253,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T15:35:39Z",
+          "completedUtc": "2026-11-09T15:36:16Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:40Z",
+              "completedUtc": "2026-11-09T15:35:41Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:35:41Z",
+              "completedUtc": "2026-11-09T15:35:41Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:41Z",
+              "completedUtc": "2026-11-09T15:35:50Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:50Z",
+              "completedUtc": "2026-11-09T15:35:51Z"
+            },
+            {
+              "name": "Run $commit = (git rev-parse HEAD).Trim()",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:35:51Z",
+              "completedUtc": "2026-11-09T15:36:11Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:11Z",
+              "completedUtc": "2026-11-09T15:36:13Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:13Z",
+              "completedUtc": "2026-11-09T15:36:13Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:13Z",
+              "completedUtc": "2026-11-09T15:36:13Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:13Z",
+              "completedUtc": "2026-11-09T15:36:13Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "id": 129260461408,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedUtc": "2026-11-09T15:36:19Z",
+          "completedUtc": "0001-01-01T00:00:00Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:20Z",
+              "completedUtc": "2026-11-09T15:36:22Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:22Z",
+              "completedUtc": "2026-11-09T15:36:23Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:23Z",
+              "completedUtc": "2026-11-09T15:36:58Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:58Z",
+              "completedUtc": "2026-11-09T15:37:10Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:37:10Z",
+              "completedUtc": "2026-11-09T15:37:11Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:37:11Z",
+              "completedUtc": "2026-11-09T15:46:12Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:46:12Z",
+              "completedUtc": "2026-11-09T15:46:12Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:46:12Z",
+              "completedUtc": "2026-11-09T15:46:12Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:46:12Z",
+              "completedUtc": "2026-11-09T15:46:23Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedUtc": "2026-11-09T15:46:23Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "id": 129260461770,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedUtc": "2026-11-09T15:36:20Z",
+          "completedUtc": "0001-01-01T00:00:00Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:22Z",
+              "completedUtc": "2026-11-09T15:36:25Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:25Z",
+              "completedUtc": "2026-11-09T15:36:28Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:28Z",
+              "completedUtc": "2026-11-09T15:36:46Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:46Z",
+              "completedUtc": "2026-11-09T15:36:52Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:52Z",
+              "completedUtc": "2026-11-09T15:36:53Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:36:53Z",
+              "completedUtc": "2026-11-09T15:41:58Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:41:58Z",
+              "completedUtc": "2026-11-09T15:41:58Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:41:58Z",
+              "completedUtc": "2026-11-09T15:41:58Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:41:58Z",
+              "completedUtc": "2026-11-09T15:42:04Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:42:04Z",
+              "completedUtc": "2026-11-09T16:01:48Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T16:01:48Z",
+              "completedUtc": "2026-11-09T16:01:50Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T16:01:50Z",
+              "completedUtc": "2026-11-09T16:01:50Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedUtc": "2026-11-09T16:01:50Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedTilde",
+      "runId": 42641696441,
+      "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42641696441",
+      "source": "17514a7ea06f27e84eed81208a8f22e07643dacf",
+      "status": "in_progress",
+      "conclusion": "",
+      "createdUtc": "2026-11-09T15:09:00Z",
+      "startedUtc": "2026-11-09T15:09:00Z",
+      "updatedUtc": "2026-11-09T15:39:50Z",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "id": 129244198965,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T15:09:05Z",
+          "completedUtc": "2026-11-09T15:09:28Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:06Z",
+              "completedUtc": "2026-11-09T15:09:07Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:09:07Z",
+              "completedUtc": "2026-11-09T15:09:07Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:07Z",
+              "completedUtc": "2026-11-09T15:09:10Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:10Z",
+              "completedUtc": "2026-11-09T15:09:11Z"
+            },
+            {
+              "name": "Run $commit = (git rev-parse HEAD).Trim()",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:11Z",
+              "completedUtc": "2026-11-09T15:09:25Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:25Z",
+              "completedUtc": "2026-11-09T15:09:26Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:26Z",
+              "completedUtc": "2026-11-09T15:09:26Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:27Z",
+              "completedUtc": "2026-11-09T15:09:27Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:27Z",
+              "completedUtc": "2026-11-09T15:09:27Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "id": 129244456471,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T15:09:33Z",
+          "completedUtc": "2026-11-09T15:28:00Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:35Z",
+              "completedUtc": "2026-11-09T15:09:37Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:37Z",
+              "completedUtc": "2026-11-09T15:09:39Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:39Z",
+              "completedUtc": "2026-11-09T15:09:50Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:50Z",
+              "completedUtc": "2026-11-09T15:09:56Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:56Z",
+              "completedUtc": "2026-11-09T15:09:58Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:58Z",
+              "completedUtc": "2026-11-09T15:15:03Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:15:03Z",
+              "completedUtc": "2026-11-09T15:15:03Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:15:03Z",
+              "completedUtc": "2026-11-09T15:15:03Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:03Z",
+              "completedUtc": "2026-11-09T15:15:07Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:15:07Z",
+              "completedUtc": "2026-11-09T15:22:29Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:22:29Z",
+              "completedUtc": "2026-11-09T15:22:30Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:22:30Z",
+              "completedUtc": "2026-11-09T15:22:30Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:22:30Z",
+              "completedUtc": "2026-11-09T15:27:41Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:27:41Z",
+              "completedUtc": "2026-11-09T15:27:43Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:27:43Z",
+              "completedUtc": "2026-11-09T15:27:43Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:27:43Z",
+              "completedUtc": "2026-11-09T15:27:47Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:27:47Z",
+              "completedUtc": "2026-11-09T15:27:52Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:27:52Z",
+              "completedUtc": "2026-11-09T15:27:54Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:27:54Z",
+              "completedUtc": "2026-11-09T15:27:56Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:27:56Z",
+              "completedUtc": "2026-11-09T15:27:57Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "id": 129244456608,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T15:09:31Z",
+          "completedUtc": "2026-11-09T15:39:35Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:33Z",
+              "completedUtc": "2026-11-09T15:09:35Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:35Z",
+              "completedUtc": "2026-11-09T15:09:36Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:36Z",
+              "completedUtc": "2026-11-09T15:09:57Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:09:57Z",
+              "completedUtc": "2026-11-09T15:10:08Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:10:08Z",
+              "completedUtc": "2026-11-09T15:10:09Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:10:09Z",
+              "completedUtc": "2026-11-09T15:18:34Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:18:34Z",
+              "completedUtc": "2026-11-09T15:18:34Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:18:34Z",
+              "completedUtc": "2026-11-09T15:18:34Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:18:34Z",
+              "completedUtc": "2026-11-09T15:18:41Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:18:41Z",
+              "completedUtc": "2026-11-09T15:37:10Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:37:10Z",
+              "completedUtc": "2026-11-09T15:37:12Z"
+            },
+            {
+              "name": "Save successfully verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:37:12Z",
+              "completedUtc": "2026-11-09T15:37:12Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:37:12Z",
+              "completedUtc": "2026-11-09T15:39:08Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:08Z",
+              "completedUtc": "2026-11-09T15:39:10Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:39:10Z",
+              "completedUtc": "2026-11-09T15:39:10Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:10Z",
+              "completedUtc": "2026-11-09T15:39:14Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:14Z",
+              "completedUtc": "2026-11-09T15:39:18Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:18Z",
+              "completedUtc": "2026-11-09T15:39:23Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:23Z",
+              "completedUtc": "2026-11-09T15:39:27Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:27Z",
+              "completedUtc": "2026-11-09T15:39:28Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / test-gate",
+          "id": 129262421139,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T15:39:38Z",
+          "completedUtc": "2026-11-09T15:39:46Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:39Z",
+              "completedUtc": "2026-11-09T15:39:40Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:39:40Z",
+              "completedUtc": "2026-11-09T15:39:40Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:40Z",
+              "completedUtc": "2026-11-09T15:39:42Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:42Z",
+              "completedUtc": "2026-11-09T15:39:43Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:43Z",
+              "completedUtc": "2026-11-09T15:39:43Z"
+            },
+            {
+              "name": "Run ./.ci-engine/Tools/Test-Qualification.ps1 -Directory evidence -Phase Regression",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:43Z",
+              "completedUtc": "2026-11-09T15:39:45Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:45Z",
+              "completedUtc": "2026-11-09T15:39:45Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:45Z",
+              "completedUtc": "2026-11-09T15:39:45Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "id": 129262531646,
+          "status": "completed",
+          "conclusion": "success",
+          "startedUtc": "2026-11-09T15:39:49Z",
+          "completedUtc": "2026-11-09T15:52:00Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:50Z",
+              "completedUtc": "2026-11-09T15:39:52Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:52Z",
+              "completedUtc": "2026-11-09T15:39:53Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:53Z",
+              "completedUtc": "2026-11-09T15:40:04Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:40:04Z",
+              "completedUtc": "2026-11-09T15:40:09Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:40:09Z",
+              "completedUtc": "2026-11-09T15:40:10Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:40:10Z",
+              "completedUtc": "2026-11-09T15:45:21Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:45:21Z",
+              "completedUtc": "2026-11-09T15:45:21Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:45:21Z",
+              "completedUtc": "2026-11-09T15:45:21Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:45:21Z",
+              "completedUtc": "2026-11-09T15:45:24Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:45:24Z",
+              "completedUtc": "2026-11-09T15:45:24Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:45:24Z",
+              "completedUtc": "2026-11-09T15:45:24Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:45:24Z",
+              "completedUtc": "2026-11-09T15:51:48Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:51:48Z",
+              "completedUtc": "2026-11-09T15:51:50Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:51:50Z",
+              "completedUtc": "2026-11-09T15:51:52Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:51:52Z",
+              "completedUtc": "2026-11-09T15:51:54Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:51:54Z",
+              "completedUtc": "2026-11-09T15:51:56Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:51:56Z",
+              "completedUtc": "2026-11-09T15:51:56Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "id": 129262531864,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedUtc": "2026-11-09T15:39:49Z",
+          "completedUtc": "0001-01-01T00:00:00Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:50Z",
+              "completedUtc": "2026-11-09T15:39:54Z"
+            },
+            {
+              "name": "Enable long Windows checkout paths",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:54Z",
+              "completedUtc": "2026-11-09T15:39:56Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:39:56Z",
+              "completedUtc": "2026-11-09T15:40:18Z"
+            },
+            {
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:40:18Z",
+              "completedUtc": "2026-11-09T15:40:28Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:40:28Z",
+              "completedUtc": "2026-11-09T15:40:29Z"
+            },
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:40:29Z",
+              "completedUtc": "2026-11-09T15:50:43Z"
+            },
+            {
+              "name": "Resolve canonical Terminal dependency toolchain identity",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:50:43Z",
+              "completedUtc": "2026-11-09T15:50:43Z"
+            },
+            {
+              "name": "Restore verified Terminal dependency products",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:50:43Z",
+              "completedUtc": "2026-11-09T15:50:43Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedUtc": "2026-11-09T15:50:43Z",
+              "completedUtc": "2026-11-09T15:50:58Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:50:58Z",
+              "completedUtc": "2026-11-09T15:50:58Z"
+            },
+            {
+              "name": "Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedUtc": "2026-11-09T15:50:58Z",
+              "completedUtc": "2026-11-09T15:50:58Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedUtc": "2026-11-09T15:50:58Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "status": "pending",
+              "conclusion": "",
+              "startedUtc": "0001-01-01T00:00:00Z",
+              "completedUtc": "0001-01-01T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

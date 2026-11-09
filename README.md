@@ -33,6 +33,10 @@ Implementation is recorded by [RedSalamander I55](https://github.com/RedSalamand
 
 All six projects have canonical callers for compiler-free PR/main coordination, serialized main qualification, manual formatting, manual diagnostic qualification and compiler-free security. The five applications additionally have a manual publication caller. Tools/Update-ProjectPin.ps1 updates the manifest and callers together from a clean, exact engine checkout; it removes an SDK's unchanged legacy publication caller and refuses to discard custom workflow changes. Conformance refuses SDK publication routes, moving pins and workflow-only pin updates.
 
+Pin maintenance also replaces the original global Markdown exclusion with owned prose patterns. Current
+conformance refuses extension-wide exclusions that could hide new runtime/test inputs; explicit runtime
+includes retain precedence. Historical source/artifact manifests remain readable under their original identity.
+
 Operator actions start from the product's main branch. Formatting names an open same-repository PR and explicitly requests new checks after its narrow fast-forward commit. Manual native retry requires retry=true for already admitted inputs. Extended qualification selects Debug, ASan Debug or Release and Normal or Full scope; it cannot qualify a public release. Publication selects an original successful main qualification run and defaults to Prepare. Release promotes its ZIPs, and Winget requires the published anonymous URLs and native install evidence before submitting manifests with the dedicated credential.
 
 No release or winget submission is part of engine validation. Ninety-day qualification artifacts may expire: operators then run an explicit fresh native qualification rather than reconstructing old ZIPs. Public reusable workflows let public and private products share the engine without changing product visibility.

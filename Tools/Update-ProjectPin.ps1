@@ -7,6 +7,7 @@ One RedSalamanders project checkout.
 Exact clean engine commit currently checked out beside this command.
 .OUTPUTS
 Updated .ci/project.json and canonical CI caller files. Removes an SDK's unchanged legacy publication caller.
+Replaces the original **/*.md exclusion with owned prose patterns; explicit runtime includes still take precedence.
 No commit, push or native build.
 .NOTES
 Requires PowerShell 7.4 and Git. Explicit maintenance command; review the diff and run compiler-free
@@ -21,11 +22,17 @@ $ErrorActionPreference='Stop'
 $engine=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 Import-Module (Join-Path $PSScriptRoot 'Modules/Ci.Policy.psm1')
 $project=Read-CiProject $Root
-if((Resolve-CiCommit $engine HEAD) -cne $EngineRef -or (Invoke-CiGit $engine @('status','--porcelain','--untracked-files=no')).stdout.Trim()){
+if((Resolve-CiCommit $engine HEAD) -cne $EngineRef -or (Invoke-CiGit $engine @('status','--porcelain','--untracked-files=all')).stdout.Trim()){
     throw 'Use the exact clean reviewed engine commit; a mutable development checkout cannot publish a pin.'
 }
 $old=$project.engine.ref
 $project.engine.ref=$EngineRef
+$exclusions=[Collections.Generic.List[string]]::new()
+foreach($pattern in $project.exclude){
+    $replacement=if($pattern -ceq '**/*.md'){@('README.md','AGENTS.md','CLAUDE.md','CHANGELOG.md','Specs/**/*.md','Tests/README.md','.github/skills/**/*.md')}else{@($pattern)}
+    foreach($value in $replacement){if($value -cnotin $exclusions){$exclusions.Add($value)}}
+}
+$project.exclude=$exclusions.ToArray()
 $rootPath=[IO.Path]::GetFullPath($Root)
 $legacyPublication=Assert-CiContainedPath $rootPath (Join-Path $rootPath '.github/workflows/publish.yml')
 if($project.kind -ceq 'sdk' -and (Test-Path -LiteralPath $legacyPublication)){
