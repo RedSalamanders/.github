@@ -1179,6 +1179,7 @@ Invoke-Case 'Pinned SDK admission is manual main only and preserves independent 
             Assert-Equal $policy.toolingContentIdentity $r.toolingContentIdentity
             Assert-Equal $source.contentIdentity $r.sourceContentIdentity
             Assert-Equal $policy.storageEngineRef $r.storageEngineRef
+            Assert-Equal $policy.storageEngineContentIdentity $r.storageEngineContentIdentity
             Assert-Equal $(if($platform -ceq 'All'){2}else{1}) @($r.matrix.include).Count
             if($platform -cne 'All'){Assert-Equal $platform $r.matrix.include[0].platform}
         }
@@ -1206,8 +1207,20 @@ Invoke-Case 'SDK producer checks actual clean Git identities, main ancestry, API
     $sourceHead=Save-Fixture $source 'Synthetic source API'
     $null=Invoke-CiGit $tooling @('update-ref','refs/remotes/origin/main',$toolingHead)
     $request=@{toolingRef=$toolingHead;sourceCommit=$sourceHead;storageEngineRef=$storageHead;apiRevision=4;
-        toolingContentIdentity=(Get-CiSdkCheckoutContentIdentity $tooling);sourceContentIdentity=(Get-CiSdkCheckoutContentIdentity $source)}
+        toolingContentIdentity=(Get-CiSdkCheckoutContentIdentity $tooling);sourceContentIdentity=(Get-CiSdkCheckoutContentIdentity $source);storageEngineContentIdentity=(Get-CiSdkCheckoutContentIdentity $storage)}
     Assert-CiSdkProducerCheckouts $request $tooling $source $storage
+    $storageFile=Join-Path $storage 'README.md'
+    $storageBytes=[IO.File]::ReadAllBytes($storageFile);$storageTime=[IO.File]::GetLastWriteTimeUtc($storageFile)
+    $null=Invoke-CiGit $storage @('update-index','--assume-unchanged','README.md')
+    try{
+        $mutated=$storageBytes.Clone();$mutated[0]=$mutated[0] -bxor 1
+        [IO.File]::WriteAllBytes($storageFile,$mutated);[IO.File]::SetLastWriteTimeUtc($storageFile,$storageTime)
+        Assert-Equal '' (Invoke-CiGit $storage @('status','--porcelain')).stdout.Trim()
+        Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
+    }finally{
+        [IO.File]::WriteAllBytes($storageFile,$storageBytes);[IO.File]::SetLastWriteTimeUtc($storageFile,$storageTime)
+        $null=Invoke-CiGit $storage @('update-index','--no-assume-unchanged','README.md')
+    }
     $bad=$request.Clone();$bad.sourceCommit='1'*40
     Assert-Refused {Assert-CiSdkProducerCheckouts $bad $tooling $source $storage}
     Write-FixtureFile $source 'untracked.txt' 'mutation witness'
@@ -1293,6 +1306,81 @@ Invoke-Case 'SDK workflow keeps reviewed tooling separate, read-only tokens and 
         $text.Replace('contents: read','contents: write'),$text.Replace("if: steps.build.outcome == 'success'",'if: always()'),
         $text.Replace('-${{ github.run_attempt }}',''),$text.Replace('core.autocrlf true','core.autocrlf false'),
         $text.Replace('Assert-CiSdkProducerCheckouts','UncheckedSdkInputs'))){Assert-Refused {Assert-SdkProducerWorkflow $bad}}
+}
+
+Invoke-Case 'SDK compilation checks the actual live reader handle across processes and refuses stale or mismatched settings' {
+    $consumer=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkConsumer.psm1') -PassThru
+    $root=New-Fixture 'sdk-reader-owner'
+    $payload=Join-Path $root '.build/payload'
+    $witness=& $consumer {param($r,$s) New-CiSdkConsumerWitness $r $s x64} $root $payload
+    $command=Join-Path $engineRoot 'Tools/Test-SdkConsumerLease.ps1'
+    $arguments=@('-NoProfile','-NonInteractive','-File',$command,'-ProjectRoot',$root,'-LeasePath',$witness.Path,'-SdkRoot',$payload,'-Platform','x64','-Configuration','Release')
+    try{
+        Assert-CiSdkConsumerLease -ProjectRoot $root -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release
+        $actual=Invoke-CiProcess (Get-Process -Id $PID).Path $arguments $root -TimeoutSeconds 30 -AllowFailure
+        Assert-True ($actual.exitCode -eq 0) ('SDK reader child refused: '+$actual.stderr+' '+$actual.stdout)
+        $original=[byte[]]::new($witness.Stream.Length)
+        $witness.Stream.Position=0;$witness.Stream.ReadExactly($original)
+        $changed=[Text.UTF8Encoding]::new($false).GetString($original)|ConvertFrom-Json
+        $changed.ownerIdentity+='-stale'
+        $bytes=[Text.UTF8Encoding]::new($false).GetBytes(($changed|ConvertTo-Json -Compress))
+        try{
+            $witness.Stream.Position=0;$witness.Stream.SetLength(0);$witness.Stream.Write($bytes);$witness.Stream.Flush($true)
+            Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $root -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release}
+        }finally{$witness.Stream.Position=0;$witness.Stream.SetLength(0);$witness.Stream.Write($original);$witness.Stream.Flush($true)}
+        foreach($wrong in @(@($payload,'ARM64','Release'),@($payload,'x64','Debug'),@((Join-Path $root '.build/other'),'x64','Release'))){
+            Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $root -LeasePath $witness.Path -SdkRoot $wrong[0] -Platform $wrong[1] -Configuration $wrong[2]}
+        }
+        Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot (Join-Path $root 'another-project') -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release}
+    }finally{$witness.Stream.Dispose()}
+    # The creator PID is still alive and the file remains, but its handle no longer exists.
+    $stale=Invoke-CiProcess (Get-Process -Id $PID).Path $arguments $root -TimeoutSeconds 30 -AllowFailure
+    Assert-True ($stale.exitCode -ne 0)
+}
+Invoke-Case 'Local SDK descriptors are independent, strictly typed and cannot change the application lock or profile' {
+    $consumer=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkConsumer.psm1') -PassThru
+    $root=New-Fixture 'sdk-local-descriptor'
+    $policy=Read-CiSdkProducerPolicy
+    $d=@{schemaVersion=1;role='LocalPinnedDependencyInput';sourceCommit=$policy.sources[1].commit;apiRevision=4;platform='x64';
+        sourceRoot='unused';toolingRoot='unused';storageEngineRoot='unused';storeRoot=(Join-Path $root '.build/store');manifestSha256=('1'*64)}
+    $path=Join-Path $root '.build/input.json'
+    Write-FixtureFile $root '.build/input.json' ($d|ConvertTo-Json)
+    $read=& $consumer {param($r,$p) Read-CiLocalSdkDescriptor $r $p} $root $path
+    Assert-Equal $d.sourceCommit $read.Value.sourceCommit
+    foreach($changed in @('bad-source','bad-api','bad-platform','unsupported-configuration')){
+        $values=@{ProjectRoot=$root;Descriptor=$path;ExpectedSourceCommit=$d.sourceCommit;ExpectedApiRevision=4;Platform='x64';Configuration='Release'}
+        switch($changed){'bad-source'{$values.ExpectedSourceCommit='2'*40};'bad-api'{$values.ExpectedApiRevision=5};'bad-platform'{$values.Platform='ARM64'};default{$values.Configuration='Debug'}}
+        $reason=$null
+        try{Open-CiPinnedSdkInput @values|Out-Null}catch{$reason=$_.Exception.Message}
+        Assert-True ($null -ne $reason -and $reason -match $(if($changed -ceq 'unsupported-configuration'){'Release only'}else{'cannot advance the application lock'}))
+    }
+    foreach($field in @('verdict','apiRevision')){
+        $bad=$d.Clone();$bad[$field]=if($field -ceq 'verdict'){'passed'}else{'4'}
+        Write-FixtureFile $root '.build/input.json' ($bad|ConvertTo-Json)
+        Assert-Refused {& $consumer {param($r,$p) Read-CiLocalSdkDescriptor $r $p} $root $path}
+    }
+    Write-FixtureFile $root '.build/store/self-input.json' ($d|ConvertTo-Json)
+    Assert-Refused {& $consumer {param($r,$p) Read-CiLocalSdkDescriptor $r $p} $root (Join-Path $root '.build/store/self-input.json')}
+    Write-FixtureFile $root 'outside-input.json' ($d|ConvertTo-Json)
+    Assert-Refused {& $consumer {param($r,$p) Read-CiLocalSdkDescriptor $r $p} $root (Join-Path $root 'outside-input.json')}
+}
+
+Invoke-Case 'Fast SDK bootstrap retains the exact ordinal raw map, missing-file refusal and per-read reparse barriers' {
+    $root=New-Fixture 'sdk-raw-map'
+    Write-FixtureFile $root 'src/café 日本語.cpp' 'Unicode raw source input'
+    $listed=(Invoke-CiGit $root @('ls-files','--cached','--others','--exclude-standard','-z')).stdout
+    $paths=[Collections.Generic.SortedSet[string]]::new([StringComparer]::Ordinal)
+    foreach($p in $listed.Split([char]0,[StringSplitOptions]::RemoveEmptyEntries)){[void]$paths.Add($p)}
+    $rows=@(foreach($p in $paths){$p+[char]0+(Get-FileHash -LiteralPath (Join-Path $root $p)).Hash})
+    Assert-Equal (Get-CiSha256 ($rows -join "`n")) (Get-CiSdkCheckoutContentIdentity $root)
+    $src=Join-Path $root 'src';$held=Join-Path $root '.build/original-src'
+    [void][IO.Directory]::CreateDirectory((Split-Path $held -Parent))
+    Move-Item -LiteralPath $src -Destination $held
+    $null=New-Item -ItemType $(if($IsWindows){'Junction'}else{'SymbolicLink'}) -Path $src -Target $held
+    try{Assert-Refused {Get-CiSdkCheckoutContentIdentity $root}}
+    finally{Remove-Item -LiteralPath $src;Move-Item -LiteralPath $held -Destination $src}
+    Remove-Item -LiteralPath (Join-Path $src 'main.cpp')
+    Assert-Refused {Get-CiSdkCheckoutContentIdentity $root}
 }
 
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count

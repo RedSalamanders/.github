@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "workloadOwner": "RedSalamanders/.github",
+  "sourceCommit": "f2e328a0a26a18ca66bf4b2aea77bf010c9515e1",
+  "fixture": "Complete canonical pinned DxUi checkout on the same Windows x64 host",
+  "benchmarkInputs": "Identical ordinal Git path and full raw-file SHA-256 inventory; current source and original 6816011 implementation",
+  "baselineCommit": "6816011e6b8024896ab70ab1320823564da045e2",
+  "candidateModuleSha256": "69754abcc0c3778eac3756a283459652360ed7054aeec14a47172308593a403b",
+  "initialBaseline": {
+    "source": "Z:/src/RedSalamanders.CI/.build/sdk-input-sources/f2e328a0a26a18ca",
+    "hash": "fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773",
+    "elapsedMs": 30639,
+    "role": "baseline",
+    "implementation": "6816011e6b8024896ab70ab1320823564da045e2"
+  },
+  "initialCandidate": [
+    {
+      "iteration": 1,
+      "hash": "fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773",
+      "elapsedMs": 4316
+    },
+    {
+      "iteration": 2,
+      "hash": "fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773",
+      "elapsedMs": 3945
+    },
+    {
+      "iteration": 3,
+      "hash": "fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773",
+      "elapsedMs": 3945
+    }
+  ],
+  "interleaved": [
+    {
+      "role": "candidate",
+      "hash": "fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773",
+      "elapsedMs": 4402
+    },
+    {
+      "role": "baseline",
+      "hash": "fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773",
+      "elapsedMs": 30601
+    },
+    {
+      "role": "baseline",
+      "hash": "fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773",
+      "elapsedMs": 29289
+    },
+    {
+      "role": "candidate",
+      "hash": "fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773",
+      "elapsedMs": 3969
+    }
+  ],
+  "limits": "Same-host warm diagnostics with other build/restore activity. No end-to-end, cold-cache, application or architecture speedup claim."
+}

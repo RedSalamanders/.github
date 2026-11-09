@@ -13,7 +13,7 @@ checkout must match its full expected commit, remain clean and retain the exact 
 tooling must already be an ancestor of its normally integrated main before native setup. Unsupported
 sources, repositories, events or refs refuse. This is never a PR or scheduled native build route.
 
-Policy also freezes the full raw source and tooling content identities of canonical Windows checkouts
+Policy also freezes the full raw source, tooling and storage-engine content identities of canonical Windows checkouts
 (`core.autocrlf=true`, with each version's attributes taking precedence). The controller verifies these
 bytes before importing producer code. Its small bootstrap hash adapter deliberately mirrors the SDK's
 ordinal path/raw SHA-256 map: invoking unverified producer code to establish its own trust would be circular.
@@ -88,3 +88,29 @@ creates marked owned directories; `Publish-CiSdkCacheEntry` copies and publishes
 `Open-CiSdkCacheEntry` verifies and holds a lease (including a lock file on a miss); `Close-CiSdkCacheEntry`
 verifies/relinquishes it; `Move-CiSdkCacheEntryToQuarantine` preserves one version through a guarded atomic move.
 Callers must close every acquired entry in finally and keep the lease through all compilation/link use.
+
+## Explicit local pinned application input
+
+`Ci.SdkConsumer.psm1` provides one shared application seam for a deliberately selected local Release SDK.
+The strict descriptor resides below the application's `.build`, outside the store, and binds source/API,
+platform, full existing source/tooling/storage checkouts, store and independently retained manifest hash.
+It cannot change the application's lock. Canonical raw bootstrap checks precede SDK imports; the native
+input acquisition then independently derives the complete key and leases the verified payload. A precise
+miss supplies no bytes and permits the adapter's unchanged source-build fallback. Malformed/corrupt inputs
+fail. No clone, dependency restore, product launch or test verdict occurs in this shared helper.
+
+The adapter holds the reader through all native use and closes it successfully before publishing a build
+receipt. Close rechecks the independent descriptor, complete SDK inputs and payload bytes; failure releases
+handles and prevents a successful build receipt. Existing build/test/package source and byte checks remain.
+The receipt identifies `PinnedReleaseSdkV1`, its actual key, manifest and complete input identity. It must
+never pretend this SDK recipe is an execution of the previous source wrapper.
+
+MSBuild calls `Test-SdkConsumerLease.ps1` before compilation with the exact project/payload/profile and a
+unique operation witness. The guard checks owner PID plus creation time and an actual still-held file handle.
+PID existence or a surviving witness alone is insufficient. Closed, stale and other-profile settings refuse.
+Witnesses stay as diagnostic data after handles close; they grant no reuse authority. This prevents accidental
+direct/stale compilation; it is not a security boundary against a user controlling the local build process.
+
+This local seam does not authenticate an arbitrary hosted artifact. Hosted producer workflow/run/attempt
+and transport admission, application adapter adoption, native architecture qualification, local dirty-source
+candidates and overall speedup acceptance remain separate implementation work.
