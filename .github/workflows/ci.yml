@@ -48,6 +48,9 @@ jobs:
       - name: Compiler-free dependency metadata behavior controls
         shell: pwsh
         run: ./Tests/Test-DependencyStatus.ps1
+      - name: Immutable SDK storage integrity and process leases
+        shell: pwsh
+        run: ./Tests/Test-SdkCache.ps1 -TestRoot (Join-Path $env:RUNNER_TEMP 'unified-ci-tests')
       - name: Preserve engine behavior evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

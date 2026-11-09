@@ -21,7 +21,13 @@ The normative contract is [Specs/CI.md](Specs/CI.md). Engine behavior tests use 
 
 ```powershell
 ./Tests/Test-Engine.ps1 -TestRoot Z:/RedSalamander.Perf
+./Tests/Test-SdkCache.ps1 -TestRoot Z:/RedSalamander.Perf
 ```
+
+The [SDK storage contract](Specs/SDK_Cache.md) defines immutable dependency byte storage, full manifest and
+payload verification, atomic publication and process reader leases. Its synthetic controls run on Windows
+and Ubuntu. Native identity acquisition, SDK producer/consumer integration and cache-hit acceleration remain
+under implementation; the storage module grants no test or qualification result.
 
 Implementation is recorded by [RedSalamander I55](https://github.com/RedSalamanders/RedSalamander/blob/main/Specs/Plans/Done/CI_OrganizationStandardization_2026-10-29.md); remaining live acceptance is owned by [I56](https://github.com/RedSalamanders/RedSalamander/blob/main/Specs/Plans/WIP/CI_HostedAcceptance_2026-10-31.md). A local test pass is not native project qualification.
 

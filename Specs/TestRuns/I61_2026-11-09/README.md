@@ -19,6 +19,36 @@ build/smoke branches and completion. RedTilde and RedXe passed both native regre
 jobs were still running at the snapshot. RedPrism and DxUi remained in native regression. Pending jobs are not passes.
 These runs differ from the historical samples in source and cache state and cannot establish a controlled speedup.
 
+## Follow-up implementation and capability evidence
+
+[DxUi #230](https://github.com/RedSalamanders/DxUi/pull/230) merged as f73da6db47d0afa198d855e82620a0088daac7ed.
+It adds selected target-union builds and receipts, the affected iteration baseline and the corrected preflight
+ordering assertions. Complete local tooling validation, 43 scoped cases, 43 build/SkipBuild policy cases and
+hosted compiler-free checks passed. Its [selected-build evidence](https://github.com/RedSalamanders/DxUi/blob/main/Measurements/TestingAcceleration_2026-11-09/selected-builds.json)
+retains source patch/input/image hashes, exactly three cold-build targets, six output files and native results.
+Cold build elapsed 148 seconds; default selected build with pre/post attestation elapsed 192 seconds. Both cold
+native suites passed, including 583,358 Embedded checks. Actual Full and Grid requests refused partial proof
+before native work; matching public Foundation follow-up reused its passed result in about 9.4 seconds.
+These are subset diagnostics, with source-revision limits stated by the owning record, not the overall target.
+
+RedTilde [#100](https://github.com/RedSalamanders/RedTilde/pull/100) merged old-baseline failure/interruption
+revocation and a reentrant profile lease after 57 scoped cases, all validators and hosted checks passed.
+RedPrism [#11](https://github.com/RedSalamanders/RedPrism/pull/11) merged as d7c53c618513ac9d5c44eac063a766d8a075f30a
+with the same controls after 30 scoped cases, 76 native-ARM refusal controls, complete validation and hosted checks passed.
+
+The first-wave DxUi x64 hosted regression at 5f65003 failed on the two stale direct-watchdog assertions before
+product suite execution. Its raw log is preserved in DxUi `.build/i61-hosted-first-wave-x64.log`. The failure
+is not reclassified; #230 fixes it and needs a new source-bound hosted run. RedMonitor, RedTilde and RedXe's
+first-wave normal qualification completed successfully on both native regression and production architectures.
+
+Engine [#21](https://github.com/RedSalamanders/.github/pull/21) added the manual compiler-free SDK artifact access
+probe. [Run 42641065137](https://github.com/RedSalamanders/.github/actions/runs/42641065137) passed with the engine
+repository's ordinary read-only workflow token. [sdk-artifact-access.json](sdk-artifact-access.json) records HTTP
+302 authorization for the exact existing qualified DxUi production-x64 artifact at 2a26dfbd5df4ea2af9cd7742677c17326f3bfa94.
+No SDK contents, credential or signed URL were retained. This proves only that caller's access capability;
+it neither qualifies a cache entry nor proves all five consumer tokens/configurations. The artifact source does
+not match the consumers' current three pins. Native source-build fallback remains mandatory on any mismatch.
+
 ## Source and obligation inventory
 
 [inventory.json](inventory.json) records six client heads, deployed engine pins, distinct DxUi pins/API revisions, native scope names, compiler-free PR coverage and effective main rules observed through GitHub's branch-rules API. The shared engine was based on `570351e14d469f2b1cefa7762fc64c1c24a4adf7`. Organization discovery returned exactly these six clients and `.github`; none was archived.
@@ -67,3 +97,17 @@ Whole restored DxUi trees currently range from about 0.49 to 20.59 GiB across cl
 ## Remaining acceptance
 
 The 3x warm component and 2x end-to-end objectives are unchanged and unproved. S2, full S3/S4/S5, S6B and S7–S10 remain open. Preserve the WIP plan until the accepted implementation, comparisons, native/hosted qualification and normative closeout are complete. A working-branch pin, cache hit, compilation or local fixture pass cannot close those gates.
+
+## SDK storage foundation
+
+The immutable dependency storage layer passes 12 local synthetic controls; [results](sdk-store-results.json)
+include real separate-process reader sharing and blocked quarantine, same-size/timestamp-restored corruption,
+independently retained manifest digests, shortened-locator full-identity checks, interrupted source publication
+and ownership initialization recovery. Original failed fixtures remain in the marked test sandbox. Complete
+engine behavior still passes 50 cases and dependency metadata behavior passes seven; workflow syntax validates
+nine definitions. Hosted Windows/Ubuntu acceptance is pending for this change.
+
+The [normative storage contract](../../SDK_Cache.md) describes the implemented effects and explicit limits.
+No consumer compiles or links from this store yet. The synthetic payload is not a native library. Producer trust,
+full native identity acquisition, archive/headers/symbols/licenses, actual linker provenance, local candidates and
+all five consumers' cold/hit/mismatch/native acceptance remain open; no SDK speedup or test verdict is claimed.

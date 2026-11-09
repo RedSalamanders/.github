@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "capability": "cross-repository-sdk-artifact-access",
+  "producer": "RedSalamanders/DxUi",
+  "consumer": "RedSalamanders/.github",
+  "tokenKind": "repository-scoped GITHUB_TOKEN",
+  "tokenPermissions": "contents:read,actions:read",
+  "observedUtc": "2026-11-09T15:05:30.6043045Z",
+  "confirmed": true,
+  "phase": "completed",
+  "httpStatus": 302,
+  "producerRunId": "42442938301",
+  "artifactName": "production-x64",
+  "sourceCommit": "2a26dfbd5df4ea2af9cd7742677c17326f3bfa94",
+  "artifactId": 13604817732,
+  "artifactDigest": "sha256:4bfebb4534b2736adf5bc60d3e52babc10373025da9f4241f5d63b6768347d3c",
+  "artifactBytes": 64253327
+}
