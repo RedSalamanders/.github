@@ -168,6 +168,14 @@ jobs:
           path: ${{ steps.tests.outputs.receipt_path }}
           if-no-files-found: error
           retention-days: 90
+      - name: Retain SDK library inputs from this successful regression attempt
+        if: steps.tests.outcome == 'success' && github.repository == 'RedSalamanders/DxUi' && steps.tests.outputs.sdk_inputs_directory != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sdk-library-inputs-${{ matrix.platform }}-${{ github.run_attempt }}
+          path: ${{ steps.tests.outputs.sdk_inputs_directory }}
+          if-no-files-found: error
+          retention-days: 14
       - if: steps.tests.outcome == 'success' && github.event.repository.name == 'RedSalamander'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -293,12 +301,23 @@ jobs:
         with:
           name: regression-${{ matrix.platform }}
           path: .build/ci/test-tools
+      # Defaults to this run; attempt-specific names exclude inputs from earlier retries.
+      # A missing handoff falls back to source in the adapter; package smoke is always required.
+      - name: Download this attempt's SDK library inputs
+        if: github.repository == 'RedSalamanders/DxUi'
+        id: sdk-inputs
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: sdk-library-inputs-${{ matrix.platform }}-${{ github.run_attempt }}
+          path: .build/sdk-library-download/${{ matrix.platform }}
       - name: Build production Release and smoke-test ZIP or SDK
         id: package
         shell: pwsh
         env:
           CI_PLATFORM: ${{ matrix.platform }}
           GH_TOKEN: ${{ github.token }}
+          CI_SDK_LIBRARY_INPUTS: ${{ steps.sdk-inputs.outputs.download-path }}
           VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.build/ci/vcpkg-cache,readwrite
         run: |
           $manifest = Get-Content .ci/project.json -Raw | ConvertFrom-Json

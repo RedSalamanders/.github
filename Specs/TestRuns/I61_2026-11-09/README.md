@@ -142,3 +142,35 @@ Shared current-conformance controls reject global Markdown-extension exclusions,
 readable for original artifact/source verification. Explicit pin maintenance migrates the original default and
 uses only committed templates from a clean reviewed engine. [Local controls](prose-policy-engine-results.json)
 and subsequent hosted/client adoption must be recorded against the final source before that rollout closes.
+
+## Coordinated adoption and SDK input handoff
+
+The later [hosted-adoption snapshot](hosted-adoption.json) preserves exact sources and outcomes after the
+initial snapshot. RedTilde's baseline campaign, RedXe's prose campaign and RedMonitor's public-wrapper campaign
+all completed both native regression and production architectures successfully. Later pin-adoption campaigns
+and RedPrism's baseline campaign remain separately identified; a queued or running job is not passed.
+
+Engine [#23](https://github.com/RedSalamanders/.github/pull/23) and [#24](https://github.com/RedSalamanders/.github/pull/24)
+passed Windows/Ubuntu behavior and both hosted winget controls. The five integrated clients now pin source
+904a8cb6824da010e2ddcd787d2037c610b0df9c with matching workflow callers: DxUi #231, RedTilde #101, RedPrism #12,
+RedXe #79 and RedMonitor #41. RedSalamander #209 remains pending Entire review; its separate successor worktree
+contains the same coordinated pin without changing the head the user is reviewing.
+
+DxUi's f73da6d native campaign failed x64 tooling before product execution because its fixture inherited CI
+flags and expected a local iteration baseline. The raw failure remains `.build/i61-hosted-followup-x64.log`.
+PR #231 preserves production refusal, explicitly tests the hosted route and isolates the local fixture child.
+Its 43 scoped controls passed under hosted/compiler-free environment flags, complete tooling passed and the
+static adapter now runs this reviewed compiler-free regression before native builds. The new native campaign
+at 0cc1ac0d2c240168a625bf15c2db8707669faa56 is recorded independently; it has not yet completed acceptance.
+
+The current SDK-library handoff branches add separate library-only provenance, using DxUi's complete v2
+source/dependency/evaluated-profile/toolchain identities and library/compiler-PDB bytes. Synthetic Git/file
+tests cover changed inputs, same-size/mtime corruption, missing symbols, dirty commits, failure revocation,
+same-run/attempt transfer, Full/performance receipt refusal and actual production routing. Eleven controls
+pass, including 13 incompatible evaluated-profile variants; actual installed x64 Release profile admission
+also passes. The shared current-run/attempt workflow contract and four seeded violations pass within 53
+engine controls; all nine workflow definitions pass syntax validation. Raw local evidence is retained at
+`Z:/RedSalamander.Perf/unified-ci/engine-20261109T171441329Z-60d839ecea764841a41a0bf24cb7f9c3/results.json`
+and DxUi `.build/i61-sdk-transfer-controls-v3.log` / `.build/i61-sdk-actual-profile.log`.
+These are controls and profile admission, not native SDK compilation, consumer qualification or a speedup claim.
+Native timings, final source-bound build/transfer/package proof and both hosted architectures remain required.

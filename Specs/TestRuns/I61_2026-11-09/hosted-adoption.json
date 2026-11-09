@@ -1,0 +1,520 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-11-09T17:18:17.2535848Z",
+  "purpose": "Post-adoption source-bound hosted outcomes; not a controlled speedup comparison.",
+  "runs": [
+    {
+      "repository": "RedSalamanders/DxUi",
+      "runId": 42659996089,
+      "source": "0cc1ac0d2c240168a625bf15c2db8707669faa56",
+      "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42659996089",
+      "event": "workflow_dispatch",
+      "createdAt": "2026-11-09T16:58:01Z",
+      "updatedAt": "2026-11-09T17:00:50Z",
+      "status": "in_progress",
+      "conclusion": "",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T17:00:07Z",
+          "completedAt": "2026-11-09T17:00:46Z",
+          "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42659996089/job/129309824798"
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T17:00:49Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42659996089/job/129310236110"
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T17:00:49Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42659996089/job/129310236286"
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/DxUi",
+      "runId": 42641495649,
+      "source": "f73da6db47d0afa198d855e82620a0088daac7ed",
+      "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42641495649",
+      "event": "workflow_dispatch",
+      "createdAt": "2026-11-09T15:07:50Z",
+      "updatedAt": "2026-11-09T17:00:04Z",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:35:39Z",
+          "completedAt": "2026-11-09T15:36:16Z",
+          "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42641495649/job/129260062253"
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:36:19Z",
+          "completedAt": "2026-11-09T16:59:29Z",
+          "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42641495649/job/129260461408"
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "failure",
+          "startedAt": "2026-11-09T15:36:20Z",
+          "completedAt": "2026-11-09T16:14:28Z",
+          "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42641495649/job/129260461770"
+        },
+        {
+          "name": "qualify / complete",
+          "status": "completed",
+          "conclusion": "failure",
+          "startedAt": "2026-11-09T16:59:32Z",
+          "completedAt": "2026-11-09T17:00:03Z",
+          "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42641495649/job/129309501276"
+        },
+        {
+          "name": "qualify / test-gate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-09T16:59:29Z",
+          "completedAt": "2026-11-09T16:59:29Z",
+          "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42641495649/job/129309502906"
+        },
+        {
+          "name": "qualify / production",
+          "status": "completed",
+          "conclusion": "skipped",
+          "startedAt": "2026-11-09T16:59:29Z",
+          "completedAt": "2026-11-09T16:59:29Z",
+          "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42641495649/job/129309503664"
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedTilde",
+      "runId": 42658161980,
+      "source": "15983fe90cc7f9166ef2d4a29116af1d4dc86740",
+      "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42658161980",
+      "event": "workflow_dispatch",
+      "createdAt": "2026-11-09T16:46:36Z",
+      "updatedAt": "2026-11-09T17:17:10Z",
+      "status": "in_progress",
+      "conclusion": "",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:46:40Z",
+          "completedAt": "2026-11-09T16:46:58Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42658161980/job/129302185323"
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:47:01Z",
+          "completedAt": "2026-11-09T17:16:51Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42658161980/job/129302380690"
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:47:01Z",
+          "completedAt": "2026-11-09T17:01:16Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42658161980/job/129302380905"
+        },
+        {
+          "name": "qualify / test-gate",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T17:16:54Z",
+          "completedAt": "2026-11-09T17:17:07Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42658161980/job/129319389694"
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T17:17:10Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42658161980/job/129319533087"
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T17:17:10Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42658161980/job/129319533348"
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedTilde",
+      "runId": 42641696441,
+      "source": "17514a7ea06f27e84eed81208a8f22e07643dacf",
+      "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42641696441",
+      "event": "workflow_dispatch",
+      "createdAt": "2026-11-09T15:09:00Z",
+      "updatedAt": "2026-11-09T16:09:10Z",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:09:05Z",
+          "completedAt": "2026-11-09T15:09:28Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42641696441/job/129244198965"
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:09:33Z",
+          "completedAt": "2026-11-09T15:28:00Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42641696441/job/129244456471"
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:09:31Z",
+          "completedAt": "2026-11-09T15:39:35Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42641696441/job/129244456608"
+        },
+        {
+          "name": "qualify / test-gate",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:39:38Z",
+          "completedAt": "2026-11-09T15:39:46Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42641696441/job/129262421139"
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:39:49Z",
+          "completedAt": "2026-11-09T15:52:00Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42641696441/job/129262531646"
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:39:49Z",
+          "completedAt": "2026-11-09T16:08:47Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42641696441/job/129262531864"
+        },
+        {
+          "name": "qualify / complete",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:08:50Z",
+          "completedAt": "2026-11-09T16:09:09Z",
+          "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42641696441/job/129279692022"
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedPrism",
+      "runId": 42658161657,
+      "source": "ed69e5c276eca9de8a1aea694ff528f00ecd4228",
+      "url": "https://github.com/RedSalamanders/RedPrism/actions/runs/42658161657",
+      "event": "workflow_dispatch",
+      "createdAt": "2026-11-09T16:46:36Z",
+      "updatedAt": "2026-11-09T16:46:38Z",
+      "status": "pending",
+      "conclusion": "",
+      "jobs": []
+    },
+    {
+      "repository": "RedSalamanders/RedPrism",
+      "runId": 42645222119,
+      "source": "d7c53c618513ac9d5c44eac063a766d8a075f30a",
+      "url": "https://github.com/RedSalamanders/RedPrism/actions/runs/42645222119",
+      "event": "workflow_dispatch",
+      "createdAt": "2026-11-09T15:29:44Z",
+      "updatedAt": "2026-11-09T15:43:02Z",
+      "status": "in_progress",
+      "conclusion": "",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:42:35Z",
+          "completedAt": "2026-11-09T15:42:58Z",
+          "url": "https://github.com/RedSalamanders/RedPrism/actions/runs/42645222119/job/129264140995"
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T15:43:02Z",
+          "completedAt": "2026-11-09T16:43:39Z",
+          "url": "https://github.com/RedSalamanders/RedPrism/actions/runs/42645222119/job/129264401307"
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T15:43:02Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "url": "https://github.com/RedSalamanders/RedPrism/actions/runs/42645222119/job/129264401594"
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedXe",
+      "runId": 42658141677,
+      "source": "7f135dcd005bd7b0e5c911cfe93e6563b1d7af30",
+      "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42658141677",
+      "event": "workflow_dispatch",
+      "createdAt": "2026-11-09T16:46:29Z",
+      "updatedAt": "2026-11-09T16:58:39Z",
+      "status": "in_progress",
+      "conclusion": "",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:58:11Z",
+          "completedAt": "2026-11-09T16:58:34Z",
+          "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42658141677/job/129308730238"
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T16:58:38Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42658141677/job/129308976500"
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T16:58:37Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42658141677/job/129308976549"
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedXe",
+      "runId": 42650238224,
+      "source": "3bcdc0bea21baaf48436fbeb46f5a056f1cf07f7",
+      "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42650238224",
+      "event": "workflow_dispatch",
+      "createdAt": "2026-11-09T15:59:53Z",
+      "updatedAt": "2026-11-09T16:58:08Z",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:00:00Z",
+          "completedAt": "2026-11-09T16:00:17Z",
+          "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42650238224/job/129274371925"
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:00:19Z",
+          "completedAt": "2026-11-09T16:30:33Z",
+          "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42650238224/job/129274569661"
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:00:20Z",
+          "completedAt": "2026-11-09T16:38:12Z",
+          "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42650238224/job/129274570521"
+        },
+        {
+          "name": "qualify / test-gate",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:38:15Z",
+          "completedAt": "2026-11-09T16:38:26Z",
+          "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42650238224/job/129297239085"
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:38:29Z",
+          "completedAt": "2026-11-09T16:57:43Z",
+          "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42650238224/job/129297384855"
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:38:30Z",
+          "completedAt": "2026-11-09T16:51:37Z",
+          "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42650238224/job/129297385080"
+        },
+        {
+          "name": "qualify / complete",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:57:47Z",
+          "completedAt": "2026-11-09T16:58:07Z",
+          "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42650238224/job/129308497199"
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedMonitor",
+      "runId": 42658151208,
+      "source": "caa40ec7dd14100e6d1159263af90661e6247643",
+      "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42658151208",
+      "event": "workflow_dispatch",
+      "createdAt": "2026-11-09T16:46:32Z",
+      "updatedAt": "2026-11-09T17:06:36Z",
+      "status": "in_progress",
+      "conclusion": "",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:46:38Z",
+          "completedAt": "2026-11-09T16:47:00Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42658151208/job/129302150903"
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:47:03Z",
+          "completedAt": "2026-11-09T17:06:16Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42658151208/job/129302400548"
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:47:03Z",
+          "completedAt": "2026-11-09T17:01:36Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42658151208/job/129302400695"
+        },
+        {
+          "name": "qualify / test-gate",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T17:06:20Z",
+          "completedAt": "2026-11-09T17:06:32Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42658151208/job/129313342549"
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T17:06:35Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42658151208/job/129313491611"
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T17:06:35Z",
+          "completedAt": "2026-11-09T17:18:03Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42658151208/job/129313491717"
+        }
+      ]
+    },
+    {
+      "repository": "RedSalamanders/RedMonitor",
+      "runId": 42651065770,
+      "source": "4a0de7870cf87fd05136e6a874f0cea84d0870f2",
+      "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42651065770",
+      "event": "workflow_dispatch",
+      "createdAt": "2026-11-09T16:04:43Z",
+      "updatedAt": "2026-11-09T16:40:21Z",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:04:48Z",
+          "completedAt": "2026-11-09T16:05:04Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42651065770/job/129277243197"
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:05:07Z",
+          "completedAt": "2026-11-09T16:16:50Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42651065770/job/129277437655"
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:05:07Z",
+          "completedAt": "2026-11-09T16:22:47Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42651065770/job/129277437879"
+        },
+        {
+          "name": "qualify / test-gate",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:22:51Z",
+          "completedAt": "2026-11-09T16:23:02Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42651065770/job/129288038131"
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:23:05Z",
+          "completedAt": "2026-11-09T16:40:02Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42651065770/job/129288181884"
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:23:05Z",
+          "completedAt": "2026-11-09T16:34:49Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42651065770/job/129288182006"
+        },
+        {
+          "name": "qualify / complete",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T16:40:05Z",
+          "completedAt": "2026-11-09T16:40:19Z",
+          "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42651065770/job/129298307349"
+        }
+      ]
+    }
+  ]
+}
