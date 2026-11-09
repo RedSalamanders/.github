@@ -996,12 +996,15 @@ Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unrev
     $root=New-Fixture 'workflow-conformance'
     $project=Read-CiProject $root
     Write-FixtureFile $root 'Tools/Invoke-ProjectCi.ps1' '# Fixture adapter; no source execution.'
-    foreach($template in Get-ChildItem (Join-Path $engineRoot 'Templates') -Filter '*.yml'){
+    foreach($template in Get-CiProjectWorkflowTemplates $project){
         $text=[IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$project.engine.ref).Replace('@OPERATIONS@','Prepare, Release, Winget')
         Write-FixtureFile $root ('.github/workflows/'+$template.Name) $text
     }
     $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
     Test-CiProjectConfiguration $context
+    Write-FixtureFile $root '.github/workflows/sdk-inputs.yml' ([IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/sdk-inputs.yml')).Replace('@ENGINE@',$project.engine.ref))
+    Assert-Refused {Test-CiProjectConfiguration $context}
+    Remove-Item -LiteralPath (Join-Path $root '.github/workflows/sdk-inputs.yml')
     $path=Join-Path $root '.github/workflows/ci.yml'
     $original=[IO.File]::ReadAllText($path)
     Write-FixtureFile $root '.github/workflows/ci.yml' ($original+([char]10)+'  native:'+([char]10)+'    runs-on: windows-latest'+([char]10)+'    steps:'+([char]10)+'      - run: ./build.ps1')
