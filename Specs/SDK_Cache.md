@@ -2,7 +2,40 @@
 
 Status: storage/schema foundation implemented; native identity acquisition, producer distribution,
 consumer integration and local candidate support remain in [I61](Plans/WIP/TestingAndIntegrationAcceleration_2026-11-09.md).
-No consumer currently bypasses source compilation through this module.
+No application currently bypasses source compilation through this module.
+
+## Explicit pinned native SDK producer
+
+The `sdk-inputs.yml` reusable workflow is a read-only, explicitly dispatched DxUi-main dependency-input
+role. `Policy/sdk-producer.json` owns exact reviewed source/API pins, producer-tooling snapshot and its
+storage-engine pin. Source, producer tooling and controller code are separate checkouts. Every actual
+checkout must match its full expected commit, remain clean and retain the exact source API; producer
+tooling must already be an ancestor of its normally integrated main before native setup. Unsupported
+sources, repositories, events or refs refuse. This is never a PR or scheduled native build route.
+
+Policy also freezes the full raw source and tooling content identities of canonical Windows checkouts
+(`core.autocrlf=true`, with each version's attributes taking precedence). The controller verifies these
+bytes before importing producer code. Its small bootstrap hash adapter deliberately mirrors the SDK's
+ordinal path/raw SHA-256 map: invoking unverified producer code to establish its own trust would be circular.
+Full checkouts are required; sparse, missing, reparse or mutated inputs refuse, including mutations hidden
+from Git status or preserving file size and timestamps. Other checkout bytes remain different identities;
+existing receipts are never relabeled to match this canonical producer.
+
+The producer supports only pinned Release/MD/stdcpplatest/full GL-LTCG/enabled-annotation SDK inputs.
+It preserves each original source/dependency pin, uses the reviewed producer's existing build/profile/
+zero-warning/process guards, and executes every SDK extraction/header/license/symbol/warning control
+on the architecture's native hosted runner before byte publication. The complete stored payload must
+match its independently held pre-archive snapshot. Generic storage remains data-only and grants no verdict.
+
+Manual platform selection is All, x64 or ARM64. Each archive has independent native SDK proof; a failed
+architecture can be retried without rebuilding a passed architecture. A selected producer is not full
+product qualification. Immutable artifact names bind source, platform and workflow attempt. Consumers
+still independently verify the trusted producer workflow/ref/source/run/attempt and transport digest,
+complete actual input key and full entry manifest/bytes before use. A missing artifact/access/profile is
+source fallback. No token writes, main-state advancement, merge approval or product publication occurs.
+
+Only SDK projects receive the manual SDK-input caller template. Application callers retain their
+independent native regression, production, packaging, sanitizer and interactive obligations.
 
 ## Authority and identity
 

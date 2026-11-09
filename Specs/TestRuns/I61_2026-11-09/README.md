@@ -214,3 +214,47 @@ The oldest API4 source pin 4cdf1ce5 also passed extracted native SDK compilation
 closure, PDB isolation/missing-PDB and first-party-warning rejection controls; other package checks are
 pending at this snapshot. Native ARM64, authenticated distribution, consumer integration and local
 candidates remain open. An SDK input is never a product test verdict.
+
+## Native SDK byte handoff and producer rollout
+
+DxUi #234, #235 and #236 merged respectively as 7dea6e886f437c88cbcfbbc84e98f6a914edd23b,
+54ea8335d5625761187caff93065d1336c10c040 and cb31c4f85602ad34d0a0fd6cd87c30d5d0b4e041.
+All three current source pins built and passed their native extracted SDK gates on x64. Complete input
+acquisition across independent checkouts matches, while old v2 build/test receipts retain location binding.
+At reviewed producer snapshot 6c89bb60c01e14ab4008e300ea73b44d206efb24, the f2e328a0 SDK passed every
+native gate and was stored with a full pre-archive payload witness. An independent checked-out/restored
+source compiled, linked and ran the SDK consumer from the immutable payload under a reader lease: 391
+headers stayed in SDK/toolchain, the original producer PDB stayed exclusively held, and no source library
+was built in the reader checkout. Open/close input verification took 32,313/26,796ms and native client
+compilation/execution 12,059ms; this is one diagnostic, not a controlled overall speedup result.
+Exact identities, SDK receipt and limits live in
+[DxUi's SDK store record](https://github.com/RedSalamanders/DxUi/blob/main/Measurements/TestingAcceleration_2026-11-09/sdk-input-store.json).
+
+The first storage prototype's logs remain retained; a full pre-archive byte witness was added before any
+independent client consumed an entry. Five store controls cover late stage/header changes, stored corruption,
+source mutation, profile/policy/symbol mismatch, misses and failure-safe lease release. Complete tooling
+validation and final focused/spec/changelog checks pass. No application adoption or ARM64 result is claimed.
+
+The shared manual producer freezes the exact SDK source/API, reviewed tooling snapshot and storage-engine
+pin separately. It permits only explicit DxUi-main dispatch, verifies normal main ancestry before native
+setup, uses read-only tokens and uploads attempt-bound dependency artifacts only after native SDK checks.
+All/x64/ARM64 selection allows a missing architecture to be retried independently. Actual Git fixtures and
+the extracted real resolver script pass within 57 engine controls; ten workflows pass syntax checks.
+Final local engine evidence is `Z:/RedSalamander.Perf/unified-ci/engine-20261109T200136901Z-6fd07f625f7a41cca8d496c020a0b9cc/results.json`.
+Earlier failed fixtures remain retained. Hosted deployment and both native architectures remain required.
+
+Canonical-checkout bootstrap hardening passes the same 57 engine controls and ten workflow syntax checks.
+The controller's raw maps matched the independently acquired SDK provenance for all three full pinned
+source checkouts and the clean 6c89bb60 tooling checkout (recorded in the local SDK worktree's
+`.build/i61-sdk-canonical-provenance.json`). A real Git fixture preserves size/mtime, hides the mutation
+with assume-unchanged, observes a clean status, and still refuses the changed raw bytes. String-valued
+API revisions also refuse. Final engine evidence:
+`Z:/RedSalamander.Perf/unified-ci/engine-20261109T202241902Z-a180fe185bb64d5596d176688ea78e78/results.json`.
+Canonical checkout bytes are explicit inputs, not a normalization of old proof. Hosted x64 regression
+for DxUi campaign 42682591817 passed; ARM64 remains pending at this observation.
+
+RedSalamander #210 merged at 99624c5385c6c0d42f8d1c6f8be54cbe69f506ef. Its
+49 current Ghostty lifecycle controls include real curl 504 recovery, permanent 404 refusal and bounded
+persistent failure, without relaxing hashes or offline behavior. The separate historical five-notice
+assertion mismatch remains evidence with sealed source bytes unchanged. Prior campaign 42674161785
+still records its x64 HTTP 504 build failure; queued 42687608134 targets the actual merged retry fix.

@@ -996,12 +996,15 @@ Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unrev
     $root=New-Fixture 'workflow-conformance'
     $project=Read-CiProject $root
     Write-FixtureFile $root 'Tools/Invoke-ProjectCi.ps1' '# Fixture adapter; no source execution.'
-    foreach($template in Get-ChildItem (Join-Path $engineRoot 'Templates') -Filter '*.yml'){
+    foreach($template in Get-CiProjectWorkflowTemplates $project){
         $text=[IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$project.engine.ref).Replace('@OPERATIONS@','Prepare, Release, Winget')
         Write-FixtureFile $root ('.github/workflows/'+$template.Name) $text
     }
     $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
     Test-CiProjectConfiguration $context
+    Write-FixtureFile $root '.github/workflows/sdk-inputs.yml' ([IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/sdk-inputs.yml')).Replace('@ENGINE@',$project.engine.ref))
+    Assert-Refused {Test-CiProjectConfiguration $context}
+    Remove-Item -LiteralPath (Join-Path $root '.github/workflows/sdk-inputs.yml')
     $path=Join-Path $root '.github/workflows/ci.yml'
     $original=[IO.File]::ReadAllText($path)
     Write-FixtureFile $root '.github/workflows/ci.yml' ($original+([char]10)+'  native:'+([char]10)+'    runs-on: windows-latest'+([char]10)+'    steps:'+([char]10)+'      - run: ./build.ps1')
@@ -1026,7 +1029,8 @@ Invoke-Case 'SDK conformance retains qualification and rejects every hosted publ
     $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
     Test-CiProjectConfiguration $context
     Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/qualify.yml'))
-    Assert-Equal 5 @(Get-CiProjectWorkflowTemplates $project).Count
+    Assert-Equal 6 @(Get-CiProjectWorkflowTemplates $project).Count
+    Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/sdk-inputs.yml'))
     Write-FixtureFile $root '.github/workflows/publish.yml' 'on: workflow_dispatch'
     Assert-Refused {Test-CiProjectConfiguration $context}
     Remove-Item -LiteralPath (Join-Path $root '.github/workflows/publish.yml')
@@ -1160,6 +1164,135 @@ Invoke-Case 'Queue compatibility validates the official value and noncancellatio
     Assert-Refused { Test-CiWorkflowQueues ("concurrency:"+$lf+"  queue: unlimited") }
     Assert-Refused { Test-CiWorkflowQueues ("concurrency:"+$lf+"  queue: max"+$lf+"  cancel-in-progress: true") }
     Assert-Refused { Test-CiWorkflowQueues ("jobs:"+$lf+"  queue: max") }
+}
+
+Invoke-Case 'Pinned SDK admission is manual main only and preserves independent native architecture requests' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkProducer.psm1')
+    $policy=Read-CiSdkProducerPolicy
+    $template=[IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/sdk-inputs.yml'))
+    foreach($source in $policy.sources){
+        Assert-True ($template.Contains($source.commit))
+        foreach($platform in @('All','x64','ARM64')){
+            $r=Resolve-CiSdkProducerRequest -Repository RedSalamanders/DxUi -Ref refs/heads/main -Event workflow_dispatch -SourceCommit $source.commit -RunId 123 -Platform $platform
+            Assert-Equal $source.apiRevision $r.apiRevision
+            Assert-Equal $policy.toolingRef $r.toolingRef
+            Assert-Equal $policy.toolingContentIdentity $r.toolingContentIdentity
+            Assert-Equal $source.contentIdentity $r.sourceContentIdentity
+            Assert-Equal $policy.storageEngineRef $r.storageEngineRef
+            Assert-Equal $(if($platform -ceq 'All'){2}else{1}) @($r.matrix.include).Count
+            if($platform -cne 'All'){Assert-Equal $platform $r.matrix.include[0].platform}
+        }
+    }
+    foreach($bad in @(@('RedSalamanders/RedMonitor','refs/heads/main','workflow_dispatch',$policy.sources[0].commit,'123'),
+        @('RedSalamanders/DxUi','refs/heads/feature','workflow_dispatch',$policy.sources[0].commit,'123'),
+        @('RedSalamanders/DxUi','refs/heads/main','pull_request',$policy.sources[0].commit,'123'),
+        @('RedSalamanders/DxUi','refs/heads/main','schedule',$policy.sources[0].commit,'123'),
+        @('RedSalamanders/DxUi','refs/heads/main','workflow_dispatch','main','123'),
+        @('RedSalamanders/DxUi','refs/heads/main','workflow_dispatch',('1'*40),'123'),
+        @('RedSalamanders/DxUi','refs/heads/main','workflow_dispatch',$policy.sources[0].commit,'0'))){
+        Assert-Refused {Resolve-CiSdkProducerRequest -Repository $bad[0] -Ref $bad[1] -Event $bad[2] -SourceCommit $bad[3] -RunId $bad[4]}
+    }
+    $app=Read-CiProject (New-Fixture 'sdk-template-app')
+    Assert-True ('sdk-inputs.yml' -cnotin @(Get-CiProjectWorkflowTemplates $app).Name)
+}
+Invoke-Case 'SDK producer checks actual clean Git identities, main ancestry, API and storage pin before setup' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkProducer.psm1')
+    $tooling=New-Fixture 'sdk-tooling';$source=New-Fixture 'sdk-source';$storage=New-Fixture 'sdk-storage'
+    $storageHead=(Invoke-CiGit $storage @('rev-parse','HEAD')).stdout.Trim()
+    $manifest=Read-CiProject $tooling;$manifest.repository='RedSalamanders/DxUi';$manifest.kind='sdk';$manifest.winget=$null;$manifest.engine.ref=$storageHead
+    Write-FixtureFile $tooling '.ci/project.json' ($manifest|ConvertTo-Json -Depth 8)
+    $toolingHead=Save-Fixture $tooling 'Synthetic producer metadata'
+    Write-FixtureFile $source 'capabilities.json' '{"apiRevision":4}'
+    $sourceHead=Save-Fixture $source 'Synthetic source API'
+    $null=Invoke-CiGit $tooling @('update-ref','refs/remotes/origin/main',$toolingHead)
+    $request=@{toolingRef=$toolingHead;sourceCommit=$sourceHead;storageEngineRef=$storageHead;apiRevision=4;
+        toolingContentIdentity=(Get-CiSdkCheckoutContentIdentity $tooling);sourceContentIdentity=(Get-CiSdkCheckoutContentIdentity $source)}
+    Assert-CiSdkProducerCheckouts $request $tooling $source $storage
+    $bad=$request.Clone();$bad.sourceCommit='1'*40
+    Assert-Refused {Assert-CiSdkProducerCheckouts $bad $tooling $source $storage}
+    Write-FixtureFile $source 'untracked.txt' 'mutation witness'
+    Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
+    Remove-Item -LiteralPath (Join-Path $source 'untracked.txt')
+    # Git's clean report is insufficient: preserve size/mtime and hide a real byte mutation from its index.
+    $capabilities=Join-Path $source 'capabilities.json'
+    $original=[IO.File]::ReadAllBytes($capabilities);$mtime=[IO.File]::GetLastWriteTimeUtc($capabilities)
+    $null=Invoke-CiGit $source @('update-index','--assume-unchanged','capabilities.json')
+    try{
+        [IO.File]::WriteAllText($capabilities,'{"apiRevision":5}',[Text.UTF8Encoding]::new($false))
+        [IO.File]::SetLastWriteTimeUtc($capabilities,$mtime)
+        Assert-Equal $original.Length ([IO.File]::ReadAllBytes($capabilities)).Length
+        Assert-Equal '' (Invoke-CiGit $source @('status','--porcelain')).stdout.Trim()
+        Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
+    }finally{
+        [IO.File]::WriteAllBytes($capabilities,$original);[IO.File]::SetLastWriteTimeUtc($capabilities,$mtime)
+        $null=Invoke-CiGit $source @('update-index','--no-assume-unchanged','capabilities.json')
+    }
+    Assert-CiSdkProducerCheckouts $request $tooling $source $storage
+    Write-FixtureFile $tooling 'README.md' 'Reviewed but not integrated synthetic tooling'
+    $request.toolingRef=Save-Fixture $tooling 'Synthetic future tooling'
+    $request.toolingContentIdentity=Get-CiSdkCheckoutContentIdentity $tooling
+    Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
+    $null=Invoke-CiGit $tooling @('update-ref','refs/remotes/origin/main',$request.toolingRef)
+    Assert-CiSdkProducerCheckouts $request $tooling $source $storage
+    Write-FixtureFile $source 'capabilities.json' '{"apiRevision":5}'
+    $request.sourceCommit=Save-Fixture $source 'Synthetic changed API'
+    $request.sourceContentIdentity=Get-CiSdkCheckoutContentIdentity $source
+    Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
+    Write-FixtureFile $source 'capabilities.json' '{"apiRevision":"4"}'
+    $request.sourceCommit=Save-Fixture $source 'Synthetic mistyped API'
+    $request.sourceContentIdentity=Get-CiSdkCheckoutContentIdentity $source
+    Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
+}
+Invoke-Case 'Actual SDK workflow resolver writes five independent outputs without compilation' {
+    $root=New-Fixture 'sdk-workflow-output'
+    $clone=Join-Path $root '.ci-engine'
+    $null=Invoke-CiProcess git @('clone','--no-local','--no-hardlinks','--no-checkout',$engineRoot,$clone) $root
+    $head=(Invoke-CiGit $engineRoot @('rev-parse','HEAD')).stdout.Trim()
+    $null=Invoke-CiGit $clone @('checkout','--detach',$head)
+    $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/sdk-inputs.yml'))
+    $body=[regex]::Match($text,'(?m)^      - name: Resolve only reviewed pinned SDK inputs\r?\n[\s\S]*?^        run: \|\r?\n(?<body>(?:          [^\r\n]*\r?\n)+)').Groups['body'].Value
+    Assert-True ($body.Length -gt 0)
+    $code=($body -split '\r?\n'|ForEach-Object{$_ -replace '^          ',''}) -join "`n"
+    Write-FixtureFile $root 'resolve.ps1' $code
+    $policy=Read-CiSdkProducerPolicy
+    $output=Join-Path $root 'github-output.txt'
+    $values=@{CI_ENGINE_REF=$head;SDK_SOURCE=$policy.sources[1].commit;SDK_PLATFORM='ARM64';GITHUB_REPOSITORY='RedSalamanders/DxUi';
+        GITHUB_REF='refs/heads/main';GITHUB_EVENT_NAME='workflow_dispatch';GITHUB_RUN_ID='321';GITHUB_OUTPUT=$output}
+    $saved=@{}
+    try{
+        foreach($name in $values.Keys){$saved[$name]=[Environment]::GetEnvironmentVariable($name);[Environment]::SetEnvironmentVariable($name,$values[$name])}
+        $result=Invoke-CiProcess (Get-Process -Id $PID).Path @('-NoProfile','-NonInteractive','-File',(Join-Path $root 'resolve.ps1')) $root -TimeoutSeconds 30 -AllowFailure
+        Assert-True ($result.exitCode -eq 0) $result.stderr
+    }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name])}}
+    $lines=@(Get-Content $output)
+    Assert-Equal 5 $lines.Count
+    $actual=@{}
+    foreach($line in $lines){$pair=$line -split '=',2;Assert-Equal 2 $pair.Count;Assert-True (-not $actual.ContainsKey($pair[0]));$actual[$pair[0]]=$pair[1]}
+    Assert-Equal $policy.sources[1].commit $actual.source
+    Assert-Equal $policy.toolingRef $actual.tooling
+    Assert-Equal $policy.storageEngineRef $actual.storage_engine
+    Assert-Equal '0.1.321' $actual.version
+    $matrix=$actual.matrix|ConvertFrom-Json
+    Assert-Equal 1 @($matrix.include).Count
+    Assert-Equal 'ARM64' $matrix.include[0].platform
+    Assert-True (-not(Test-Path (Join-Path $root '.build')))
+}
+Invoke-Case 'SDK workflow keeps reviewed tooling separate, read-only tokens and native-success attempt-bound artifacts' {
+    function Assert-SdkProducerWorkflow([string]$Text){
+        foreach($required in @("github.event_name == 'workflow_dispatch'","github.ref == 'refs/heads/main'",'contents: read','actions: read',
+            'ref: ${{ needs.resolve.outputs.tooling }}','ref: ${{ needs.resolve.outputs.source }}','ref: ${{ needs.resolve.outputs.storage_engine }}',
+            'Assert-CiSdkProducerCheckouts','git config --global core.autocrlf true','if: steps.build.outcome == ''success''','-${{ github.run_attempt }}',
+            '-SdkStoreRoot','-ProductionOnly','-SmokeRoot $env:RUNNER_TEMP')){Assert-True ($Text.Contains($required))}
+        Assert-True (-not($Text.Contains('contents: write') -or $Text.Contains('statuses: write') -or $Text.Contains('secrets: inherit')))
+        Assert-True ($Text.IndexOf('Assert-CiSdkProducerCheckouts') -lt $Text.IndexOf('uses: ./.build/sdk-producer/.github/actions/setup-msvc'))
+        Assert-True (-not($Text.Contains('Invoke-Admission') -or $Text.Contains('ci-state') -or $Text.Contains('ProductionRelease')))
+    }
+    $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/sdk-inputs.yml'))
+    Assert-SdkProducerWorkflow $text
+    foreach($bad in @($text.Replace("github.event_name == 'workflow_dispatch'",'true'),
+        $text.Replace('contents: read','contents: write'),$text.Replace("if: steps.build.outcome == 'success'",'if: always()'),
+        $text.Replace('-${{ github.run_attempt }}',''),$text.Replace('core.autocrlf true','core.autocrlf false'),
+        $text.Replace('Assert-CiSdkProducerCheckouts','UncheckedSdkInputs'))){Assert-Refused {Assert-SdkProducerWorkflow $bad}}
 }
 
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count

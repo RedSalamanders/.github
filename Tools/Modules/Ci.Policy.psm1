@@ -109,7 +109,8 @@ function Get-CiProjectWorkflowTemplates {
     $engine=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
     $paths=(Invoke-CiGit $engine @('ls-tree','-r','--name-only','-z','HEAD','--','Templates')).stdout.Split([char]0,[StringSplitOptions]::RemoveEmptyEntries)
     foreach($path in $paths){
-        if($path -cnotmatch '^Templates/[^/]+\.yml$' -or ($Project.kind -ceq 'sdk' -and $path -ceq 'Templates/publish.yml')){continue}
+        if($path -cnotmatch '^Templates/[^/]+\.yml$' -or ($Project.kind -ceq 'sdk' -and $path -ceq 'Templates/publish.yml') -or
+            ($Project.kind -cne 'sdk' -and $path -ceq 'Templates/sdk-inputs.yml')){continue}
         Get-Item -LiteralPath (Assert-CiContainedPath $engine (Join-Path $engine $path)) -ErrorAction Stop
     }
 }

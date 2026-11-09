@@ -1,0 +1,163 @@
+name: Pinned native dependency SDK inputs
+on:
+  workflow_call:
+    inputs:
+      engine_ref:
+        type: string
+        required: true
+      source_commit:
+        type: string
+        required: true
+      platform:
+        type: string
+        default: All
+permissions:
+  contents: read
+  actions: read
+jobs:
+  resolve:
+    if: github.repository == 'RedSalamanders/DxUi' && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.request.outputs.matrix }}
+      source: ${{ steps.request.outputs.source }}
+      tooling: ${{ steps.request.outputs.tooling }}
+      storage_engine: ${{ steps.request.outputs.storage_engine }}
+      version: ${{ steps.request.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - name: Resolve only reviewed pinned SDK inputs
+        id: request
+        shell: pwsh
+        env:
+          CI_ENGINE_REF: ${{ inputs.engine_ref }}
+          SDK_SOURCE: ${{ inputs.source_commit }}
+          SDK_PLATFORM: ${{ inputs.platform }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $head=(git -C .ci-engine rev-parse HEAD).Trim()
+          if($LASTEXITCODE -or $head -cne $env:CI_ENGINE_REF){throw 'SDK controller engine identity mismatch.'}
+          Import-Module ./.ci-engine/Tools/Modules/Ci.SdkProducer.psm1
+          $request=Resolve-CiSdkProducerRequest -Repository $env:GITHUB_REPOSITORY -Ref $env:GITHUB_REF -Event $env:GITHUB_EVENT_NAME -SourceCommit $env:SDK_SOURCE -RunId $env:GITHUB_RUN_ID -Platform $env:SDK_PLATFORM
+          $outputs=[ordered]@{matrix=($request.matrix|ConvertTo-Json -Depth 4 -Compress);source=$request.sourceCommit;tooling=$request.toolingRef;storage_engine=$request.storageEngineRef;version=$request.version}
+          foreach($output in $outputs.GetEnumerator()){"$($output.Key)=$($output.Value)"|Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append}
+  sdk:
+    needs: resolve
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.resolve.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    steps:
+      - name: Select canonical Windows SDK checkout bytes
+        shell: pwsh
+        run: |
+          git config --global core.longpaths true
+          if($LASTEXITCODE){throw 'Could not configure long SDK paths.'}
+          git config --global core.autocrlf true
+          if($LASTEXITCODE){throw 'Could not configure canonical SDK checkout bytes.'}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/DxUi
+          ref: ${{ needs.resolve.outputs.tooling }}
+          path: .build/sdk-producer
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/DxUi
+          ref: ${{ needs.resolve.outputs.source }}
+          path: .build/sdk-source
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ needs.resolve.outputs.storage_engine }}
+          path: .build/sdk-producer/.ci-engine
+          persist-credentials: false
+      - name: Verify reviewed source and tooling before native setup
+        shell: pwsh
+        env:
+          SDK_SOURCE: ${{ needs.resolve.outputs.source }}
+          SDK_PLATFORM: ${{ matrix.platform }}
+        run: |
+          Import-Module ./.ci-engine/Tools/Modules/Ci.SdkProducer.psm1
+          $request=Resolve-CiSdkProducerRequest -Repository $env:GITHUB_REPOSITORY -Ref $env:GITHUB_REF -Event $env:GITHUB_EVENT_NAME -SourceCommit $env:SDK_SOURCE -RunId $env:GITHUB_RUN_ID -Platform $env:SDK_PLATFORM
+          Assert-CiSdkProducerCheckouts -Request $request -ToolingRoot (Join-Path $PWD '.build/sdk-producer') -SourceRoot (Join-Path $PWD '.build/sdk-source') -StorageEngineRoot (Join-Path $PWD '.build/sdk-producer/.ci-engine')
+      - uses: ./.build/sdk-producer/.github/actions/setup-msvc
+        with:
+          platform: ${{ matrix.platform }}
+      - name: Restore ABI-indexed dependencies
+        id: deps
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/ci/vcpkg-cache
+          key: ci-deps-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ inputs.engine_ref }}-sdk-${{ needs.resolve.outputs.source }}
+          restore-keys: |
+            ci-deps-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-
+      - name: Build and natively check pinned SDK input bytes
+        id: build
+        shell: pwsh
+        env:
+          SDK_PLATFORM: ${{ matrix.platform }}
+          SDK_VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $producer=Join-Path $PWD '.build/sdk-producer'
+          $source=Join-Path $PWD '.build/sdk-source'
+          $cache=Join-Path $PWD '.build/ci/vcpkg-cache'
+          [void][IO.Directory]::CreateDirectory($cache)
+          $env:VCPKG_BINARY_SOURCES='clear;files,'+$cache+',readwrite'
+          & (Join-Path $source 'vcpkg-install.ps1') -Platform $env:SDK_PLATFORM
+          if(-not $? -or $LASTEXITCODE){throw 'Pinned SDK dependency restore failed.'}
+          'deps_ready=true'|Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          & (Join-Path $producer 'build.ps1') -SourceRoot $source -Platform $env:SDK_PLATFORM -Configuration Release -ProductionOnly
+          if(-not $? -or $LASTEXITCODE){throw 'Pinned SDK native library build failed.'}
+          & (Join-Path $producer 'Tools/New-SdkPackage.ps1') -SourceRoot $source -Platform $env:SDK_PLATFORM -Version $env:SDK_VERSION -SmokeRoot $env:RUNNER_TEMP -SdkStoreRoot (Join-Path $producer '.build/sdk-input-store') -SdkStoreRepositoryRoot $producer
+          if(-not $? -or $LASTEXITCODE){throw 'Pinned SDK native qualification/publication failed.'}
+      - name: Save successfully populated ABI dependency cache
+        if: always() && steps.build.outputs.deps_ready == 'true' && steps.deps.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/ci/vcpkg-cache
+          key: ${{ steps.deps.outputs.cache-primary-key }}
+      - name: Retain immutable dependency bytes after native SDK checks
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dependency-sdk-${{ needs.resolve.outputs.source }}-${{ matrix.platform }}-${{ github.run_attempt }}
+          path: |
+            .build/sdk-producer/.build/sdk-input-store/entries/
+            .build/sdk-source/.build/sdk/*.receipt.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90
+      - name: Retain native SDK diagnostics separately
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dependency-sdk-diagnostics-${{ matrix.platform }}-${{ github.run_attempt }}
+          path: |
+            .build/sdk-source/.build/logs/
+            .build/sdk-source/.build/sdk/*.receipt.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 90
