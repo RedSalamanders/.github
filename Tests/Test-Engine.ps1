@@ -1226,7 +1226,7 @@ Invoke-Case 'Actual SDK workflow resolver writes five independent outputs withou
     $head=(Invoke-CiGit $engineRoot @('rev-parse','HEAD')).stdout.Trim()
     $null=Invoke-CiGit $clone @('checkout','--detach',$head)
     $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/sdk-inputs.yml'))
-    $body=[regex]::Match($text,'(?ms)^      - name: Resolve only reviewed pinned SDK inputs\r?\n.*?        run: \|\r?\n(?<body>(?:          .*\r?\n)+)').Groups['body'].Value
+    $body=[regex]::Match($text,'(?m)^      - name: Resolve only reviewed pinned SDK inputs\r?\n[\s\S]*?^        run: \|\r?\n(?<body>(?:          [^\r\n]*\r?\n)+)').Groups['body'].Value
     Assert-True ($body.Length -gt 0)
     $code=($body -split '\r?\n'|ForEach-Object{$_ -replace '^          ',''}) -join "`n"
     Write-FixtureFile $root 'resolve.ps1' $code
