@@ -1,6 +1,23 @@
 # I61 implementation and evidence — 2026-11-09
 
-This is a partial implementation record for the [active organization plan](../../Plans/WIP/TestingAndIntegrationAcceleration_2026-11-09.md). Overall speed targets and hosted acceptance remain open. No release, publication, account or billing operation was performed.
+This is a partial implementation record for the [active organization plan](../../Plans/WIP/TestingAndIntegrationAcceleration_2026-11-09.md). Overall speed targets and remaining hosted acceptance stay open. No release, publication, account or billing operation was performed.
+
+## Integrated changes and hosted acceptance
+
+The reviewed engine source `fbe6a707eb5d11847ac1a982d1c3851ea32b2baf` was integrated in
+[engine PR #19](https://github.com/RedSalamanders/.github/pull/19). All six client pins and generated callers
+match that source. Normal integration completed for [RedPrism #10](https://github.com/RedSalamanders/RedPrism/pull/10),
+[RedTilde #99](https://github.com/RedSalamanders/RedTilde/pull/99), [RedXe #77](https://github.com/RedSalamanders/RedXe/pull/77),
+[RedMonitor #39](https://github.com/RedSalamanders/RedMonitor/pull/39) and [DxUi #229](https://github.com/RedSalamanders/DxUi/pull/229)
+after their applicable hosted checks passed. No branch-protection bypass was used.
+[RedSalamander #209](https://github.com/RedSalamanders/RedSalamander/pull/209) has passing required compiler-free
+checks and remains open for Entire reviewer approval; its new runner handoff has no final hosted native acceptance yet.
+
+[hosted-rollout.json](hosted-rollout.json) freezes the observed run/source/job/phase snapshot with direct run links.
+RedMonitor run 42626422908 passed both native Release regression branches, the AND test gate, both production
+build/smoke branches and completion. RedTilde and RedXe passed both native regression branches; their production
+jobs were still running at the snapshot. RedPrism and DxUi remained in native regression. Pending jobs are not passes.
+These runs differ from the historical samples in source and cache state and cannot establish a controlled speedup.
 
 ## Source and obligation inventory
 
@@ -26,7 +43,18 @@ The observed effective rules contain no merge-queue requirement or strict-base n
 - Existing sibling checks: RedPrism scoped tests passed **27 cases**; RedTilde **54**; RedXe **33**; RedMonitor build controls **41**. These do not qualify product runtime behavior.
 - DxUi x64 Release canonical build passed with zero warnings/errors, elapsed **7 min 1 sec**. The first serial native attempt (Foundation, Embedded, Grid, Theme) then failed: Embedded terminated with `0xc0000409`; the other three suites and 8 filter/12 watchdog controls passed. The failed run remains failed and is not a concurrency benchmark. No ARM64 runtime or foreground acceptance is inferred.
 
-The serial failure is retained at DxUi run `20261109T130229552Z-81776-d3ff2e9c1cd84dbeb130432cab0e8b22`, with native EXE/PDB hashes and a member-verified archive, dump and `ordinary.record`. Symbol resolution against the matching PDB identifies `PreparedLayoutAccess::Prepare` at `src/Controls/DxUi.RichTextLayout.cpp:447`, called by `TestRichDocumentGeometryMaximumStorageBudget`. DirectWrite raised a C++ exception internally during `GetOverhangMetrics`; the existing native allowance covered only the preceding `GetMetrics`. The narrow repair extends the same canonical native-call boundary to overhang metrics; HRESULT handling and observation of SDK allocations/reentrant scopes remain required. Rebuild and regression acceptance are pending. Hosted parallelism stays serial while comparison is unqualified.
+The serial failure is retained at DxUi run `20261109T130229552Z-81776-d3ff2e9c1cd84dbeb130432cab0e8b22`, with native EXE/PDB hashes and a member-verified archive, dump and `ordinary.record`. Symbol resolution against the matching PDB identifies `PreparedLayoutAccess::Prepare` at `src/Controls/DxUi.RichTextLayout.cpp:447`, called by `TestRichDocumentGeometryMaximumStorageBudget`. DirectWrite raised a C++ exception internally during `GetOverhangMetrics`; the existing native allowance covered only the preceding `GetMetrics`. PR #229 extends the same canonical native-call boundary to overhang metrics; HRESULT handling and observation of SDK allocations/reentrant scopes remain required. The subsequent canonical x64 Release rebuild passed with zero warnings/errors in 6 min 19 sec. The original failure remains failed.
+
+The [DxUi measurement package](https://github.com/RedSalamanders/DxUi/tree/main/Measurements/TestingAcceleration_2026-11-09)
+retains an exact compressed candidate patch, source identity, ordered case lists and image hashes. Its serial
+run `20261109T131955474Z-74628-95d33a4f550243ca90b1394f455f1a7f` and parallel-2 run
+`20261109T132823197Z-28960-df5daf385fed47e2884f517480183b9c` used the same binaries, passed all 19 requested
+nonforeground suites, the same 1,726 named cases and zero capability skips. Elapsed time was 441,376.8 ms versus
+335,173.6 ms: 24.1% less, 1.317x, in one pair. This is neither a median/p95 nor the overall acceleration target.
+The archived source predates the subsequent engine-only pin update; it is not final-head whole-project qualification.
+Two alternating prerequisite measurements were 1,029.8/23,263.0 and 920.2/23,178.8 ms for reused/fresh native
+filter/watchdog verification. Performance and desktop prerequisites were not cached. Hosted scheduling stays serial
+pending native architecture acceptance; ARM64, Debug/ASan, consumers and foreground work remain separate.
 
 ## Measured and rejected optimizations
 
