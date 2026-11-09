@@ -113,6 +113,20 @@ Invoke-Case 'Current conformance refuses extension-wide Markdown exclusions with
         Assert-True ($message.Contains('extension-wide exclusion')) "Unexpected conformance result: $message"
     }
 }
+Invoke-Case 'Compiler-free planner command is restricted to the reviewed DxUi adapter and preserves nonzero exits' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
+    $root=New-Fixture 'compiler-free-planner'
+    $script='Tools/tests/Test-ScopedTesting.ps1'
+    Write-FixtureFile $root $script 'Write-Output "recording planner control, no compiler"; exit 0'
+    Write-FixtureFile $root 'build.ps1' 'throw "A native build must never be invoked."'
+    $context=@{root=$root;phase='Static';project=@{repository='RedSalamanders/RedMonitor'}}
+    Assert-Refused {Invoke-CiProjectScript $context $script -TimeoutSeconds 30}
+    $context.project.repository='RedSalamanders/DxUi'
+    Invoke-CiProjectScript $context $script -TimeoutSeconds 30
+    Assert-Refused {Invoke-CiProjectScript $context 'build.ps1' -TimeoutSeconds 30}
+    Write-FixtureFile $root $script 'exit 23'
+    Assert-Refused {Invoke-CiProjectScript $context $script -TimeoutSeconds 30}
+}
 Invoke-Case 'A code merge followed by docs still carries the cumulative code obligation' {
     $root = New-Fixture 'cumulative'
     $before = New-CiInputDescriptor $root
