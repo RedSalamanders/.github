@@ -45,7 +45,8 @@ jobs:
           if($LASTEXITCODE -or $head -cne $env:CI_ENGINE_REF){throw 'SDK controller engine identity mismatch.'}
           Import-Module ./.ci-engine/Tools/Modules/Ci.SdkProducer.psm1
           $request=Resolve-CiSdkProducerRequest -Repository $env:GITHUB_REPOSITORY -Ref $env:GITHUB_REF -Event $env:GITHUB_EVENT_NAME -SourceCommit $env:SDK_SOURCE -RunId $env:GITHUB_RUN_ID -Platform $env:SDK_PLATFORM
-          @('matrix='+($request.matrix|ConvertTo-Json -Depth 4 -Compress),'source='+$request.sourceCommit,'tooling='+$request.toolingRef,'storage_engine='+$request.storageEngineRef,'version='+$request.version)|Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          $outputs=[ordered]@{matrix=($request.matrix|ConvertTo-Json -Depth 4 -Compress);source=$request.sourceCommit;tooling=$request.toolingRef;storage_engine=$request.storageEngineRef;version=$request.version}
+          foreach($output in $outputs.GetEnumerator()){"$($output.Key)=$($output.Value)"|Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append}
   sdk:
     needs: resolve
     strategy:

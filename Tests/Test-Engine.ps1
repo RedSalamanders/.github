@@ -1219,6 +1219,40 @@ Invoke-Case 'SDK producer checks actual clean Git identities, main ancestry, API
     $request.sourceCommit=Save-Fixture $source 'Synthetic changed API'
     Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
 }
+Invoke-Case 'Actual SDK workflow resolver writes five independent outputs without compilation' {
+    $root=New-Fixture 'sdk-workflow-output'
+    $clone=Join-Path $root '.ci-engine'
+    $null=Invoke-CiProcess git @('clone','--no-local','--no-hardlinks','--no-checkout',$engineRoot,$clone) $root
+    $head=(Invoke-CiGit $engineRoot @('rev-parse','HEAD')).stdout.Trim()
+    $null=Invoke-CiGit $clone @('checkout','--detach',$head)
+    $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/sdk-inputs.yml'))
+    $body=[regex]::Match($text,'(?ms)^      - name: Resolve only reviewed pinned SDK inputs\r?\n.*?        run: \|\r?\n(?<body>(?:          .*\r?\n)+)').Groups['body'].Value
+    Assert-True ($body.Length -gt 0)
+    $code=($body -split '\r?\n'|ForEach-Object{$_ -replace '^          ',''}) -join "`n"
+    Write-FixtureFile $root 'resolve.ps1' $code
+    $policy=Read-CiSdkProducerPolicy
+    $output=Join-Path $root 'github-output.txt'
+    $values=@{CI_ENGINE_REF=$head;SDK_SOURCE=$policy.sources[1].commit;SDK_PLATFORM='ARM64';GITHUB_REPOSITORY='RedSalamanders/DxUi';
+        GITHUB_REF='refs/heads/main';GITHUB_EVENT_NAME='workflow_dispatch';GITHUB_RUN_ID='321';GITHUB_OUTPUT=$output}
+    $saved=@{}
+    try{
+        foreach($name in $values.Keys){$saved[$name]=[Environment]::GetEnvironmentVariable($name);[Environment]::SetEnvironmentVariable($name,$values[$name])}
+        $result=Invoke-CiProcess (Get-Process -Id $PID).Path @('-NoProfile','-NonInteractive','-File',(Join-Path $root 'resolve.ps1')) $root -TimeoutSeconds 30 -AllowFailure
+        Assert-True ($result.exitCode -eq 0) $result.stderr
+    }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name])}}
+    $lines=@(Get-Content $output)
+    Assert-Equal 5 $lines.Count
+    $actual=@{}
+    foreach($line in $lines){$pair=$line -split '=',2;Assert-Equal 2 $pair.Count;Assert-True (-not $actual.ContainsKey($pair[0]));$actual[$pair[0]]=$pair[1]}
+    Assert-Equal $policy.sources[1].commit $actual.source
+    Assert-Equal $policy.toolingRef $actual.tooling
+    Assert-Equal $policy.storageEngineRef $actual.storage_engine
+    Assert-Equal '0.1.321' $actual.version
+    $matrix=$actual.matrix|ConvertFrom-Json
+    Assert-Equal 1 @($matrix.include).Count
+    Assert-Equal 'ARM64' $matrix.include[0].platform
+    Assert-True (-not(Test-Path (Join-Path $root '.build')))
+}
 Invoke-Case 'SDK workflow keeps reviewed tooling separate, read-only tokens and native-success attempt-bound artifacts' {
     function Assert-SdkProducerWorkflow([string]$Text){
         foreach($required in @("github.event_name == 'workflow_dispatch'","github.ref == 'refs/heads/main'",'contents: read','actions: read',
