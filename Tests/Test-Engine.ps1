@@ -1319,7 +1319,8 @@ Invoke-Case 'SDK compilation checks the actual live reader handle across process
         Assert-CiSdkConsumerLease -ProjectRoot $root -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release
         $actual=Invoke-CiProcess (Get-Process -Id $PID).Path $arguments $root -TimeoutSeconds 30 -AllowFailure
         Assert-True ($actual.exitCode -eq 0) ('SDK reader child refused: '+$actual.stderr+' '+$actual.stdout)
-        $original=[IO.File]::ReadAllBytes($witness.Path)
+        $original=[byte[]]::new($witness.Stream.Length)
+        $witness.Stream.Position=0;$witness.Stream.ReadExactly($original)
         $changed=[Text.UTF8Encoding]::new($false).GetString($original)|ConvertFrom-Json
         $changed.ownerIdentity+='-stale'
         $bytes=[Text.UTF8Encoding]::new($false).GetBytes(($changed|ConvertTo-Json -Compress))
