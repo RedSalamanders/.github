@@ -17,6 +17,11 @@ establishes only that caller's access capability; it is not SDK or native qualif
 
 Organization-owned implementation plans are indexed in [Specs/Plans/WIP](Specs/Plans/WIP/README.md). Completed plans move to [Specs/Plans/Done](Specs/Plans/Done/README.md) under the [plan lifecycle rule](AGENTS.md#plan-lifecycle), after implementation, validation and normative documentation closeout.
 
+DxUi's coordinated adapter can hand off the exact Release library/PDB inputs from successful regression to
+production within one run and attempt. Complete native identities and bytes are verified again; missing or
+incompatible inputs rebuild from source. Both architecture gates and extracted-SDK qualification remain required.
+The handoff grants no test verdict and does not yet distribute pinned SDKs to the five applications.
+
 The normative contract is [Specs/CI.md](Specs/CI.md). Engine behavior tests use actual temporary Git histories and deterministic coordinator events:
 
 ```powershell

@@ -1133,6 +1133,26 @@ Invoke-Case 'Sandbox evidence and workspace logs retain separate artifact roots'
         Assert-Refused {Assert-IsolatedEvidence $unguarded $item[1]}
     }
 }
+Invoke-Case 'SDK library handoff stays within one successful regression run attempt and preserves the global production gate' {
+    function Assert-SdkHandoff([string]$Text){
+        Assert-True ($Text.Contains("needs: [admission, test-gate]"))
+        Assert-True ($Text.Contains("if: steps.tests.outcome == 'success' && github.repository == 'RedSalamanders/DxUi' && steps.tests.outputs.sdk_inputs_directory != ''"))
+        Assert-True ($Text.Contains('path: ${{ steps.tests.outputs.sdk_inputs_directory }}'))
+        Assert-Equal 2 ([regex]::Matches($Text,[regex]::Escape('name: sdk-library-inputs-${{ matrix.platform }}-${{ github.run_attempt }}')).Count)
+        $download=[regex]::Match($Text,'(?ms)^      - name: Download this attempt''s SDK library inputs\r?\n(?<body>.*?)(?=^      - name:)').Groups['body'].Value
+        Assert-True ($download.Contains("if: github.repository == 'RedSalamanders/DxUi'"))
+        Assert-True ($download.Contains('id: sdk-inputs'))
+        Assert-True ($download.Contains('continue-on-error: true'))
+        Assert-True ($download.Contains('path: .build/sdk-library-download/${{ matrix.platform }}'))
+        Assert-True ($download -notmatch '(?m)^\s+(run-id|github-token|repository):')
+        Assert-True ($Text.Contains('CI_SDK_LIBRARY_INPUTS: ${{ steps.sdk-inputs.outputs.download-path }}'))
+    }
+    $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/native.yml'))
+    Assert-SdkHandoff $text
+    foreach($changed in @($text.Replace('needs: [admission, test-gate]','needs: admission'),
+        $text.Replace('-${{ github.run_attempt }}',''),$text.Replace("if: steps.tests.outcome == 'success' && github.repository",'if: always() && github.repository'),
+        $text.Replace('id: sdk-inputs',"id: sdk-inputs`n        with:`n          run-id: 999"))){Assert-Refused {Assert-SdkHandoff $changed}}
+}
 Invoke-Case 'Queue compatibility validates the official value and noncancellation rules' {
     $lf=[string][char]10
     Assert-True (Test-CiWorkflowQueues ("concurrency:"+$lf+"  group: native"+$lf+"  cancel-in-progress: false"+$lf+"  queue: max"))

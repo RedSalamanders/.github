@@ -44,6 +44,16 @@ Admission freezes source, dependency inputs, engine policy, product version and 
 
 Both architecture branches and required prerequisites must pass before either production Release job starts. Production outputs have clean test-disabled identity. Test snapshots remain immutable. Dependency cache reuse requires compatible compiler, SDK, CRT, architecture and dependency inputs; test object reuse cannot contaminate production.
 
+DxUi may hand off its Release static library and matching compiler PDB from successful regression to
+production within the same workflow run and attempt. The library's compile profile is identical in these
+two roles; test executables, objects and verdicts are never imported. Attempt-specific artifact names and
+the current-run download preserve the producer boundary. The product adapter recomputes the complete
+native v2 source, dependency, evaluated-profile and toolchain identity and verifies every transferred byte.
+Missing artifacts or incompatible inputs require a fresh governed source build. Library-only imports revoke
+Full/performance build receipts and cannot establish native test acceptance. Both regression architectures
+and all extracted-SDK native smoke, symbol isolation, license and header-closure checks remain mandatory.
+This same-run handoff does not enable cross-repository SDK consumption or change application production roles.
+
 The normal and explicit diagnostic workflows retain vcpkg's ABI-indexed binary packages in the repository-scoped Actions cache. Exact engine/input keys remain the preferred lookup; a fallback may supply older package archives within the same runner OS, host architecture and target platform. The pinned vcpkg restore still computes each requested package's ABI and installs only the matching entry or builds it. This fallback never restores product objects, SDK build outputs, build receipts or test results, and never changes source/dependency pins. Successful diagnostic qualification may save a newly populated exact cache key; failed qualification does not save it. Cache availability and hits do not change any qualification or production gate. See [vcpkg binary caching](https://learn.microsoft.com/en-us/vcpkg/users/binarycaching).
 
 Native production/package smoke is required on both architectures. Application ZIPs and DxUi SDK ZIPs retain source, profile, version, evidence and SHA-256 manifests. The SDK includes public headers, Release libraries, supported integration, redistributable dependencies and licenses, and must build/run an extracted-SDK consumer without the producer checkout.
