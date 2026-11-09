@@ -258,3 +258,29 @@ RedSalamander #210 merged at 99624c5385c6c0d42f8d1c6f8be54cbe69f506ef. Its
 persistent failure, without relaxing hashes or offline behavior. The separate historical five-notice
 assertion mismatch remains evidence with sealed source bytes unchanged. Prior campaign 42674161785
 still records its x64 HTTP 504 build failure; queued 42687608134 targets the actual merged retry fix.
+
+## Local application SDK input seam and bootstrap cost
+
+Shared producer #27 merged as 6816011e6b8024896ab70ab1320823564da045e2 after all hosted engine and
+winget checks passed. DxUi #237 deploys its main-only caller; complete validation/tooling, the compiler-free
+adapter, changelog and seven workflow definitions passed locally. Hosted producer execution remains open.
+Canonical local SDK 0.1.611097 passed native x64 build, extracted consumer, header/license/symbol isolation
+and first-party warning controls with unchanged f2e328a0 source. Its store key is
+766c9e4b9351a7f896f913fce9f08b74f598fc0a5edb0fa0b97aa199bd00a9fb and independent manifest SHA-256
+50b5a816c693b61fb737ea8093c998ef81c748f10595742994ece009450ede87.
+
+The current shared local application seam adds strict independent descriptors, application lock/profile
+admission, full raw source/tooling/storage-engine bootstrap, a complete native input reader, before/after
+descriptor/storage checks and a live-owner MSBuild witness. Sixty engine controls pass, including actual
+cross-process handle checks, stale/profile/lock refusal, missing source and junction refusal, and mutations
+hidden from Git with preserved size/mtime. Evidence:
+`Z:/RedSalamander.Perf/unified-ci/engine-20261109T203619583Z-f3a842510d55481e8c73deadf9e798af/results.json`.
+RedMonitor's adapter, matching notice packaging and explicit fallback are being integrated; no application
+SDK success or native ARM64 qualification is claimed at this snapshot.
+
+[Bootstrap timing diagnostics](sdk-bootstrap-io.json) retain identical raw hashes for the original implementation
+and direct-IO candidate. Interleaved candidate/baseline/baseline/candidate timings were 4402/30601/29289/3969ms.
+The original 30639ms baseline and three 3945–4316ms candidate repetitions are retained too. Every file and
+ancestor is still checked for reparse paths at each read; missing files fail. No timestamp/index shortcut,
+reduced hash coverage, normalization or test verdict was introduced. These same-host warm diagnostics ran
+alongside other work and do not establish the plan's overall speedup targets.
