@@ -174,3 +174,43 @@ engine controls; all nine workflow definitions pass syntax validation. Raw local
 and DxUi `.build/i61-sdk-transfer-controls-v3.log` / `.build/i61-sdk-actual-profile.log`.
 These are controls and profile admission, not native SDK compilation, consumer qualification or a speedup claim.
 Native timings, final source-bound build/transfer/package proof and both hosted architectures remain required.
+
+## Integrated follow-up and failure classification
+
+The [later source/job snapshot](hosted-qualification-followup.json) supersedes pending statuses above without
+changing historical run results.
+
+- RedSalamander [#209](https://github.com/RedSalamanders/RedSalamander/pull/209) merged at
+  c883bbf55aad0b56eef8e600349adeb80b6d9cf5. Entire approval is no longer pending. Main run 42672143943
+  and its retry failed at GitHub startup without native jobs. Fresh ordinary manual qualification
+  [42674161785](https://github.com/RedSalamanders/RedSalamander/actions/runs/42674161785) admitted the
+  same source; both architectures were building at this snapshot. It is not yet accepted.
+- RedMonitor [#33](https://github.com/RedSalamanders/RedMonitor/pull/33) was reconciled against main,
+  retaining the newer 904a8cb engine/callers and the original App Installer fix already in its ancestry.
+  Its remaining diff was historical prose. It merged at cdd700db2a7652218ec828494a2b83dd311a828b.
+  The coordinator recorded `Native inputs unchanged; original outcome: succeeded.` and linked the
+  actual successful [42658151208](https://github.com/RedSalamanders/RedMonitor/actions/runs/42658151208)
+  campaign. This is verified avoidance of a redundant native campaign, without a new test execution claim.
+- RedXe 42658141677, RedTilde 42658161980 and RedMonitor 42658151208 completed native x64/ARM64
+  regression and production successfully after coordinated adoption.
+- DxUi [#232](https://github.com/RedSalamanders/DxUi/pull/232) and
+  [#233](https://github.com/RedSalamanders/DxUi/pull/233) merged current-run library-input reuse and
+  complete metadata queries; engine [#25](https://github.com/RedSalamanders/.github/pull/25) merged the
+  corresponding optional artifact handoff. Exact native x64 timings, output hashes and limitations are
+  retained in [DxUi measurements](https://github.com/RedSalamanders/DxUi/tree/main/Measurements/TestingAcceleration_2026-11-09).
+  Both regressions at 0cc1ac0 passed in [42659996089](https://github.com/RedSalamanders/DxUi/actions/runs/42659996089),
+  but a GitHub internal error prevented production startup. Final 63ffc056 run 42669734857 also failed
+  GitHub startup without native jobs. These runs remain failed; production/hosted handoff acceptance is open.
+- RedPrism [42645222119](https://github.com/RedSalamanders/RedPrism/actions/runs/42645222119) at
+  d7c53c618513ac9d5c44eac063a766d8a075f30a passed x64 regression but genuinely timed out in native ARM64
+  hidden WARP self-test after 5,400s. No product termination was attempted. Evidence finalization then failed
+  to pin an active error log and masked the primary timeout. Preserved stdout ends at session/rendering
+  self-test entry; the earlier deliberate crash-probe dumps are not hang evidence. The underlying hang
+  remains undiagnosed and red. Later campaign 42658161657 failed GitHub startup without jobs.
+
+Pinned-source SDK producer tooling is locally validated at DxUi 288c76737ec180753aab926e17b98922509a747d.
+Complete tooling passes. All three unchanged source pins built x64 Release with zero warnings/errors.
+The oldest API4 source pin 4cdf1ce5 also passed extracted native SDK compilation/link/run, header/license
+closure, PDB isolation/missing-PDB and first-party-warning rejection controls; other package checks are
+pending at this snapshot. Native ARM64, authenticated distribution, consumer integration and local
+candidates remain open. An SDK input is never a product test verdict.
