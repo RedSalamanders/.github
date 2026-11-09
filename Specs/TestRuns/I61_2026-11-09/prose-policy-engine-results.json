@@ -1,0 +1,263 @@
+{
+  "schemaVersion": 1,
+  "passed": true,
+  "executed": 51,
+  "failed": 0,
+  "cases": [
+    {
+      "name": "Prose changes create zero native obligation and retain native input identity",
+      "passed": true,
+      "elapsedMs": 1227
+    },
+    {
+      "name": "Current conformance refuses extension-wide Markdown exclusions without invalidating historical manifest reads",
+      "passed": true,
+      "elapsedMs": 665
+    },
+    {
+      "name": "A code merge followed by docs still carries the cumulative code obligation",
+      "passed": true,
+      "elapsedMs": 1714
+    },
+    {
+      "name": "Shipped schema and test fixture Markdown override surrounding exclusions",
+      "passed": true,
+      "elapsedMs": 855
+    },
+    {
+      "name": "Complete comparison sees meaningful input beyond 300 changed paths",
+      "passed": true,
+      "elapsedMs": 1104
+    },
+    {
+      "name": "A rename into an excluded folder retains the old meaningful path",
+      "passed": true,
+      "elapsedMs": 951
+    },
+    {
+      "name": "Deleting a native input changes its identity",
+      "passed": true,
+      "elapsedMs": 1057
+    },
+    {
+      "name": "Unicode paths survive Git transport and are meaningful",
+      "passed": true,
+      "elapsedMs": 787
+    },
+    {
+      "name": "Unknown inputs are conservative and an unreadable comparison is refused",
+      "passed": true,
+      "elapsedMs": 530
+    },
+    {
+      "name": "Strict schema rejects unknown policy keys and invalid path patterns",
+      "passed": true,
+      "elapsedMs": 363
+    },
+    {
+      "name": "Snapshot uses the exact committed manifest rather than mutable working-tree policy",
+      "passed": true,
+      "elapsedMs": 769
+    },
+    {
+      "name": "Public classification command returns the same real Git decision",
+      "passed": true,
+      "elapsedMs": 1266
+    },
+    {
+      "name": "Three nearby merges admit only after five minutes from the last merge",
+      "passed": true,
+      "elapsedMs": 16
+    },
+    {
+      "name": "Continuous merges reset admission without a hidden maximum-deferral override",
+      "passed": true,
+      "elapsedMs": 5
+    },
+    {
+      "name": "Recorded failures survive docs and only an explicit retry readmits identical inputs",
+      "passed": true,
+      "elapsedMs": 7
+    },
+    {
+      "name": "Regression gate rejects empty execution, disabled assertions, skips and stale identities",
+      "passed": true,
+      "elapsedMs": 27
+    },
+    {
+      "name": "State updates use a captured parent and a non-forced ref update",
+      "passed": true,
+      "elapsedMs": 40
+    },
+    {
+      "name": "Real Git fast-forward semantics refuse competing sibling state commits",
+      "passed": true,
+      "elapsedMs": 639
+    },
+    {
+      "name": "An ended workflow without a recorded qualification never recovers as success",
+      "passed": true,
+      "elapsedMs": 8
+    },
+    {
+      "name": "API routes outside the reviewed repositories are refused before credential use",
+      "passed": true,
+      "elapsedMs": 4
+    },
+    {
+      "name": "Pinned formatter produces a narrow real patch and leaves the Git head unchanged",
+      "passed": true,
+      "elapsedMs": 2668
+    },
+    {
+      "name": "Revision options cannot turn classification into a Git write or external command",
+      "passed": true,
+      "elapsedMs": 467
+    },
+    {
+      "name": "Static project command selection refuses compiler-dependent entry points",
+      "passed": true,
+      "elapsedMs": 353
+    },
+    {
+      "name": "Manual qualification selects only the requested architectures before native setup",
+      "passed": true,
+      "elapsedMs": 2938
+    },
+    {
+      "name": "Windowless child diagnostics preserve both output streams and the real exit code",
+      "passed": true,
+      "elapsedMs": 745
+    },
+    {
+      "name": "Production admission refuses test-role evidence, stale attempts and modified ZIP bytes",
+      "passed": true,
+      "elapsedMs": 619
+    },
+    {
+      "name": "The global test gate needs both architecture receipts from the same admitted run",
+      "passed": true,
+      "elapsedMs": 466
+    },
+    {
+      "name": "winget manifests carry schema headers, use the ZIP nested executable and reject SDK, missing licensing and unsafe paths",
+      "passed": true,
+      "elapsedMs": 432
+    },
+    {
+      "name": "Unpublished winget installation proves every alias, product smoke and manifest-based cleanup without list correlation",
+      "passed": true,
+      "elapsedMs": 424
+    },
+    {
+      "name": "winget validation warnings are accepted and logged, while other validation failures refuse before install",
+      "passed": true,
+      "elapsedMs": 797
+    },
+    {
+      "name": "winget resolution registers the inbox App Installer only when its alias is absent, and refuses when it stays absent",
+      "passed": true,
+      "elapsedMs": 408
+    },
+    {
+      "name": "An existing portable product is refused before any install or removal",
+      "passed": true,
+      "elapsedMs": 420
+    },
+    {
+      "name": "Missing, foreign-target and stale-version aliases reject qualification and clean only the owned product",
+      "passed": true,
+      "elapsedMs": 1133
+    },
+    {
+      "name": "A failing or timed-out installed product probe retains failure and still uninstalls its owned package",
+      "passed": true,
+      "elapsedMs": 758
+    },
+    {
+      "name": "A partial install is cleaned but a foreign registration is never removed",
+      "passed": true,
+      "elapsedMs": 795
+    },
+    {
+      "name": "Cleanup failure cannot write a passing native installation proof",
+      "passed": true,
+      "elapsedMs": 374
+    },
+    {
+      "name": "Undeclared or unbounded product smoke commands are refused before installation",
+      "passed": true,
+      "elapsedMs": 728
+    },
+    {
+      "name": "Submission needs source-matching native alias, product probe and actual cleanup counts",
+      "passed": true,
+      "elapsedMs": 425
+    },
+    {
+      "name": "Manual native admission retains a failed input until explicit retry is supplied",
+      "passed": true,
+      "elapsedMs": 1031
+    },
+    {
+      "name": "winget transport creates one exact manifest PR and reuses it on retry",
+      "passed": true,
+      "elapsedMs": 528
+    },
+    {
+      "name": "Explicit formatting commits use real Git narrow staging and fresh-head dispatch",
+      "passed": true,
+      "elapsedMs": 5876
+    },
+    {
+      "name": "Production SDK receipts expose distinct real artifact and receipt outputs",
+      "passed": true,
+      "elapsedMs": 873
+    },
+    {
+      "name": "Prepare command exports distinct version and directory without release mutation",
+      "passed": true,
+      "elapsedMs": 412
+    },
+    {
+      "name": "Manual bot-push rechecks bind all three required checks to the exact new PR head",
+      "passed": true,
+      "elapsedMs": 447
+    },
+    {
+      "name": "Native architecture checks refuse emulated, malformed and truncated images",
+      "passed": true,
+      "elapsedMs": 424
+    },
+    {
+      "name": "Workflow conformance refuses a native PR route, pin drift and unreviewed timers",
+      "passed": true,
+      "elapsedMs": 686
+    },
+    {
+      "name": "SDK conformance retains qualification and rejects every hosted publication route",
+      "passed": true,
+      "elapsedMs": 672
+    },
+    {
+      "name": "SDK publication APIs refuse before downloads, remote calls or output creation",
+      "passed": true,
+      "elapsedMs": 400
+    },
+    {
+      "name": "Pin migration removes only the generated SDK publisher and preserves custom changes",
+      "passed": true,
+      "elapsedMs": 5043
+    },
+    {
+      "name": "Sandbox evidence and workspace logs retain separate artifact roots",
+      "passed": true,
+      "elapsedMs": 7
+    },
+    {
+      "name": "Queue compatibility validates the official value and noncancellation rules",
+      "passed": true,
+      "elapsedMs": 8
+    }
+  ]
+}

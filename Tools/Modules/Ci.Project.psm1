@@ -62,6 +62,9 @@ function Test-CiProjectConfiguration {
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Context)
     $project = $Context.project
     if ($project.engine.ref -eq ('0' * 40) -and -not $Context.development) { throw 'A placeholder engine pin cannot pass CI.' }
+    if (@($project.exclude | Where-Object {$_ -match '^\*{1,2}(?:/\*)?\.[mM][dD]$'}).Count) {
+        throw 'Markdown exclusions must name owned prose locations or guides; an extension-wide exclusion can hide runtime/test inputs. Update the reviewed manifest through Update-ProjectPin.ps1.'
+    }
     $scopePath = Join-Path $Context.root 'Tests/test-scopes.json'
     if (Test-Path -LiteralPath $scopePath) {
         $scopes = Get-Content -LiteralPath $scopePath -Raw | ConvertFrom-Json -AsHashtable

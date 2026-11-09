@@ -104,8 +104,14 @@ function Test-CiGlob {
 function Get-CiProjectWorkflowTemplates {
     [CmdletBinding()]
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Project)
-    Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot '../../Templates') -Filter '*.yml' -File |
-        Where-Object { $Project.kind -cne 'sdk' -or $_.Name -cne 'publish.yml' }
+    # Only reviewed committed templates may become workflows, including when an ignored
+    # untracked file is present beside them in an otherwise clean checkout.
+    $engine=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+    $paths=(Invoke-CiGit $engine @('ls-tree','-r','--name-only','-z','HEAD','--','Templates')).stdout.Split([char]0,[StringSplitOptions]::RemoveEmptyEntries)
+    foreach($path in $paths){
+        if($path -cnotmatch '^Templates/[^/]+\.yml$' -or ($Project.kind -ceq 'sdk' -and $path -ceq 'Templates/publish.yml')){continue}
+        Get-Item -LiteralPath (Assert-CiContainedPath $engine (Join-Path $engine $path)) -ErrorAction Stop
+    }
 }
 
 function Assert-CiContainedPath {

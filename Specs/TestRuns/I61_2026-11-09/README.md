@@ -105,9 +105,40 @@ include real separate-process reader sharing and blocked quarantine, same-size/t
 independently retained manifest digests, shortened-locator full-identity checks, interrupted source publication
 and ownership initialization recovery. Original failed fixtures remain in the marked test sandbox. Complete
 engine behavior still passes 50 cases and dependency metadata behavior passes seven; workflow syntax validates
-nine definitions. Hosted Windows/Ubuntu acceptance is pending for this change.
+nine definitions. These local checks preceded the hosted acceptance recorded below.
 
 The [normative storage contract](../../SDK_Cache.md) describes the implemented effects and explicit limits.
 No consumer compiles or links from this store yet. The synthetic payload is not a native library. Producer trust,
 full native identity acquisition, archive/headers/symbols/licenses, actual linker provenance, local candidates and
 all five consumers' cold/hit/mismatch/native acceptance remain open; no SDK speedup or test verdict is claimed.
+
+Engine [#22](https://github.com/RedSalamanders/.github/pull/22) subsequently merged as
+95187e6fc913984f2a7e105b3b57ad8991b24eca after Windows/Ubuntu engine and SDK controls and both hosted winget
+resolution checks passed. Six consumer pins remain at fbe6 until a behavior-changing rollout requires adoption;
+the SDK storage is still inactive for native consumers.
+
+## Prose ownership and later hosted snapshot
+
+[hosted-followups.json](hosted-followups.json) retains the later run/source/job/phase snapshot. All four first-wave
+RedMonitor, RedXe, RedTilde and RedPrism campaigns completed native x64/ARM64 regression and production successfully.
+The first DxUi campaign remains failed because of its x64 tooling prerequisite. Its integrated follow-up and
+RedTilde's later baseline-control campaign were still running at this snapshot. These are diagnostic phase costs,
+with different sources/cache states; they do not establish a controlled speedup.
+
+RedXe [#78](https://github.com/RedSalamanders/RedXe/pull/78) merged as 3bcdc0bea21baaf48436fbeb46f5a056f1cf07f7
+after 35 scoped cases, complete independent tooling and hosted checks. Unknown/runtime Markdown and fixture README
+bytes retain native ownership and evidence; hosted exclusions name known prose locations instead of all Markdown.
+RedMonitor [#40](https://github.com/RedSalamanders/RedMonitor/pull/40) merged as 4a0de7870cf87fd05136e6a874f0cea84d0870f2
+after complete validation, formatting, tooling and hosted checks. Its ten actual public-wrapper process/Git cases
+retain cumulative native edits, Full/PrePush matrices, early changelog refusal, nonzero exits and mutation barriers.
+Native recording fixtures establish routing only. Existing native source/build controls still pass all 41 checks.
+
+RedTilde's docs/examples are shipped by package.ps1 and include the paired-performance fixture. They retain full
+selection and native byte identity, including new Markdown, README and binary assets. The correction passes 58
+scoped cases and complete canonical Tooling validation. Initial fixture failures are preserved; the build guard
+fixture now copies the actual scope policy it depends on. Ordinary prose remains independently validated.
+
+Shared current-conformance controls reject global Markdown-extension exclusions, while historical manifests remain
+readable for original artifact/source verification. Explicit pin maintenance migrates the original default and
+uses only committed templates from a clean reviewed engine. [Local controls](prose-policy-engine-results.json)
+and subsequent hosted/client adoption must be recorded against the final source before that rollout closes.

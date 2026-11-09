@@ -8,6 +8,15 @@ Organization-owned implementation work is indexed in [Plans/WIP](Plans/WIP/READM
 
 Every project uses the same strict manifest schema. Explicit runtime/build/test input exceptions precede reviewed prose/folder exclusions. Unknown paths are meaningful. Complete Git comparisons include both rename paths and deleted inputs. Full native input identity hashes the ordered meaningful Git tree entries, manifest and engine pin. It is cumulative; a later documentation commit cannot consume an earlier code obligation.
 
+Current adapter conformance refuses extension-wide Markdown exclusions (`**/*.md`, `*.md` and equivalent
+unowned wildcard forms). Exclusions must identify owned prose locations or known guides; new implementation,
+test data and notice files remain meaningful. Runtime includes still take precedence. Update-ProjectPin.ps1
+migrates only the original exact `**/*.md` default to reviewed root guides, Specs Markdown, the test guide and
+skill prose while updating the pin/callers. Other custom exclusions remain review-owned. Historical manifest
+reads remain supported for original source/artifact verification; a new deployment must pass current conformance.
+Pin maintenance requires the exact clean engine, including non-ignored untracked inputs. Only committed
+top-level Templates YAML files may become callers; ignored untracked templates cannot add a workflow.
+
 PR checks never compile, including compiler-dependent tooling fixtures. Classification errors fail the static gate. Formatting drift retains a patch and fails the check. An explicitly dispatched trusted formatter may commit a narrow change to the verified same-repository PR head, then explicitly dispatch fresh compiler-free checks for that exact new head. Because token pushes suppress ordinary workflow events, that dispatch also runs CodeQL with the exact pull-head ref/SHA and dependency review with the verified base/head SHAs. A trusted reporter completes each of the three separately required checks on that source; skipped, failed or cancelled security work cannot pass.
 
 The manual writer accepts only main-targeting PRs, stages literal NUL-delimited paths, and uses a normal fast-forward push. It tolerates bounded lag from the old PR metadata head to its own new commit; another head, closed PR or changed target refuses confirmation. The artifact and publication commands expose each workflow output as a separate key/value line so upload/promotion cannot silently lose its archive path or version.
