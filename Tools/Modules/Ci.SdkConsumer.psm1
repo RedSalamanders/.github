@@ -19,12 +19,28 @@ function Read-CiLocalSdkDescriptor {
     return @{Path=$path;Hash=(Get-FileHash -LiteralPath $path).Hash;Value=$value}
 }
 
+function Get-CiSdkReaderProcessIdentity {
+    param([ValidateRange(1,2147483647)][int]$ProcessId)
+    if($IsWindows){return 'windows:'+((Get-Process -Id $ProcessId -ErrorAction Stop).StartTime.ToUniversalTime().Ticks)}
+    if($IsLinux){
+        # .NET's Linux StartTime conversion can differ between processes. Bind the kernel's exact
+        # start-clock token plus boot identity instead of adding a tolerance that could admit PID reuse.
+        $stat=[IO.File]::ReadAllText("/proc/$ProcessId/stat")
+        $end=$stat.LastIndexOf(')')
+        if($end -lt 0){throw 'Cannot read SDK reader process creation identity.'}
+        $fields=$stat.Substring($end+2).Split(' ',[StringSplitOptions]::RemoveEmptyEntries)
+        if($fields.Length -lt 20 -or $fields[19] -cnotmatch '^[0-9]+$'){throw 'Invalid SDK reader kernel creation token.'}
+        return 'linux:'+([IO.File]::ReadAllText('/proc/sys/kernel/random/boot_id').Trim())+':'+$fields[19]
+    }
+    throw 'SDK reader process identity is unsupported on this operating system.'
+}
+
 function New-CiSdkConsumerWitness {
     param([string]$ProjectRoot,[string]$SdkRoot,[string]$Platform)
     $directory=Assert-CiContainedPath $ProjectRoot (Join-Path $ProjectRoot '.build/sdk-leases')
     [void][IO.Directory]::CreateDirectory($directory)
     $path=Assert-CiContainedPath $ProjectRoot (Join-Path $directory ([guid]::NewGuid().ToString('N')+'.json'))
-    $record=[ordered]@{schemaVersion=1;ownerPid=$PID;ownerStartTicks=(Get-Process -Id $PID).StartTime.ToUniversalTime().Ticks;
+    $record=[ordered]@{schemaVersion=1;ownerPid=$PID;ownerIdentity=(Get-CiSdkReaderProcessIdentity $PID);
         projectRoot=[IO.Path]::GetFullPath($ProjectRoot);sdkRoot=[IO.Path]::GetFullPath($SdkRoot);platform=$Platform;configuration='Release'}
     $stream=[IO.File]::Open($path,[IO.FileMode]::CreateNew,[IO.FileAccess]::ReadWrite,[IO.FileShare]::Read)
     try{$bytes=[Text.UTF8Encoding]::new($false).GetBytes(($record|ConvertTo-Json -Compress));$stream.Write($bytes);$stream.Flush($true)}catch{$stream.Dispose();throw}
@@ -41,8 +57,7 @@ function Assert-CiSdkConsumerLease {
     $witness=Get-Content -LiteralPath $path -Raw|ConvertFrom-Json
     if($witness.schemaVersion -ne 1 -or $witness.projectRoot -cne [IO.Path]::GetFullPath($ProjectRoot) -or
         $witness.sdkRoot -cne [IO.Path]::GetFullPath($SdkRoot) -or $witness.platform -cne $Platform -or $witness.configuration -cne $Configuration){throw 'SDK reader witness has another project, payload or profile.'}
-    $owner=Get-Process -Id $witness.ownerPid -ErrorAction Stop
-    if($owner.StartTime.ToUniversalTime().Ticks -ne $witness.ownerStartTicks){throw 'SDK reader owner is stale.'}
+    if((Get-CiSdkReaderProcessIdentity $witness.ownerPid) -cne $witness.ownerIdentity){throw 'SDK reader owner is stale.'}
     # A surviving JSON file and a recycled/live PID are insufficient: the parent must still hold its handle.
     $exclusive=$null
     try{$exclusive=[IO.File]::Open($path,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)}catch [IO.IOException]{return}

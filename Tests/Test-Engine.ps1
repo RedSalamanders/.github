@@ -1319,6 +1319,14 @@ Invoke-Case 'SDK compilation checks the actual live reader handle across process
         Assert-CiSdkConsumerLease -ProjectRoot $root -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release
         $actual=Invoke-CiProcess (Get-Process -Id $PID).Path $arguments $root -TimeoutSeconds 30 -AllowFailure
         Assert-True ($actual.exitCode -eq 0) ('SDK reader child refused: '+$actual.stderr+' '+$actual.stdout)
+        $original=[IO.File]::ReadAllBytes($witness.Path)
+        $changed=[Text.UTF8Encoding]::new($false).GetString($original)|ConvertFrom-Json
+        $changed.ownerIdentity+='-stale'
+        $bytes=[Text.UTF8Encoding]::new($false).GetBytes(($changed|ConvertTo-Json -Compress))
+        try{
+            $witness.Stream.Position=0;$witness.Stream.SetLength(0);$witness.Stream.Write($bytes);$witness.Stream.Flush($true)
+            Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $root -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release}
+        }finally{$witness.Stream.Position=0;$witness.Stream.SetLength(0);$witness.Stream.Write($original);$witness.Stream.Flush($true)}
         foreach($wrong in @(@($payload,'ARM64','Release'),@($payload,'x64','Debug'),@((Join-Path $root '.build/other'),'x64','Release'))){
             Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $root -LeasePath $witness.Path -SdkRoot $wrong[0] -Platform $wrong[1] -Configuration $wrong[2]}
         }
