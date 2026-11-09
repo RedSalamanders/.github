@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "repository": "RedSalamanders/DxUi",
+  "toolingRef": "6c89bb60c01e14ab4008e300ea73b44d206efb24",
+  "storageEngineRef": "e3c637bd9a44bd409f30b5a1c1f28f155d2319dd",
+  "sources": [
+    {"commit":"4cdf1ce52c7785446698e346b8aec058ed6a9283","apiRevision":4},
+    {"commit":"f2e328a0a26a18ca66bf4b2aea77bf010c9515e1","apiRevision":4},
+    {"commit":"21fae0dc66000b04504ba7862169533ac2943be8","apiRevision":5}
+  ]
+}

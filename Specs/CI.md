@@ -31,6 +31,13 @@ Native child commands always capture stdout/stderr, including on windowless Wind
 
 ## Admission and persistent state
 
+The explicit DxUi-main dependency SDK producer is a separate input-only role governed by
+[SDK_Cache.md](SDK_Cache.md#explicit-pinned-native-sdk-producer). It uses reviewed pinned source and
+tooling snapshots on native selected architectures, retains every SDK gate and has read-only tokens.
+It cannot update main qualification state, qualify a product, run from PR/schedules or publish a release.
+Selected architecture retries do not imply omitted architecture coverage. Existing candidate/main gates
+and local obligations remain unchanged.
+
 The cheap main coordinator waits for five continuous quiet minutes. Superseded coordinators may be cancelled. A separate repository/main concurrency lane uses GitHub's bounded queue with cancellation disabled. Stale queued candidates exit admission before any expensive setup; an active native pipeline is never cancelled by newer pushes. Admission rechecks the current head and the trusted main dispatch identity.
 
 Persistent state lives on the project's `ci-state` branch, outside product source. Atomic fast-forward ref updates retain the admitted input identity, commit, engine/policy, run and actual outcome. Concurrent sibling updates fail rather than overwrite. Identical admitted inputs retain their original success, running state or failure; documentation cannot trigger an automatic retry or hide a failure. A retry is explicit. Missing state is conservative and never fabricates qualification.
