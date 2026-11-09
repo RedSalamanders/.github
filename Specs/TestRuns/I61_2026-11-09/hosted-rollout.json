@@ -1,0 +1,810 @@
+{
+  "schemaVersion": 1,
+  "evidenceKind": "hosted-qualification-snapshot",
+  "observedUtc": "2026-11-09T14:15:40.2657271Z",
+  "enginePin": "fbe6a707eb5d11847ac1a982d1c3851ea32b2baf",
+  "scope": "First-wave cache and caller integration; not a controlled performance comparison",
+  "runs": [
+    {
+      "project": "RedPrism",
+      "runId": 42626407579,
+      "sourceCommit": "98b7a34fe11aa2c9e593e0a69f98b901733858b3",
+      "url": "https://github.com/RedSalamanders/RedPrism/actions/runs/42626407579",
+      "createdAt": "2026-11-09T13:32:45Z",
+      "observedUpdatedAt": "2026-11-09T13:33:14Z",
+      "status": "in_progress",
+      "conclusion": "",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "jobId": 129191233588,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:32:50Z",
+          "completedAt": "2026-11-09T13:33:10Z",
+          "phases": []
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "jobId": 129191421876,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T13:33:13Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:33:52Z",
+              "completedAt": "2026-11-09T13:42:41Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:42:41Z",
+              "completedAt": "2026-11-09T13:42:44Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedAt": "2026-11-09T13:42:44Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "jobId": 129191422060,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T13:33:12Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:33:32Z",
+              "completedAt": "2026-11-09T13:38:19Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:38:19Z",
+              "completedAt": "2026-11-09T13:38:21Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:38:21Z",
+              "completedAt": "2026-11-09T14:14:27Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T14:14:27Z",
+              "completedAt": "2026-11-09T14:14:29Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedAt": "2026-11-09T14:14:29Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "project": "RedTilde",
+      "runId": 42626411451,
+      "sourceCommit": "f87e2b50bcd9ee4f2ab3bb41220b920f87a87ed3",
+      "url": "https://github.com/RedSalamanders/RedTilde/actions/runs/42626411451",
+      "createdAt": "2026-11-09T13:32:47Z",
+      "observedUpdatedAt": "2026-11-09T14:06:39Z",
+      "status": "in_progress",
+      "conclusion": "",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "jobId": 129191269021,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:32:54Z",
+          "completedAt": "2026-11-09T13:33:13Z",
+          "phases": []
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "jobId": 129191446733,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:33:16Z",
+          "completedAt": "2026-11-09T13:51:02Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:33:34Z",
+              "completedAt": "2026-11-09T13:38:46Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:38:46Z",
+              "completedAt": "2026-11-09T13:38:48Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:38:48Z",
+              "completedAt": "2026-11-09T13:45:51Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:45:51Z",
+              "completedAt": "2026-11-09T13:45:52Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:45:52Z",
+              "completedAt": "2026-11-09T13:50:46Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "jobId": 129191446811,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:33:16Z",
+          "completedAt": "2026-11-09T14:06:22Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:33:59Z",
+              "completedAt": "2026-11-09T13:43:59Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:43:59Z",
+              "completedAt": "2026-11-09T13:44:07Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:44:07Z",
+              "completedAt": "2026-11-09T14:03:52Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T14:03:52Z",
+              "completedAt": "2026-11-09T14:03:53Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T14:03:53Z",
+              "completedAt": "2026-11-09T14:05:51Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / test-gate",
+          "jobId": 129208359038,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T14:06:25Z",
+          "completedAt": "2026-11-09T14:06:35Z",
+          "phases": [
+            {
+              "name": "Run ./.ci-engine/Tools/Test-Qualification.ps1 -Directory evidence -Phase Regression",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T14:06:29Z",
+              "completedAt": "2026-11-09T14:06:33Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "jobId": 129208466489,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T14:06:38Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedAt": "2026-11-09T14:07:19Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "jobId": 129208466512,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T14:06:38Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T14:07:13Z",
+              "completedAt": "2026-11-09T14:12:18Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T14:12:18Z",
+              "completedAt": "2026-11-09T14:12:21Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedAt": "2026-11-09T14:12:21Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "project": "RedXe",
+      "runId": 42626412604,
+      "sourceCommit": "5cf66a545be54a5a3aeaddddd8b46453439a504a",
+      "url": "https://github.com/RedSalamanders/RedXe/actions/runs/42626412604",
+      "createdAt": "2026-11-09T13:32:47Z",
+      "observedUpdatedAt": "2026-11-09T14:08:28Z",
+      "status": "in_progress",
+      "conclusion": "",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "jobId": 129191251299,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:32:52Z",
+          "completedAt": "2026-11-09T13:33:13Z",
+          "phases": []
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "jobId": 129191446031,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:33:16Z",
+          "completedAt": "2026-11-09T14:04:52Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:33:47Z",
+              "completedAt": "2026-11-09T13:42:12Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:42:12Z",
+              "completedAt": "2026-11-09T13:42:16Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:42:16Z",
+              "completedAt": "2026-11-09T13:54:15Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:54:15Z",
+              "completedAt": "2026-11-09T13:54:18Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:54:18Z",
+              "completedAt": "2026-11-09T14:04:27Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "jobId": 129191446118,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:33:16Z",
+          "completedAt": "2026-11-09T14:08:09Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:33:35Z",
+              "completedAt": "2026-11-09T13:38:11Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:38:11Z",
+              "completedAt": "2026-11-09T13:38:14Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:38:14Z",
+              "completedAt": "2026-11-09T13:51:02Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:51:02Z",
+              "completedAt": "2026-11-09T13:51:04Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:51:04Z",
+              "completedAt": "2026-11-09T14:07:54Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / test-gate",
+          "jobId": 129209319184,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T14:08:12Z",
+          "completedAt": "2026-11-09T14:08:24Z",
+          "phases": [
+            {
+              "name": "Run ./.ci-engine/Tools/Test-Qualification.ps1 -Directory evidence -Phase Regression",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T14:08:17Z",
+              "completedAt": "2026-11-09T14:08:22Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "jobId": 129209460228,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T14:08:27Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedAt": "2026-11-09T14:08:59Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "jobId": 129209460677,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T14:08:27Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T14:08:48Z",
+              "completedAt": "2026-11-09T14:13:17Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T14:13:17Z",
+              "completedAt": "2026-11-09T14:13:20Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedAt": "2026-11-09T14:13:20Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "project": "RedMonitor",
+      "runId": 42626422908,
+      "sourceCommit": "b6814c1264dd5b1911c8c0d13281171bdf1b8c8c",
+      "url": "https://github.com/RedSalamanders/RedMonitor/actions/runs/42626422908",
+      "createdAt": "2026-11-09T13:32:51Z",
+      "observedUpdatedAt": "2026-11-09T14:07:31Z",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "jobId": 129191287184,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:32:56Z",
+          "completedAt": "2026-11-09T13:33:15Z",
+          "phases": []
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "jobId": 129191463233,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:33:18Z",
+          "completedAt": "2026-11-09T13:46:03Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:33:35Z",
+              "completedAt": "2026-11-09T13:38:24Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:38:24Z",
+              "completedAt": "2026-11-09T13:38:26Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:38:26Z",
+              "completedAt": "2026-11-09T13:44:37Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:44:37Z",
+              "completedAt": "2026-11-09T13:44:38Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:44:38Z",
+              "completedAt": "2026-11-09T13:45:33Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "jobId": 129191463388,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:33:19Z",
+          "completedAt": "2026-11-09T13:51:01Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:33:49Z",
+              "completedAt": "2026-11-09T13:42:23Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:42:23Z",
+              "completedAt": "2026-11-09T13:42:26Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:42:26Z",
+              "completedAt": "2026-11-09T13:50:11Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:50:11Z",
+              "completedAt": "2026-11-09T13:50:13Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:50:13Z",
+              "completedAt": "2026-11-09T13:50:18Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / test-gate",
+          "jobId": 129200383925,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:51:04Z",
+          "completedAt": "2026-11-09T13:51:16Z",
+          "phases": [
+            {
+              "name": "Run ./.ci-engine/Tools/Test-Qualification.ps1 -Directory evidence -Phase Regression",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:51:09Z",
+              "completedAt": "2026-11-09T13:51:13Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "jobId": 129200508347,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:51:19Z",
+          "completedAt": "2026-11-09T14:07:10Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:51:47Z",
+              "completedAt": "2026-11-09T13:59:55Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:59:55Z",
+              "completedAt": "2026-11-09T13:59:58Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:59:58Z",
+              "completedAt": "2026-11-09T14:06:48Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "jobId": 129200508521,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T13:51:19Z",
+          "completedAt": "2026-11-09T14:02:37Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:51:35Z",
+              "completedAt": "2026-11-09T13:56:39Z"
+            },
+            {
+              "name": "Run actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:56:39Z",
+              "completedAt": "2026-11-09T13:56:41Z"
+            },
+            {
+              "name": "Build production Release and smoke-test ZIP or SDK",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-11-09T13:56:41Z",
+              "completedAt": "2026-11-09T14:02:27Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / complete",
+          "jobId": 129208780668,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T14:07:13Z",
+          "completedAt": "2026-11-09T14:07:30Z",
+          "phases": []
+        }
+      ]
+    },
+    {
+      "project": "DxUi",
+      "runId": 42631977298,
+      "sourceCommit": "5f65003cd94fdd45bfd47255b17d5a5eac498b11",
+      "url": "https://github.com/RedSalamanders/DxUi/actions/runs/42631977298",
+      "createdAt": "2026-11-09T14:09:55Z",
+      "observedUpdatedAt": "2026-11-09T14:10:39Z",
+      "status": "in_progress",
+      "conclusion": "",
+      "jobs": [
+        {
+          "name": "qualify / admission",
+          "jobId": 129210311958,
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-11-09T14:10:01Z",
+          "completedAt": "2026-11-09T14:10:34Z",
+          "phases": []
+        },
+        {
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "jobId": 129210670805,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T14:10:38Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedAt": "2026-11-09T14:11:36Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "jobId": 129210670976,
+          "status": "in_progress",
+          "conclusion": "",
+          "startedAt": "2026-11-09T14:10:38Z",
+          "completedAt": "0001-01-01T00:00:00Z",
+          "phases": [
+            {
+              "name": "Run ./.github/actions/setup-msvc",
+              "status": "in_progress",
+              "conclusion": "",
+              "startedAt": "2026-11-09T14:11:07Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Restore dependency binary cache",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Restore and build the test-enabled Release profile",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Save successfully populated dependency cache even if later tests fail",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            },
+            {
+              "name": "Run actual regression tests and Release assertion probe",
+              "status": "pending",
+              "conclusion": "",
+              "startedAt": "0001-01-01T00:00:00Z",
+              "completedAt": "0001-01-01T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
