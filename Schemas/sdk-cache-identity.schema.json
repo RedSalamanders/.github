@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "role", "sourceRepository", "sourceCommit", "sourceBytes", "apiRevision", "platform", "configuration", "runtimeFamily", "annotationPolicy", "languageStandard", "optimizationPolicy", "toolchainIdentity", "compilerProfileIdentity", "dependencyIdentity", "integrationPolicyIdentity", "environmentIdentity"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "role": { "const": "DependencySdkInputs" },
+    "sourceRepository": { "const": "RedSalamanders/DxUi" },
+    "sourceCommit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "sourceBytes": { "$ref": "#/$defs/hash" },
+    "apiRevision": { "type": "integer", "minimum": 1, "maximum": 65535 },
+    "platform": { "enum": ["x64", "ARM64"] },
+    "configuration": { "const": "Release" },
+    "runtimeFamily": { "const": "MD" },
+    "annotationPolicy": { "const": "enabled" },
+    "languageStandard": { "const": "stdcpplatest" },
+    "optimizationPolicy": { "const": "GL-LTCG-full" },
+    "toolchainIdentity": { "$ref": "#/$defs/hash" },
+    "compilerProfileIdentity": { "$ref": "#/$defs/hash" },
+    "dependencyIdentity": { "$ref": "#/$defs/hash" },
+    "integrationPolicyIdentity": { "$ref": "#/$defs/hash" },
+    "environmentIdentity": { "$ref": "#/$defs/hash" }
+  },
+  "$defs": { "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+}

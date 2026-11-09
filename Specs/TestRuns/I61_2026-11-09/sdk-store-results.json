@@ -1,0 +1,55 @@
+{
+  "kind": "synthetic SDK store controls; no native SDK acceptance",
+  "cases": [
+    {
+      "name": "key ordering is stable and every input family invalidates",
+      "passed": true
+    },
+    {
+      "name": "owned initialization refuses foreign roots and nonempty data",
+      "passed": true
+    },
+    {
+      "name": "publish, explicit digest admission and multiple readers preserve bytes",
+      "passed": true
+    },
+    {
+      "name": "different outputs for equal inputs remain separate immutable versions",
+      "passed": true
+    },
+    {
+      "name": "short input locators verify the full identity before accepting a hit",
+      "passed": true
+    },
+    {
+      "name": "separate processes share readers but cannot evict an active reader",
+      "passed": true
+    },
+    {
+      "name": "source mutation during publish preserves staging and exposes no complete entry",
+      "passed": true
+    },
+    {
+      "name": "changed, extra and missing files fail integrity without timestamp shortcuts",
+      "passed": true
+    },
+    {
+      "name": "coherently rewritten manifest cannot replace an independently retained digest",
+      "passed": true
+    },
+    {
+      "name": "mutation during a reader lease is detected on close and releases the lease",
+      "passed": true
+    },
+    {
+      "name": "quarantine retains original bytes and a missing entry is a cache miss",
+      "passed": true
+    },
+    {
+      "name": "portable path grammar refuses traversal, streams and device names",
+      "passed": true
+    }
+  ],
+  "passed": 12,
+  "failed": 0
+}

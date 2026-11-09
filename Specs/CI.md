@@ -22,6 +22,9 @@ Persistent state lives on the project's `ci-state` branch, outside product sourc
 
 ## Qualification and artifacts
 
+The [immutable dependency SDK storage contract](SDK_Cache.md) defines the new input-only cache foundation.
+It does not yet replace any consumer source build or supply a native/test/production verdict.
+
 Admission freezes source, dependency inputs, engine policy, product version and build number. Native x64 and ARM64 Release test builds execute the project's declared normal regression suites against their exact built binaries. Required compiler-dependent tooling is a batch prerequisite. Empty discovery, disabled assertions, stale binaries, timeout, cancellation and unexpected skips fail the gate. Named negative controls must prove active Release failure detection.
 
 Both architecture branches and required prerequisites must pass before either production Release job starts. Production outputs have clean test-disabled identity. Test snapshots remain immutable. Dependency cache reuse requires compatible compiler, SDK, CRT, architecture and dependency inputs; test object reuse cannot contaminate production.
