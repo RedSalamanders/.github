@@ -8,9 +8,9 @@
 .NOTES Requires PowerShell 7.4, GH_TOKEN with repository-read access and network access.
 Validates the reviewed producer caller/engine, native job, source, attempt and server archive digest;
 rejects unsafe archive paths, verifies every payload byte and publishes atomically into an owned store.
-Retains downloads, authenticated metadata and failures below .build/sdk-downloads. Does not change pins,
+Retains downloads, authenticated metadata and failures below .build/sdk-downloads.
 Exact recipe misses retain expected/observed hashes and changed field names below .build/evidence/sdk-recipe-misses.
-compile, launch products, publish releases, alter accounts or accept application/SDK compatibility.
+Does not change pins, compile, launch products, publish releases, alter accounts or accept application/SDK compatibility.
 .EXAMPLE ./Tools/Import-HostedSdk.ps1 -Root ../RedMonitor -IdentityFile ../RedMonitor/.build/expected-sdk.json -RunId 42695804476 -Attempt 1
 #>
 [CmdletBinding()]
