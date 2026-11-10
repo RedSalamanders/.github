@@ -1,0 +1,17 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object","additionalProperties":false,
+  "required":["schemaVersion","role","repository","pullRequest","headRepository","headCommit","baseCommit","mergeCommit","mergeTree","controllerEngineRef","input","baseNativeDigest","nativeRequired","identity"],
+  "properties":{
+    "schemaVersion":{"const":1},"role":{"const":"IntegrationCandidateInputs"},
+    "repository":{"type":"string","pattern":"^RedSalamanders/(RedSalamander|DxUi|RedXe|RedPrism|RedTilde|RedMonitor)$"},
+    "pullRequest":{"type":"integer","minimum":1,"maximum":2147483647},
+    "headRepository":{"type":"string","pattern":"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+    "headCommit":{"$ref":"#/$defs/commit"},"baseCommit":{"$ref":"#/$defs/commit"},"mergeCommit":{"$ref":"#/$defs/commit"},"mergeTree":{"$ref":"#/$defs/commit"},"controllerEngineRef":{"$ref":"#/$defs/commit"},
+    "baseNativeDigest":{"$ref":"#/$defs/hash"},"nativeRequired":{"type":"boolean"},"identity":{"$ref":"#/$defs/hash"},
+    "input":{"type":"object","additionalProperties":false,"required":["schemaVersion","repository","commit","engine","policyVersion","nativeDigest","buildNumber","version","inputCount"],"properties":{
+      "schemaVersion":{"const":1},"repository":{"type":"string"},"commit":{"$ref":"#/$defs/commit"},"engine":{"type":"object","additionalProperties":false,"required":["repository","ref"],"properties":{"repository":{"const":"RedSalamanders/.github"},"ref":{"$ref":"#/$defs/commit"}}},
+      "policyVersion":{"const":"1"},"nativeDigest":{"$ref":"#/$defs/hash"},"buildNumber":{"type":"integer","minimum":0,"maximum":65535},"version":{"type":"string","pattern":"^[0-9]+\\.[0-9]+\\.[0-9]+$"},"inputCount":{"type":"integer","minimum":1}
+    }}
+  },"$defs":{"commit":{"type":"string","pattern":"^[a-f0-9]{40}$"},"hash":{"type":"string","pattern":"^[a-f0-9]{64}$"}}
+}

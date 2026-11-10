@@ -284,3 +284,38 @@ The original 30639ms baseline and three 3945–4316ms candidate repetitions are 
 ancestor is still checked for reparse paths at each read; missing files fail. No timestamp/index shortcut,
 reduced hash coverage, normalization or test verdict was introduced. These same-host warm diagnostics ran
 alongside other work and do not establish the plan's overall speedup targets.
+
+## Resume acceptance — 2026-11-10
+
+Background actions were left running. DxUi [42703189525](https://github.com/RedSalamanders/DxUi/actions/runs/42703189525)
+at 56f498d39c705aced252dae4885c546ede0c85ff passed x64/ARM64 regression, the global test gate,
+and both production SDK branches. Historical cancelled/failed runs retain their original outcomes.
+SDK producer [42695804476](https://github.com/RedSalamanders/DxUi/actions/runs/42695804476) passed
+both native architectures for unchanged f2e328a0a26a18ca66bf4b2aea77bf010c9515e1; the other two consumer pins
+still require hosted production.
+
+RedMonitor [#43](https://github.com/RedSalamanders/RedMonitor/pull/43) merged as
+3eabe20239fc8382f3b5143694657b36cc20cb32. Its committed measurement record owns the actual SDK-bound
+x64 Release application build, seven runtime cases, real ETW, clean-extraction packaging, fourteen effective
+MSBuild guard cases and complete Source-fallback PrePush. Cross-builds are not native ARM64 runtime proof.
+Its main qualification [42773597824](https://github.com/RedSalamanders/RedMonitor/actions/runs/42773597824)
+is pending. DxUi [#238](https://github.com/RedSalamanders/DxUi/pull/238) merged as
+1e8fcaac26eb099c3b1e5fa838652bf4b0447c97 with hosted normal Release concurrency two;
+[42773652579](https://github.com/RedSalamanders/DxUi/actions/runs/42773652579) remains pending.
+
+RedSalamander [42703183362](https://github.com/RedSalamanders/RedSalamander/actions/runs/42703183362)
+at 99624c5385c6c0d42f8d1c6f8be54cbe69f506ef reached tests on both architectures and failed validation.
+Original artifacts and job logs are preserved under
+`Z:/RedSalamander.Perf/evidence/i61-resume-20261110`. They identify a >MAX_PATH Git fixture,
+a reused partial-command scratch destination and an obsolete manual-platform assertion. The initial repair
+passed all 66 selected checks twice, zero skips, under run
+`20261110T071130Z-11820-ef20947db9ee415e868790fb7dfe10f6`.
+ARM64 additionally failed hosted boundary retirement. Preserve its nested cause before attempting a fix;
+no foreground, focus, retirement or failure assertion has been waived. Production was correctly blocked.
+
+The candidate-input foundation has four additional behavioral cases (64 total), including independent
+controller identity, ordered actual synthetic-merge parents, full source drift and strict data-only schema.
+The original recomputed-digest tamper failure is preserved separately; the corrected controls passed under
+`Z:/RedSalamander.Perf/unified-ci/engine-20261109T212221406Z-0492a0c9ee224f2db5082d452c6db49a/results.json`.
+Public API/fetch acceptance is a separate remaining gate. No native candidate workflow, required status,
+local delegation or main adoption is enabled by this input-only foundation.

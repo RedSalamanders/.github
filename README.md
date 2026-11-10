@@ -24,6 +24,10 @@ The handoff grants no test verdict and does not yet distribute pinned SDKs to th
 
 The normative contract is [Specs/CI.md](Specs/CI.md). Engine behavior tests use actual temporary Git histories and deterministic coordinator events:
 
+`Tools/Get-IntegrationCandidate.ps1` freezes exact PR/main/synthetic-merge inputs through read-only API and
+Git acquisition. Its [strict input-only contract](Specs/Integration_Candidates.md) grants no native result,
+merge gate, local delegation or main adoption; those remain under implementation.
+
 ```powershell
 ./Tests/Test-Engine.ps1 -TestRoot Z:/RedSalamander.Perf
 ./Tests/Test-SdkCache.ps1 -TestRoot Z:/RedSalamander.Perf
