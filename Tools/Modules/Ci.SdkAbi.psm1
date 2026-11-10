@@ -69,27 +69,28 @@ function ConvertTo-CiSdkAbiSearchPaths {
     param([string]$Value)
     foreach($entry in $Value.Split(';',[StringSplitOptions]::RemoveEmptyEntries)){
         if(-not [IO.Path]::IsPathFullyQualified($entry) -or $entry -match '[|%\r\n]'){throw 'Qualified SDK compiler search paths must be plain absolute paths.'}
-        [IO.Path]::GetFullPath($entry).TrimEnd('\','/').ToLowerInvariant()
+        [IO.Path]::GetFullPath($entry).TrimEnd('\','/')
     }
 }
 
 function Assert-CiSdkAbiSearchPathBinding {
     param([Collections.IDictionary]$Expected,[Collections.IDictionary]$Actual,[string]$ProjectRoot,[string]$SdkRoot)
-    $unitRoot=[IO.Path]::GetFullPath((Join-Path $Expected.VCToolsInstallDir '../../../Auxiliary/VS/UnitTest')).TrimEnd('\','/').ToLowerInvariant()
+    $comparison=if($IsWindows){[StringComparison]::OrdinalIgnoreCase}else{[StringComparison]::Ordinal}
+    $unitRoot=[IO.Path]::GetFullPath((Join-Path $Expected.VCToolsInstallDir '../../../Auxiliary/VS/UnitTest')).TrimEnd('\','/')
     foreach($name in @('IncludePath','LibraryPath','ReferencePath')){
         if(-not $Expected.Contains($name) -or -not $Actual.Contains($name)){throw "Qualified SDK actual compiler search property is missing: $name."}
         $optional=if($name -ceq 'IncludePath'){Join-Path $unitRoot 'include'}elseif($name -ceq 'LibraryPath'){Join-Path $unitRoot 'lib'}else{''}
-        $baseline=@(ConvertTo-CiSdkAbiSearchPaths $Expected[$name] | Where-Object {$_ -cne $optional})
-        $paths=@(ConvertTo-CiSdkAbiSearchPaths ([string]$Actual[$name]).Replace('|',';') | Where-Object {$_ -cne $optional})
+        $baseline=@(ConvertTo-CiSdkAbiSearchPaths $Expected[$name] | Where-Object {-not $_.Equals($optional,$comparison)})
+        $paths=@(ConvertTo-CiSdkAbiSearchPaths ([string]$Actual[$name]).Replace('|',';') | Where-Object {-not $_.Equals($optional,$comparison)})
         if($paths.Count -lt $baseline.Count){throw "Qualified SDK actual compiler search property omits default paths: $name."}
         for($i=0;$i -lt $baseline.Count;$i++){
-            if($paths[$i] -cne $baseline[$i]){throw "Qualified SDK actual compiler search property differs: $name."}
+            if(-not $paths[$i].Equals($baseline[$i],$comparison)){throw "Qualified SDK actual compiler search property differs: $name."}
         }
         foreach($path in @($paths|Select-Object -Skip $baseline.Count)){
             $owned=$false
             foreach($root in @($ProjectRoot,(Join-Path $SdkRoot 'include'))){
-                $full=[IO.Path]::GetFullPath($root).TrimEnd('\','/').ToLowerInvariant()
-                if($path -ceq $full -or $path.StartsWith($full+[IO.Path]::DirectorySeparatorChar,[StringComparison]::Ordinal)){$owned=$true;break}
+                $full=[IO.Path]::GetFullPath($root).TrimEnd('\','/')
+                if($path.Equals($full,$comparison) -or $path.StartsWith($full+[IO.Path]::DirectorySeparatorChar,$comparison)){$owned=$true;break}
             }
             if(-not $owned){throw "Qualified SDK compiler search path is outside the application and immutable SDK: $name."}
             Assert-CiSdkAbiPlainPath $path
@@ -110,7 +111,8 @@ function Assert-CiSdkAbiCompilerEnvironment {
         # VC targets initialize child-process search paths. They are admitted only
         # against the parent reader's evaluated defaults, never by their presence.
         $normalized=@(foreach($list in @($value,[string]$MSBuildSearchPaths[$property])){(@(ConvertTo-CiSdkAbiSearchPaths $list) -join ';')})
-        if($normalized[0] -cne $normalized[1]){throw "Qualified SDK actual compiler search environment differs: $name."}
+        $comparison=if($IsWindows){[StringComparison]::OrdinalIgnoreCase}else{[StringComparison]::Ordinal}
+        if(-not $normalized[0].Equals($normalized[1],$comparison)){throw "Qualified SDK actual compiler search environment differs: $name."}
     }
 }
 
