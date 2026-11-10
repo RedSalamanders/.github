@@ -544,3 +544,45 @@ authentication. Tilde main 42847307500 and live cross-repository SDK2 hits remai
 The user excluded interactive tests for this session. No foreground suite was started; the four Root
 foreground obligations and DxUi's separate focus suites remain unexecuted locally. Root 211 still has
 no Entire reviewer approval; 212 remains a dependent draft. No background GitHub Actions was cancelled.
+
+### Revision 14 runtime, SDK and integration-cache continuation
+
+DxUi #240 merged as bd0017aba799dc80e8709ebbaeefc51c4fafe01a. DxUi #241
+merged as 170f5b0095e37b89627ed869677e6783de752fbd after merged-source PrePush
+run 20261110T172417880Z-83976-6b8fb4f0d1f8449fa568e866d9da3c35 passed complete
+tooling and nineteen ordinary Debug suites. #242 merged as
+ecdaa8efb45e483932e1ccd6eb9c295e86575f28; its six clean builds and three ordinary
+x64 native profiles are curated in Measurements/TestingAcceleration_2026-11-10_NativeSdkCaller.
+The two latter merges were batched within the quiet window. Native ARM64 and foreground
+execution are distinct from local cross-build/ordinary coverage.
+
+RedPrism #14 merged as df149f4bc11d8e409264dab1051c9fd9abd9cf47. Its six clean
+Source builds, three x64 Full selections with actual ASan/captures/crash probes, Source
+production/extraction and complete current-head local SDK build/runtime/production/
+extraction are curated in Measurements/TestingAcceleration_2026-11-10_SDK2. Unknown/
+legacy provenance mutations refuse at the earlier sealed-receipt barrier; the unchanged
+SDK2 input without its independent descriptor refuses before packaging. Original bytes
+were restored exactly. Local SDK producer 6111102 is not a GitHub run.
+
+Corrected SDK2 campaigns 42866937316, 42866944166 and 42866951701 cover f2, 4cdf
+and 21fa respectively through caller blob 08d6806d6ef3db8be937042d6f6a1d57a2e1c6df.
+Both architectures of every campaign remain required. Qualified transport is disabled
+and distribution is still legacy until authenticated success and reviewed activation.
+
+Cross-repository read-token capability run 42867096863 passed: shared repository
+GITHUB_TOKEN, contents/actions read only, existing DxUi main 42825563314 production-x64
+artifact, HTTP 302 download authorization. Credential-free report retained beneath
+Z:/RedSalamander.Perf/evidence/i61-resume-20261110/sdk-access-42867096863/.
+This is one caller's access capability, not product qualification.
+
+The new compiler-free integration cache capability diagnostic has not yet been run
+on hosted infrastructure. Local syntax/behavior checks and server denial evidence
+must remain distinct. No native candidate gate, branch-policy change, delegated local
+coverage or main adoption is enabled. The user's foreground exclusion remains active;
+Root 211 still has no human reviewer approval and 212 remains draft.
+
+The cache-mode compatibility change passes all 90 engine cases at
+Z:/RedSalamander.Perf/unified-ci/engine-20261110T175507836Z-a0b90181fc3544ceb2b56b5814737aff/results.json,
+and all eleven workflow syntax checks. A preceding 89/90 result is retained: the new
+uppercase-value control exposed a case-insensitive comparison, corrected to ordinal
+literal matching. No native tests were run by these controls.

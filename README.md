@@ -4,6 +4,11 @@ One versioned CI engine serves RedSalamander, DxUi, RedXe, RedPrism, RedTilde an
 
 PRs run formatting and compiler-free tooling. Main changes are classified cumulatively and admitted after five quiet minutes. Native x64 and ARM64 Release test builds must both execute and pass their regressions before either production Release build starts. Qualified application ZIPs remain internal artifacts until an explicit publication action promotes their unchanged bytes. DxUi retains SDK ZIPs as internal qualification artifacts and has no publication workflow or winget application.
 
+The manual `integration-capabilities.yml` probes server-issued read-only cache access
+with a unique synthetic save attempt. Retain and review its raw save-step log as well
+as the mode/cache-catalog report; a service failure is inconclusive. It runs no compiler
+or product code and grants no native, merge or delegated-coverage verdict.
+
 Long benchmarks, repeated stress, Debug and ASan qualification are explicit manual actions. Dependency and security monitoring remain automated without native builds.
 Manual diagnostic qualification accepts `platform=x64`, `platform=ARM64` or the compatibility default `platform=All`.
 The chosen architecture is recorded by its native evidence; single-architecture diagnostics do not advance Release publication.

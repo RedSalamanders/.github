@@ -1,0 +1,61 @@
+name: Integration cache capability
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+cache-mode: read
+jobs:
+  cache-boundary:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    cache-mode: read
+    steps:
+      - name: Retain the effective server-issued cache mode
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if($env:ACTIONS_CACHE_MODE -cne 'read'){throw 'Explicit server-issued read-only cache mode is unavailable.'}
+          $root=Join-Path $env:RUNNER_TEMP 'integration-cache-capability'
+          [void][IO.Directory]::CreateDirectory($root)
+          [IO.File]::WriteAllText((Join-Path $root 'synthetic.txt'),'Synthetic capability fixture; no product inputs.')
+          [IO.File]::WriteAllText((Join-Path $root 'effective-mode.txt'),$env:ACTIONS_CACHE_MODE)
+      - name: Attempt an isolated cache save with a forged local mode
+        id: save
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          ACTIONS_CACHE_MODE: write
+        with:
+          path: ${{ runner.temp }}/integration-cache-capability/synthetic.txt
+          key: integration-capability-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Verify that the repository contains no attempted cache entry
+        if: always()
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SAVE_OUTCOME: ${{ steps.save.outcome }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=Join-Path $env:RUNNER_TEMP 'integration-cache-capability'
+          $key='integration-capability-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT
+          $json=& gh api ('repos/'+$env:GITHUB_REPOSITORY+'/actions/caches?key='+$key+'&per_page=100')
+          if($LASTEXITCODE){throw 'Cannot independently verify the isolated cache write outcome.'}
+          $listing=($json -join "`n")|ConvertFrom-Json
+          $matching=@($listing.actions_caches|Where-Object {$_.key -ceq $key})
+          $mode=[IO.File]::ReadAllText((Join-Path $root 'effective-mode.txt'))
+          $report=[ordered]@{schemaVersion=1;role='IntegrationCacheCapability';repository=$env:GITHUB_REPOSITORY;
+            runId=$env:GITHUB_RUN_ID;attempt=$env:GITHUB_RUN_ATTEMPT;sourceCommit=$env:GITHUB_SHA;
+            effectiveMode=$mode;forgedLocalMode='write';saveStepOutcome=$env:SAVE_OUTCOME;matchingCacheEntries=$matching.Count;
+            nativeExecutions=0;suppliesNativeVerdict=$false;requiresSaveLogReview=$true;
+            confirmed=($mode -ceq 'read' -and $matching.Count -eq 0)}
+          [IO.File]::WriteAllText((Join-Path $root 'capability.json'),($report|ConvertTo-Json))
+          if(-not $report.confirmed){throw 'Read-only cache boundary was not confirmed; keep candidate execution disabled.'}
+      - name: Retain capability evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: integration-cache-capability
+          path: ${{ runner.temp }}/integration-cache-capability/
+          if-no-files-found: error
+          retention-days: 30
