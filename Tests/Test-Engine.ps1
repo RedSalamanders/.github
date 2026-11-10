@@ -1788,6 +1788,109 @@ Invoke-Case 'Portable SDK ABI evaluation refuses compiler overrides and compiler
     }finally{foreach($name in $names){[Environment]::SetEnvironmentVariable($name,$original[$name],'Process')}}
 }
 
+Invoke-Case 'Qualified SDK transport stays disabled before API calls and filesystem side effects' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkQualifiedTransport.psm1')
+    $fixture=New-Fixture 'qualified-sdk-disabled'
+    $policy=Read-CiSdkProducerPolicy;$source=$policy.sources[0]
+    $message=''
+    try{Import-CiQualifiedHostedSdkArtifact -RepositoryRoot $fixture -StoreRoot (Join-Path $fixture '.build/store') -DownloadRoot (Join-Path $fixture '.build/downloads') `
+        -SourceCommit $source.commit -ApiRevision $source.apiRevision -Platform x64 -RunId 123 -Attempt 1|Out-Null}catch{$message=$_.Exception.Message}
+    Assert-Equal 'Qualified SDK transport is not enabled before its caller and engine are reviewed.' $message
+    Assert-True (-not(Test-Path -LiteralPath (Join-Path $fixture '.build')))
+}
+
+Invoke-Case 'Qualified SDK import binds original entry and reference from held archive bytes and preserves all v1 identities' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkCache.psm1')
+    $qualified=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkQualifiedTransport.psm1') -PassThru
+    $transport=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkTransport.psm1') -PassThru
+    $abi=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkAbi.psm1') -PassThru
+    $fixture=New-Fixture 'qualified-sdk-archive-binding';$policy=Read-CiSdkProducerPolicy;$source=$policy.sources[0]
+    $tooling=[ordered]@{repository='RedSalamanders/DxUi';commit=$policy.toolingRef;contentIdentity=$policy.toolingContentIdentity}
+    $identity=[ordered]@{schemaVersion=1;role='DependencySdkInputs';sourceRepository='RedSalamanders/DxUi';sourceCommit=$source.commit;sourceBytes=$source.contentIdentity;apiRevision=$source.apiRevision;
+        platform='x64';configuration='Release';runtimeFamily='MD';annotationPolicy='enabled';languageStandard='stdcpplatest';optimizationPolicy='GL-LTCG-full';
+        toolchainIdentity=('c'*64);compilerProfileIdentity=('d'*64);dependencyIdentity=('e'*64);environmentIdentity=('0'*64);
+        integrationPolicyIdentity=(Get-CiSha256 ('dxui-sdk-input-policy-v1'+"`n"+($tooling|ConvertTo-Json -Compress)))}
+    Write-FixtureFile $fixture '.build/payload/fixture.lib' 'synthetic input bytes, not a native SDK'
+    $sourceStore=Join-Path $fixture '.build/source-store';Initialize-CiSdkStore $fixture $sourceStore
+    $published=Publish-CiSdkCacheEntry $sourceStore $identity (Join-Path $fixture '.build/payload')
+    $entryPath=Join-Path $sourceStore ("entries/$($published.Key.Substring(0,16))/$($published.ManifestSha256.Substring(0,16))/entry.json")
+    $entry=Get-Content $entryPath -Raw|ConvertFrom-Json -AsHashtable
+    Write-FixtureFile $fixture '.build/tool-reference/fixture.h' 'synthetic reference data, not a compiler'
+    $roots=[ordered]@{}
+    foreach($role in @('MSBuild','VCTargets','MSVCHeaders','MSVCLibraries','MSVCTools','WindowsHeaders','WindowsLibraries','CRuntimeLibraries','WindowsTools')){$roots[$role]=Join-Path $fixture '.build/tool-reference'}
+    $files=Get-CiPortableSdkFileReference $roots
+    $compiler=[ordered]@{platform='x64';configuration='Release';toolset='v145';vcToolsVersion='14.52.37025';windowsSdkVersion='10.0.26100.0';
+        preferredToolArchitecture='x64';vcToolArchitecture='Native64Bit';windowsSdkToolArchitecture='Native64Bit'}
+    $toolReference=& $abi {param($c,$f) New-CiSdkAbiReference $c $f} $compiler $files
+    $receipt=[ordered]@{schemaVersion=1;kind='sdk';version='0.1.123';source=$source.commit;apiRevision=$source.apiRevision;platform='x64';configuration='Release';runtime='MD';testsIncluded=$false;
+        smokePassed=$true;producerPdbIsolationPassed=$true;missingPackagedPdbControlPassed=$true;licenseClosurePassed=$true;firstPartyWarningControlPassed=$true;headerClosurePassed=$true;
+        sdkStoreInputKey=$published.Key;sdkStoreManifestSha256=$published.ManifestSha256}
+    $receiptJson=$receipt|ConvertTo-Json
+    $receiptSha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.UTF8Encoding]::new($false).GetBytes($receiptJson))).ToLowerInvariant()
+    Assert-CiQualifiedSdkReceipt $receipt $source.commit $source.apiRevision x64 0.1.123
+    foreach($gate in @('smokePassed','producerPdbIsolationPassed','missingPackagedPdbControlPassed','licenseClosurePassed','firstPartyWarningControlPassed','headerClosurePassed')){
+        $badReceipt=$receipt|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$badReceipt[$gate]=$false
+        Assert-Refused {Assert-CiQualifiedSdkReceipt $badReceipt $source.commit $source.apiRevision x64 0.1.123}
+    }
+    $reference=[ordered]@{schemaVersion=2;role='QualifiedSdkAbiReference';sourceCommit=$source.commit;sourceBytes=$source.contentIdentity;publicHeadersGitTree=('4'*40);apiRevision=$source.apiRevision;platform='x64';
+        inputKey=$published.Key;manifestSha256=$published.ManifestSha256;producerTooling=@{commit=$policy.toolingRef;contentIdentity=$policy.toolingContentIdentity};
+        producerStorageEngine=@{commit=$policy.storageEngineRef;contentIdentity=$policy.storageEngineContentIdentity};sdkReceiptSha256=$receiptSha;toolchainReference=$toolReference}
+    & $qualified {param($e,$r,$h,$s,$a) Assert-CiQualifiedSdkBinding $e $r $h $s $a x64} $entry $reference $published.ManifestSha256 $source.commit $source.apiRevision
+    foreach($change in @('entry-key','reference-key','reference-manifest','tooling','source-bytes','integration')){
+        $e=$entry|ConvertTo-Json -Depth 10|ConvertFrom-Json -AsHashtable;$r=$reference|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable
+        switch($change){
+            entry-key {$e.key='1'*64}
+            reference-key {$r.inputKey='1'*64}
+            reference-manifest {$r.manifestSha256='1'*64}
+            tooling {$r.producerTooling.commit='1'*40}
+            source-bytes {$e.identity.sourceBytes='1'*64;$r.sourceBytes='1'*64;$e.key=Get-CiSdkCacheKey $e.identity;$r.inputKey=$e.key}
+            integration {$e.identity.integrationPolicyIdentity='1'*64;$e.key=Get-CiSdkCacheKey $e.identity;$r.inputKey=$e.key}
+        }
+        Assert-Refused {& $qualified {param($e,$r,$h,$s,$a) Assert-CiQualifiedSdkBinding $e $r $h $s $a x64} $e $r $published.ManifestSha256 $source.commit $source.apiRevision}
+    }
+    $package=Join-Path $fixture '.build/package';[void][IO.Directory]::CreateDirectory($package)
+    Copy-Item -LiteralPath (Join-Path $sourceStore 'entries') -Destination (Join-Path $package 'entries') -Recurse
+    Write-FixtureFile $package 'qualified-sdk/abi-reference.json' ($reference|ConvertTo-Json -Depth 12)
+    Write-FixtureFile $package 'receipts/DxUi-SDK-0.1.123-x64.zip.receipt.json' $receiptJson
+    $zip=Join-Path $fixture '.build/qualified.zip';[IO.Compression.ZipFile]::CreateFromDirectory($package,$zip)
+    $probe=@{zip=$zip;mutation='';calls=0;envelope=[ordered]@{schemaVersion=2;role='HostedQualifiedSdkEnvelope';contract='QualifiedAbiV2';sourceCommit=$source.commit;
+        platform='x64';runId='123';archiveBytes=(Get-Item $zip).Length;archiveSha256=(Get-FileHash $zip).Hash.ToLowerInvariant()}}
+    $resolve=& $qualified {(Get-Command Resolve-CiQualifiedSdkArtifactEnvelope).ScriptBlock}
+    $receive=& $transport {(Get-Command Receive-CiSdkArchive).ScriptBlock};$expand=& $transport {(Get-Command Expand-CiSdkArchive).ScriptBlock}
+    try{
+        & $qualified {param($p) $script:qualifiedProbe=$p;function script:Resolve-CiQualifiedSdkArtifactEnvelope {
+            param($RunId,$Attempt,$SourceCommit,$Platform)
+            $script:qualifiedProbe.calls++
+            $result=$script:qualifiedProbe.envelope|ConvertTo-Json|ConvertFrom-Json -AsHashtable
+            if($script:qualifiedProbe.mutation -ceq 'provenance' -and $script:qualifiedProbe.calls -gt 1){$result.archiveSha256='0'*64}
+            return $result
+        }} $probe
+        & $transport {param($p,$x) $script:qualifiedProbe=$p;$script:qualifiedExpand=$x
+            function script:Receive-CiSdkArchive {param($Envelope,$Destination)
+                [IO.File]::Copy($script:qualifiedProbe.zip,$Destination,$false)
+                if($script:qualifiedProbe.mutation -ceq 'archive'){$bytes=[IO.File]::ReadAllBytes($Destination);$bytes[0]=$bytes[0] -bxor 1;[IO.File]::WriteAllBytes($Destination,$bytes)}
+            }
+            function script:Expand-CiSdkArchive {param($Archive,$Destination,$Envelope)
+                $catalog=& $script:qualifiedExpand @PSBoundParameters
+                $name=switch($script:qualifiedProbe.mutation){entry{'entry.json'};reference{'abi-reference.json'};receipt{'DxUi-SDK-0.1.123-x64.zip.receipt.json'};default{''}}
+                if($name){$file=Get-ChildItem $Destination -Recurse -File -Filter $name;[IO.File]::WriteAllText($file.FullName,'{}')}
+                return $catalog
+            }
+        } $probe $expand
+        $imported=Import-CiQualifiedHostedSdkArtifact $fixture (Join-Path $fixture '.build/destination') (Join-Path $fixture '.build/downloads') $source.commit $source.apiRevision x64 123 1
+        Assert-Equal $published.Key $imported.Entry.Key;Assert-Equal $published.ManifestSha256 $imported.Entry.ManifestSha256
+        foreach($mutation in @('archive','entry','reference','receipt','provenance')){
+            $probe.mutation=$mutation;$probe.calls=0;$store=Join-Path $fixture ('.build/refused-'+$mutation);$message=''
+            try{Import-CiQualifiedHostedSdkArtifact $fixture $store (Join-Path $fixture '.build/downloads') $source.commit $source.apiRevision x64 123 1|Out-Null}catch{$message=$_.Exception.Message}
+            $expected=switch($mutation){archive{'SDK archive changed before extraction.'};provenance{'Qualified SDK artifact provenance changed during transport.'};default{'Extracted qualified SDK binding changed after authenticated acquisition.'}}
+            Assert-Equal $expected $message;Assert-True (-not(Test-Path -LiteralPath $store))
+        }
+    }finally{
+        & $qualified {param($s) Set-Item function:script:Resolve-CiQualifiedSdkArtifactEnvelope $s} $resolve
+        & $transport {param($r,$x) Set-Item function:script:Receive-CiSdkArchive $r;Set-Item function:script:Expand-CiSdkArchive $x} $receive $expand
+    }
+}
+
 Invoke-Case 'Public SDK import binds the held authenticated archive and refuses post-transfer or extracted-manifest substitution' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkCache.psm1')
     $transport=Get-Module Ci.SdkTransport

@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 2,
+  "enabled": false,
+  "repository": "RedSalamanders/DxUi",
+  "workflowPath": ".github/workflows/sdk-inputs.yml"
+}

@@ -6,12 +6,22 @@ Import-Module (Join-Path $PSScriptRoot 'Ci.GitHub.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.SdkProducer.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.SdkCache.psm1')
 
+function Read-CiSdkTransportPolicy {
+    param([ValidateSet('LegacyV1','QualifiedAbiV2')][string]$Contract='LegacyV1')
+    if($Contract -cnotin @('LegacyV1','QualifiedAbiV2')){throw 'Unsupported exact SDK transport contract.'}
+    $name=if($Contract -ceq 'QualifiedAbiV2'){'sdk-qualified-transport'}else{'sdk-transport'}
+    $policyJson=Get-Content (Join-Path $PSScriptRoot ("../../Policy/$name.json")) -Raw
+    if(-not(Test-Json -Json $policyJson -SchemaFile (Join-Path $PSScriptRoot ("../../Schemas/$name-policy.schema.json")))){throw 'Invalid reviewed SDK transport policy.'}
+    $policy=$policyJson|ConvertFrom-Json
+    if($Contract -ceq 'QualifiedAbiV2' -and -not $policy.enabled){throw 'Qualified SDK transport is not enabled before its caller and engine are reviewed.'}
+    return $policy
+}
+
 function Test-CiHostedSdkEnvelope {
     param([object]$Run,[object]$Jobs,[object]$Artifacts,[object]$Workflow,
-        [string]$SourceCommit,[string]$Platform,[string]$RunId,[int]$Attempt)
-    $policyJson=Get-Content (Join-Path $PSScriptRoot '../../Policy/sdk-transport.json') -Raw
-    if(-not(Test-Json -Json $policyJson -SchemaFile (Join-Path $PSScriptRoot '../../Schemas/sdk-transport-policy.schema.json'))){throw 'Invalid reviewed SDK transport policy.'}
-    $policy=$policyJson|ConvertFrom-Json
+        [string]$SourceCommit,[string]$Platform,[string]$RunId,[int]$Attempt,
+        [ValidateSet('LegacyV1','QualifiedAbiV2')][string]$Contract='LegacyV1')
+    $policy=Read-CiSdkTransportPolicy $Contract
     $producer=Read-CiSdkProducerPolicy
     if(@($producer.sources|Where-Object commit -CEQ $SourceCommit).Count -ne 1){throw 'Unreviewed SDK source pin.'}
     if([string]$Run.id -cne $RunId -or $Run.run_attempt -ne $Attempt -or $Run.status -cne 'completed' -or
@@ -41,9 +51,11 @@ function Test-CiHostedSdkEnvelope {
         $item.workflow_run.id -ne $Run.id -or $item.workflow_run.head_sha -cne $Run.head_sha -or
         $item.workflow_run.head_branch -cne 'main' -or $item.workflow_run.repository_id -ne $Run.repository.id -or
         $item.workflow_run.head_repository_id -ne $Run.repository.id){throw 'SDK artifact envelope identity, size or digest is invalid.'}
-    return [ordered]@{schemaVersion=1;role='HostedDependencySdkEnvelope';repository=$policy.repository;sourceCommit=$SourceCommit;
+    $result=[ordered]@{schemaVersion=1;role='HostedDependencySdkEnvelope';repository=$policy.repository;sourceCommit=$SourceCommit;
         platform=$Platform;runId=$RunId;attempt=$Attempt;producerCommit=$Run.head_sha;engineRef=$policy.engineRef;
         artifactId=[string]$item.id;artifactName=$name;archiveSha256=$item.digest.Substring(7);archiveBytes=[long]$item.size_in_bytes}
+    if($Contract -ceq 'QualifiedAbiV2'){$result.schemaVersion=2;$result.role='HostedQualifiedSdkEnvelope';$result.contract=$Contract}
+    return $result
 }
 
 function Resolve-CiHostedSdkArtifact {
@@ -51,14 +63,17 @@ function Resolve-CiHostedSdkArtifact {
     param([Parameter(Mandatory)][ValidatePattern('^[1-9][0-9]{0,19}$')][string]$RunId,
         [Parameter(Mandatory)][ValidateRange(1,100000)][int]$Attempt,
         [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{40}$')][string]$SourceCommit,
-        [Parameter(Mandatory)][ValidateSet('x64','ARM64')][string]$Platform)
+        [Parameter(Mandatory)][ValidateSet('x64','ARM64')][string]$Platform,
+        [ValidateSet('LegacyV1','QualifiedAbiV2')][string]$Contract='LegacyV1')
+    # Disabled v2 policy must fail before making a request or creating output.
+    $null=Read-CiSdkTransportPolicy $Contract
     $repo='RedSalamanders/DxUi'
     $run=Invoke-CiApi "repos/$repo/actions/runs/$RunId/attempts/$Attempt" -Method GET
     $jobs=Invoke-CiApi "repos/$repo/actions/runs/$RunId/attempts/$Attempt/jobs?per_page=100" -Method GET
     $artifacts=Invoke-CiApi "repos/$repo/actions/runs/$RunId/artifacts?per_page=100" -Method GET
     if([string]$run.head_sha -cnotmatch '^[a-f0-9]{40}$'){throw 'Invalid producer commit.'}
     $workflow=Invoke-CiApi "repos/$repo/contents/.github/workflows/sdk-inputs.yml?ref=$($run.head_sha)" -Method GET
-    Test-CiHostedSdkEnvelope $run $jobs $artifacts $workflow $SourceCommit $Platform $RunId $Attempt
+    Test-CiHostedSdkEnvelope $run $jobs $artifacts $workflow $SourceCommit $Platform $RunId $Attempt $Contract
 }
 
 function Assert-CiSdkArchiveBytes {
@@ -104,9 +119,57 @@ function Receive-CiSdkArchive {
     }
 }
 
+function Assert-CiSdkZipCatalog {
+    param([IO.Compression.ZipArchive]$Zip)
+    $cache=Import-Module (Join-Path $PSScriptRoot 'Ci.SdkCache.psm1') -PassThru
+    if($Zip.Entries.Count -lt 1 -or $Zip.Entries.Count -gt 50000){throw 'SDK archive has an invalid entry count.'}
+    $names=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $total=0L
+    foreach($entry in $Zip.Entries){
+        $name=$entry.FullName.TrimEnd('/')
+        & $cache {param($p) Test-CiSdkRelativePath $p} $name
+        if(-not $names.Add($name)){throw 'Duplicate or case-colliding SDK archive path.'}
+        $mode=($entry.ExternalAttributes -shr 16) -band 0xF000
+        if($mode -eq 0xA000 -or ($entry.ExternalAttributes -band 0x400)){throw 'SDK archive links and reparse entries are refused.'}
+        $total+=$entry.Length
+        if($total -gt 2GB){throw 'SDK archive expands beyond its bound.'}
+    }
+}
+
+function Read-CiSdkArchiveJson {
+    param([string]$Archive,[Collections.IDictionary]$Envelope,[string[]]$Paths)
+    if($Paths.Count -lt 1 -or $Paths.Count -gt 4){throw 'Select a bounded exact SDK archive JSON set.'}
+    $stream=[IO.File]::Open($Archive,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+    $zip=$null
+    try{
+        $hash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($stream)).ToLowerInvariant()
+        if($stream.Length -ne $Envelope.archiveBytes -or $hash -cne $Envelope.archiveSha256){throw 'SDK archive changed before reference acquisition.'}
+        $stream.Position=0;$zip=[IO.Compression.ZipArchive]::new($stream,[IO.Compression.ZipArchiveMode]::Read,$true)
+        Assert-CiSdkZipCatalog $zip
+        $rows=[Collections.Generic.List[object]]::new()
+        $selected=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach($path in $Paths){
+            if(-not $selected.Add($path)){throw 'Duplicate selected SDK reference path.'}
+            $entry=$zip.GetEntry($path)
+            if($null -eq $entry -or $entry.Length -lt 1 -or $entry.Length -gt 64MB){throw 'Missing or oversized exact SDK reference JSON.'}
+            $entryStream=$entry.Open();$buffer=[byte[]]::new(64KB);$memory=[IO.MemoryStream]::new()
+            try{
+                while(($count=$entryStream.Read($buffer,0,$buffer.Length)) -gt 0){
+                    if($memory.Length+$count -gt 64MB -or $memory.Length+$count -gt $entry.Length){throw 'SDK reference expands beyond its declared bound.'}
+                    $memory.Write($buffer,0,$count)
+                }
+                if($memory.Length -ne $entry.Length){throw 'Incomplete SDK reference JSON.'}
+                $bytes=$memory.ToArray()
+                $rows.Add([ordered]@{path=$path;sha256=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant();
+                    json=[Text.UTF8Encoding]::new($false,$true).GetString($bytes)})
+            }finally{$entryStream.Dispose();$memory.Dispose()}
+        }
+        return $rows.ToArray()
+    }finally{if($null -ne $zip){$zip.Dispose()};$stream.Dispose()}
+}
+
 function Expand-CiSdkArchive {
     param([string]$Archive,[string]$Destination,[Collections.IDictionary]$Envelope)
-    $cache=Get-Module Ci.SdkCache
     $archiveStream=[IO.File]::Open($Archive,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
     $zip=$null;$manifests=[Collections.Generic.List[object]]::new()
     try{
@@ -116,19 +179,8 @@ function Expand-CiSdkArchive {
             $archiveStream.Position=0
         }
         $zip=[IO.Compression.ZipArchive]::new($archiveStream,[IO.Compression.ZipArchiveMode]::Read,$true)
-        if($zip.Entries.Count -lt 1 -or $zip.Entries.Count -gt 50000){throw 'SDK archive has an invalid entry count.'}
-        $names=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
-        $total=0L
         # Validate the complete catalog before extracting the first file.
-        foreach($entry in $zip.Entries){
-            $name=$entry.FullName.TrimEnd('/')
-            & $cache {param($p) Test-CiSdkRelativePath $p} $name
-            if(-not $names.Add($name)){throw 'Duplicate or case-colliding SDK archive path.'}
-            $mode=($entry.ExternalAttributes -shr 16) -band 0xF000
-            if($mode -eq 0xA000 -or ($entry.ExternalAttributes -band 0x400)){throw 'SDK archive links and reparse entries are refused.'}
-            $total+=$entry.Length
-            if($total -gt 2GB){throw 'SDK archive expands beyond its bound.'}
-        }
+        Assert-CiSdkZipCatalog $zip
         foreach($entry in $zip.Entries){
             $path=Assert-CiContainedPath $Destination (Join-Path $Destination $entry.FullName)
             if($entry.FullName.EndsWith('/')){[void][IO.Directory]::CreateDirectory($path);continue}

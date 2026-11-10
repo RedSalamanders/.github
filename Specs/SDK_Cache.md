@@ -252,3 +252,35 @@ the SDK entry. Read-only tokens, manual main admission and independent native
 architecture gates remain unchanged. Existing v1 producer attempts stay governed
 by their original pinned transport policy. No consumer trusts a new producer
 attempt until its distinct caller/engine and archive contract are accepted.
+
+## Qualified SDK archive transport
+
+`Ci.SdkQualifiedTransport.psm1` uses a separate v2 policy. It remains disabled
+until `Policy/sdk-qualified-transport.json` names the exact reviewed producer
+caller blob and engine; disabled requests refuse before API calls or output.
+The existing v1 transport policy and successful historical attempts are retained.
+V2 uses the same strict main/manual/native-job/run/attempt/artifact checks, with
+an explicit `HostedQualifiedSdkEnvelope` role.
+
+The original archive is held read-only and its server-authenticated digest and
+length rechecked before reading JSON. The complete bounded ZIP catalog is checked
+for unsafe paths, collisions, links and excessive expansion. The exact entry,
+ABI reference and native SDK receipt are acquired directly from that held archive,
+not from their extracted copies. All three must be unique and remain byte-identical
+after extraction. The native receipt retains every SDK gate and binds the same
+source/API/architecture, run-derived version, original key and manifest. The ABI
+reference's receipt hash must match those original receipt bytes.
+
+The original v1 input identity is preserved. Source bytes, ABI/integration policy,
+reviewed tooling/storage and the reference's key/manifest must agree with the
+requested pin and independently acquired archive contents. Another compiler or
+environment in the original producer identity is not relabelled as a local v1
+recipe. Generic storage still verifies every payload byte and publishes atomically.
+Producer metadata is read again after transfer; changed provenance refuses before
+store initialization. Failed downloads/extraction stay retained for diagnosis.
+
+This transport provides dependency bytes and their authenticated producer reference.
+It does not establish consumer compatibility, a native application result, local
+delegation or main adoption. V2 application readers and their actual tool/header/
+per-file ABI checks must be implemented and accepted before any v2 input can
+replace an existing consumer obligation.

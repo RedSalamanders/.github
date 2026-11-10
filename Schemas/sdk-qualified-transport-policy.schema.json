@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "enabled", "repository", "workflowPath"],
+  "properties": {
+    "schemaVersion": {"const": 2}, "enabled": {"type": "boolean"},
+    "repository": {"const": "RedSalamanders/DxUi"},
+    "workflowPath": {"const": ".github/workflows/sdk-inputs.yml"},
+    "workflowBlob": {"type": "string", "pattern": "^(?!0{40}$)[a-f0-9]{40}$"},
+    "engineRef": {"type": "string", "pattern": "^(?!0{40}$)[a-f0-9]{40}$"}
+  },
+  "allOf": [{"if": {"properties": {"enabled": {"const": true}}}, "then": {"required": ["workflowBlob", "engineRef"]}}]
+}
