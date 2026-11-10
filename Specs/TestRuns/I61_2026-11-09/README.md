@@ -319,3 +319,11 @@ The original recomputed-digest tamper failure is preserved separately; the corre
 `Z:/RedSalamander.Perf/unified-ci/engine-20261109T212221406Z-0492a0c9ee224f2db5082d452c6db49a/results.json`.
 Public API/fetch acceptance is a separate remaining gate. No native candidate workflow, required status,
 local delegation or main adoption is enabled by this input-only foundation.
+
+The current REST acquisition correction passed 65 engine controls under
+`Z:/RedSalamander.Perf/unified-ci/engine-20261110T072402001Z-c60f100a1e2d4a93918b1b7a0627f2e1/results.json`.
+Hosted Windows/Linux engine controls and native winget checks passed for a60c15c4c48f6b38d02b99954e504f20eb607de5.
+The public command then acquired [RedSalamander #211](https://github.com/RedSalamanders/RedSalamander/pull/211)
+from independent current REST PR, main and merge-ref snapshots, with the [complete frozen input descriptor](candidate-211-inputs.json).
+It uses the actual current REST merge-ref API; the initial missing-field refusal is not relabelled as success.
+This positive probe runs no product code and supplies no native qualification verdict.

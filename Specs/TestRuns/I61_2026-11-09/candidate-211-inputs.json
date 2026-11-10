@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "role": "IntegrationCandidateInputs",
+  "repository": "RedSalamanders/RedSalamander",
+  "pullRequest": 211,
+  "headRepository": "RedSalamanders/RedSalamander",
+  "headCommit": "4a28791d1160fc50c762bb44156a5cf666f006e9",
+  "baseCommit": "99624c5385c6c0d42f8d1c6f8be54cbe69f506ef",
+  "mergeCommit": "2fa7ad9a33fdd11e1f8127ae10f8e35f1261c4d5",
+  "mergeTree": "bedd83440d8a639eea24567b74c2992f22519900",
+  "controllerEngineRef": "a60c15c4c48f6b38d02b99954e504f20eb607de5",
+  "input": {
+    "schemaVersion": 1,
+    "repository": "RedSalamanders/RedSalamander",
+    "commit": "2fa7ad9a33fdd11e1f8127ae10f8e35f1261c4d5",
+    "engine": {
+      "repository": "RedSalamanders/.github",
+      "ref": "904a8cb6824da010e2ddcd787d2037c610b0df9c"
+    },
+    "policyVersion": "1",
+    "nativeDigest": "7a687d6ef1b8da6b532de3ccd7e39ad7f5c5e1e8f291d93cea2a451202b47d27",
+    "buildNumber": 663,
+    "version": "7.0.663",
+    "inputCount": 1408
+  },
+  "baseNativeDigest": "943254befb0f925cfbe6e493c4bfcf24bd6acef5c2f611482f1f176b429145b4",
+  "nativeRequired": true,
+  "identity": "ea5503835454c86b73c942e342d65a86d4253a3692c9235c4de90d05ab4a8f6d"
+}
