@@ -27,6 +27,11 @@ bytes. It retains original manifests and diagnostics. Consumer adoption and prod
 `Ci.SdkPreparation.psm1` supplies admitted main Release adapters with a lock-bound descriptor after canonical
 bootstrap and independent actual-key acquisition. Only explicit entries in `Policy/sdk-distribution.json` are
 eligible. Missing distribution or a verified compiler/environment mismatch retains source; corrupted data fails.
+The three existing pins now select `QualifiedAbiV2` from successful native x64/ARM64
+producer attempts. All six archives have passed authenticated import checks. Legacy
+transport remains explicit and unchanged. Each client still needs a matching pin,
+actual compiler/ABI admission and native application acceptance; dependency bytes
+alone supply no product verdict.
 
 SDK-linking project wrappers share `Tools/MSBuild/Ci.SdkConsumer.targets` for live-reader and per-file ABI
 checks. Explicit `Tools/Test-SdkConsumerPolicy.ps1` runs actual MSBuild admission controls with a held verified

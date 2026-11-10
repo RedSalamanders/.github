@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "role": "AuthenticatedSdkInputVerification",
+  "nativeExecutions": 0,
+  "suppliesProductVerdict": false,
+  "verified": 6,
+  "expected": 6,
+  "policySha256": "a80f1992852bb8a9a056bf0fae2fdd21f453070d9e20d634715c60252af49fdc",
+  "entries": [
+    {
+      "sourceCommit": "f2e328a0a26a18ca66bf4b2aea77bf010c9515e1",
+      "apiRevision": 4,
+      "platform": "x64",
+      "producerRun": "42866937316",
+      "attempt": 1,
+      "inputKey": "22c10221c095069bbe06c79d18bcefcb5cbc1eff4c4f81b11739084f6f726688",
+      "manifestSha256": "09cbd229c96ab93461187b5c9523c4265492286239ff5725ed1d249d7bc80fe7",
+      "archiveSha256": "9ee230277b4fb6c4b423b199e8848e2b48d5c986c50aa9bd8a6930e6e403c3c5",
+      "archiveBytes": 59613824,
+      "toolchainReference": "21a6d9910772269d4e62185ffdbd7c17ec06a3f3cc6aa6e3d973f536cd46b111",
+      "archivePath": "Z:\\RedSalamander.Perf\\unified-ci\\sdk2-live-inputs-20261110T184434028Z-297ef742bec24533a881ac8389b1f0cc\\repository\\.build\\downloads\\35b839c9f3194fa98c435949122d2eb0\\artifact.zip"
+    },
+    {
+      "sourceCommit": "f2e328a0a26a18ca66bf4b2aea77bf010c9515e1",
+      "apiRevision": 4,
+      "platform": "ARM64",
+      "producerRun": "42866937316",
+      "attempt": 1,
+      "inputKey": "3d029294bc8a4fbdcabc2d78f81815c647d3d769dd030164d5da2b57304a74b9",
+      "manifestSha256": "650b26db0af5e2798733100f07e9ff68a04bef08cf5471cbf3e2cabcfe7e8ae4",
+      "archiveSha256": "e9f01044c023098dd3e57ebbc08bcf5b1ed3877f856be803bf886d14c4a6b4b4",
+      "archiveBytes": 59660067,
+      "toolchainReference": "1641dd1a6d5879e303187fcf194815f9b0637d5d0b83f1174dc9d06a12dd39ff",
+      "archivePath": "Z:\\RedSalamander.Perf\\unified-ci\\sdk2-live-inputs-20261110T184434028Z-297ef742bec24533a881ac8389b1f0cc\\repository\\.build\\downloads\\be30d88871ca4e35849bc49ca5f28eda\\artifact.zip"
+    },
+    {
+      "sourceCommit": "4cdf1ce52c7785446698e346b8aec058ed6a9283",
+      "apiRevision": 4,
+      "platform": "x64",
+      "producerRun": "42866944166",
+      "attempt": 1,
+      "inputKey": "04eebb3a4c682694ab5e968c6fc792e0c6fb37a6cdd81948038d75ae6e3f9e19",
+      "manifestSha256": "14cca3840854540ddc005ebff58efbd655a2f9b0bb36f9d69fc542869d96baeb",
+      "archiveSha256": "70b6b7cc0a71cdb1d61fb1193a512142117658b09949368b01cbd9b666d4ab3f",
+      "archiveBytes": 48169020,
+      "toolchainReference": "21a6d9910772269d4e62185ffdbd7c17ec06a3f3cc6aa6e3d973f536cd46b111",
+      "archivePath": "Z:\\RedSalamander.Perf\\unified-ci\\sdk2-live-inputs-20261110T184434028Z-297ef742bec24533a881ac8389b1f0cc\\repository\\.build\\downloads\\2df91524276a4612bd750e4cf1c358a3\\artifact.zip"
+    },
+    {
+      "sourceCommit": "4cdf1ce52c7785446698e346b8aec058ed6a9283",
+      "apiRevision": 4,
+      "platform": "ARM64",
+      "producerRun": "42866944166",
+      "attempt": 1,
+      "inputKey": "c12732bb1fadaf040a0bae2f4c5548103666bba86241e9193e1d8cd1986eaee2",
+      "manifestSha256": "a91fc5826f71536c1dd9a734e7f5ab256433f687113a4d14d98cc24ac8425782",
+      "archiveSha256": "4a38fe0cb72e5474e95d7b214267b2a12821a9e2b8fea3bb22f367c688d94dff",
+      "archiveBytes": 48235115,
+      "toolchainReference": "1641dd1a6d5879e303187fcf194815f9b0637d5d0b83f1174dc9d06a12dd39ff",
+      "archivePath": "Z:\\RedSalamander.Perf\\unified-ci\\sdk2-live-inputs-20261110T184434028Z-297ef742bec24533a881ac8389b1f0cc\\repository\\.build\\downloads\\65f482193813422d9d7874625aac2d1b\\artifact.zip"
+    },
+    {
+      "sourceCommit": "21fae0dc66000b04504ba7862169533ac2943be8",
+      "apiRevision": 5,
+      "platform": "x64",
+      "producerRun": "42866951701",
+      "attempt": 1,
+      "inputKey": "9fe17c6be8728ef5b4759e65592968a1fa853c1ef2c413f86a8ebe68d653ab39",
+      "manifestSha256": "5914a4c0cc6f9691848165f5280102db16d8df151d2964be3020c8e66a771299",
+      "archiveSha256": "1b4c8e482c6e329417c49ca287133becf7cff49929f2b0d67b29b7b9ec8333af",
+      "archiveBytes": 65006973,
+      "toolchainReference": "21a6d9910772269d4e62185ffdbd7c17ec06a3f3cc6aa6e3d973f536cd46b111",
+      "archivePath": "Z:\\RedSalamander.Perf\\unified-ci\\sdk2-live-inputs-20261110T184434028Z-297ef742bec24533a881ac8389b1f0cc\\repository\\.build\\downloads\\ba481ef8f8ba4de39b5cdd95970a778f\\artifact.zip"
+    },
+    {
+      "sourceCommit": "21fae0dc66000b04504ba7862169533ac2943be8",
+      "apiRevision": 5,
+      "platform": "ARM64",
+      "producerRun": "42866951701",
+      "attempt": 1,
+      "inputKey": "bac4808c2225a84cf3ef51d9bf27dd34e8fa7e9347c8853a8182aafd9e0f21a6",
+      "manifestSha256": "0e423ba37c3ed27abd8f930572c5f18fa0537508383064d55c07e34113f49219",
+      "archiveSha256": "67d19c78b048edd780955f1aaf2fd916ee074dbad6536c5ab9b4652c498a12d9",
+      "archiveBytes": 65180785,
+      "toolchainReference": "1641dd1a6d5879e303187fcf194815f9b0637d5d0b83f1174dc9d06a12dd39ff",
+      "archivePath": "Z:\\RedSalamander.Perf\\unified-ci\\sdk2-live-inputs-20261110T184434028Z-297ef742bec24533a881ac8389b1f0cc\\repository\\.build\\downloads\\672aae145c5f45f18725adaba857098b\\artifact.zip"
+    }
+  ]
+}
