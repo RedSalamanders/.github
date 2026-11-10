@@ -47,6 +47,15 @@ function Write-CiSdkPreparationEvidence {
     Write-Host "SDK input preparation evidence: $path"
 }
 
+function New-CiPinnedSdkInputDescriptor {
+    param([string]$SourceCommit,[int]$ApiRevision,[string]$Platform,[string]$SourceRoot,
+        [string]$ToolingRoot,[string]$StorageEngineRoot,[string]$StoreRoot,[string]$ManifestSha256)
+    $descriptor=[ordered]@{schemaVersion=1;role='LocalPinnedDependencyInput';sourceCommit=$SourceCommit;apiRevision=$ApiRevision;platform=$Platform;
+        sourceRoot=$SourceRoot;toolingRoot=$ToolingRoot;storageEngineRoot=$StorageEngineRoot;storeRoot=$StoreRoot;manifestSha256=$ManifestSha256}
+    if(-not(Test-Json -Json ($descriptor|ConvertTo-Json) -SchemaFile (Join-Path $PSScriptRoot '../../Schemas/sdk-consumer-local.schema.json'))){throw 'Prepared SDK descriptor does not match the shared reader contract.'}
+    return $descriptor
+}
+
 function Initialize-CiPinnedSdkInput {
     [CmdletBinding()]
     param([Parameter(Mandatory)][Collections.IDictionary]$Context,
@@ -107,8 +116,8 @@ function Initialize-CiPinnedSdkInput {
         Write-CiSdkPreparationEvidence $Context @{status='ExactInputMiss';workspace=$workspace;producerRun=$request.runId;attempt=$request.attempt;expectedIdentity=$identity;elapsedMs=$timer.ElapsedMilliseconds}
         Write-Host 'No exact compatible SDK input; retain the governed source recipe.';return $null
     }
-    $descriptor=[ordered]@{schemaVersion=1;sourceCommit=$SourceCommit;apiRevision=$ApiRevision;platform=$Context.platform;
-        sourceRoot=$source;toolingRoot=$tooling;storageEngineRoot=$storage;storeRoot=$store;manifestSha256=$entry.ManifestSha256}
+    $descriptor=New-CiPinnedSdkInputDescriptor -SourceCommit $SourceCommit -ApiRevision $ApiRevision -Platform $Context.platform `
+        -SourceRoot $source -ToolingRoot $tooling -StorageEngineRoot $storage -StoreRoot $store -ManifestSha256 $entry.ManifestSha256
     $json=$descriptor|ConvertTo-Json -Depth 3
     if(-not(Test-Json -Json $json -SchemaFile (Join-Path $PSScriptRoot '../../Schemas/sdk-consumer-local.schema.json'))){throw 'Prepared SDK descriptor does not match the shared reader contract.'}
     $path=Join-Path $workspace 'descriptor.json';[IO.File]::WriteAllText($path,$json,[Text.UTF8Encoding]::new($false))

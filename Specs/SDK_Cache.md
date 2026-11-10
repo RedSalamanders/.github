@@ -1,8 +1,9 @@
 # Immutable dependency SDK inputs
 
-Status: storage/schema foundation implemented; native identity acquisition, producer distribution,
-consumer integration and local candidate support remain in [I61](Plans/WIP/TestingAndIntegrationAcceleration_2026-11-09.md).
-No application currently bypasses source compilation through this module.
+Status: immutable storage, pinned producer/distribution and explicit application readers are implemented.
+Monitor and RedXe have locally qualified SDK consumer paths. Automatic hosted SDK-hit acceptance,
+the other application integrations, local candidates and acceleration acceptance remain in
+[I61](Plans/WIP/TestingAndIntegrationAcceleration_2026-11-09.md).
 
 ## Explicit pinned native SDK producer
 
@@ -96,6 +97,8 @@ Callers must close every acquired entry in finally and keep the lease through al
 `Ci.SdkConsumer.psm1` provides one shared application seam for a deliberately selected local Release SDK.
 The strict descriptor resides below the application's `.build`, outside the store, and binds source/API,
 platform, full existing source/tooling/storage checkouts, store and independently retained manifest hash.
+Preparation constructs the same strict `LocalPinnedDependencyInput` role consumed by the reader;
+the successful-hit constructor is checked through that actual reader schema before integration.
 It cannot change the application's lock. Canonical raw bootstrap checks precede SDK imports; the native
 input acquisition then independently derives the complete key and leases the verified payload. A precise
 miss supplies no bytes and permits the adapter's unchanged source-build fallback. Malformed/corrupt inputs

@@ -1609,6 +1609,26 @@ Invoke-Case 'SDK preparation diagnostics retain separate exact requests and outc
     foreach($record in $records){Assert-Equal 'ReleaseTestBuild' $record.phase;Assert-Equal 'x64' $record.platform}
 }
 
+Invoke-Case 'A successful SDK preparation constructs a complete descriptor accepted by the real reader schema' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkPreparation.psm1')
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkConsumer.psm1')
+    $preparation=Get-Module Ci.SdkPreparation;$consumer=Get-Module Ci.SdkConsumer
+    $fixture=New-Fixture 'sdk-prepared-descriptor'
+    $build=Join-Path $fixture '.build';[void][IO.Directory]::CreateDirectory($build)
+    $record=& $preparation {param($b) New-CiPinnedSdkInputDescriptor -SourceCommit ('a'*40) -ApiRevision 4 -Platform x64 `
+        -SourceRoot (Join-Path $b 'source') -ToolingRoot (Join-Path $b 'tooling') -StorageEngineRoot (Join-Path $b 'storage') `
+        -StoreRoot (Join-Path $b 'store') -ManifestSha256 ('b'*64)} $build
+    $path=Join-Path $build 'descriptor.json'
+    [IO.File]::WriteAllText($path,($record|ConvertTo-Json))
+    $read=& $consumer {param($r,$d) Read-CiLocalSdkDescriptor $r $d} $fixture $path
+    Assert-Equal 'LocalPinnedDependencyInput' $read.Value.role
+    Assert-Equal ('a'*40) $read.Value.sourceCommit
+    Assert-Equal ('b'*64) $read.Value.manifestSha256
+    $record.Remove('role')
+    [IO.File]::WriteAllText($path,($record|ConvertTo-Json))
+    Assert-Refused {& $consumer {param($r,$d) Read-CiLocalSdkDescriptor $r $d} $fixture $path}
+}
+
 Invoke-Case 'Public SDK import binds the held authenticated archive and refuses post-transfer or extracted-manifest substitution' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkCache.psm1')
     $transport=Get-Module Ci.SdkTransport
