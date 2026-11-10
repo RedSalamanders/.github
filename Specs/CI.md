@@ -163,3 +163,11 @@ isolated test-build role without forging main or authorizing production. This da
 binding is a prerequisite described in [Integration candidates](Integration_Candidates.md);
 native workflow deployment, authenticated results, required gate enforcement and main
 adoption remain unfinished and do not reduce existing local or main coverage.
+
+The optional manual candidate shadow caller uses a precreated unique isolated branch
+at exact trusted main, read-only freeze/native jobs and the existing Release test roles.
+It retains attempt-bound inputs, original receipts, tested profile bytes and separate
+diagnostics. It cannot run production, update qualification state, write a merge check,
+save shared caches or cancel another execution. Project rollout and authenticated
+hosted shadow acceptance remain open. See Integration_Candidates.md for the full
+controller/cache boundary and the further gates required before delegation/adoption.
