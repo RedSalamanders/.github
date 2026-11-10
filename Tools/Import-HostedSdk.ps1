@@ -9,6 +9,7 @@
 Validates the reviewed producer caller/engine, native job, source, attempt and server archive digest;
 rejects unsafe archive paths, verifies every payload byte and publishes atomically into an owned store.
 Retains downloads, authenticated metadata and failures below .build/sdk-downloads. Does not change pins,
+Exact recipe misses retain expected/observed hashes and changed field names below .build/evidence/sdk-recipe-misses.
 compile, launch products, publish releases, alter accounts or accept application/SDK compatibility.
 .EXAMPLE ./Tools/Import-HostedSdk.ps1 -Root ../RedMonitor -IdentityFile ../RedMonitor/.build/expected-sdk.json -RunId 42695804476 -Attempt 1
 #>

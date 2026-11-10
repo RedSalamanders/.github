@@ -192,3 +192,9 @@ cache miss; retain source fallback and accept no bytes. A different source/API/a
 policy, malformed manifest, corrupt archive or unknown producer fails rather than being relabelled as a
 compatible hit. The application reader still rechecks bootstrap, actual inputs and payload and holds its
 lease through native use. Preparation/transport supplies no test verdict or artifact receipt on its own.
+
+An authenticated exact recipe miss also retains both complete hash-only identities,
+the changed field names and producer run/attempt in a create-only
+`.build/evidence/sdk-recipe-misses` record. It supplies no dependency bytes and does
+not initialize the input store. The ordinary native workspace artifact retains this
+record so a successful source fallback cannot be mistaken for SDK-hit acceptance.
