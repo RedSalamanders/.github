@@ -65,6 +65,33 @@ function Assert-CiSdkConsumerLease {
     throw 'SDK reader lease is closed; direct/stale MSBuild use is refused.'
 }
 
+function Read-CiApplicationSdkLock {
+    param([string]$ProjectRoot,[string]$ControllerRoot)
+    $project=Read-CiProject $ProjectRoot
+    if($project.kind -cne 'application' -or (Resolve-CiCommit $ControllerRoot HEAD) -cne $project.engine.ref -or
+        (Invoke-CiGit $ControllerRoot @('status','--porcelain','--untracked-files=all')).stdout.Trim()){
+        throw 'Application SDK use requires its exact clean pinned shared engine.'
+    }
+    $path=Assert-CiContainedPath $ProjectRoot (Join-Path $ProjectRoot 'Dependencies/DxUi.lock.json')
+    $lock=Get-Content -LiteralPath $path -Raw|ConvertFrom-Json
+    if($lock.repository -cne 'https://github.com/RedSalamanders/DxUi' -or $lock.commit -isnot [string] -or
+        $lock.commit -cnotmatch '^[a-f0-9]{40}$' -or ($lock.apiRevision -isnot [long] -and $lock.apiRevision -isnot [int]) -or
+        $lock.apiRevision -lt 1 -or $lock.apiRevision -gt 65535 -or @($lock.targets).Count -ne 1 -or $lock.targets[0] -cne 'DxUi'){
+        throw 'Application SDK use requires its unchanged exact DxUi source/API/target lock.'
+    }
+    return $lock
+}
+
+function Open-CiApplicationSdkInput {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$ProjectRoot,[Parameter(Mandatory)][string]$Descriptor,
+        [Parameter(Mandatory)][ValidateSet('x64','ARM64')][string]$Platform,[Parameter(Mandatory)][string]$Configuration)
+    $controller=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+    $lock=Read-CiApplicationSdkLock $ProjectRoot $controller
+    return Open-CiPinnedSdkInput -ProjectRoot $ProjectRoot -Descriptor $Descriptor -ExpectedSourceCommit $lock.commit `
+        -ExpectedApiRevision $lock.apiRevision -Platform $Platform -Configuration $Configuration
+}
+
 function Open-CiPinnedSdkInput {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$ProjectRoot,[Parameter(Mandatory)][string]$Descriptor,
@@ -114,4 +141,4 @@ function Close-CiPinnedSdkInput {
     if($null -ne $primary){throw $primary}
 }
 
-Export-ModuleMember -Function Open-CiPinnedSdkInput,Close-CiPinnedSdkInput,Assert-CiSdkConsumerLease
+Export-ModuleMember -Function Open-CiApplicationSdkInput,Open-CiPinnedSdkInput,Close-CiPinnedSdkInput,Assert-CiSdkConsumerLease

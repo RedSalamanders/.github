@@ -1,0 +1,23 @@
+<Project>
+  <!-- Import only in projects which actually link the pinned SDK. Product wrappers
+       select source versus SDK imports; this shared target owns SDK ABI admission. -->
+  <Target Name="CiRequireSdkConsumerLease" BeforeTargets="PrepareForBuild;ClCompile" Condition="'$(CiSdkRoot)'!='' or '$(DxUiSdkRoot)'!=''">
+    <Error Condition="'$(CiSdkRoot)'=='' or '$(DxUiSdkRoot)'==''" Text="Pinned SDK v1 requires the guarded root and actual SDK imports." />
+    <Error Condition="'$(CiSdkProjectRoot)'=='' or '$(CiSdkLeasePath)'==''" Text="Pinned SDK v1 requires an explicit project root and live reader lease." />
+    <PropertyGroup>
+      <CiSdkVerifiedRootNormalized>$([System.IO.Path]::GetFullPath('$(CiSdkRoot)\'))</CiSdkVerifiedRootNormalized>
+      <CiSdkImportedRootNormalized>$([System.IO.Path]::GetFullPath('$(DxUiSdkRoot)\'))</CiSdkImportedRootNormalized>
+    </PropertyGroup>
+    <Error Condition="'$(CiSdkVerifiedRootNormalized)'!='$(CiSdkImportedRootNormalized)'" Text="Pinned SDK v1 import root differs from the verified reader payload." />
+    <Error Condition="'$(DxUiRoot)'!=''" Text="Pinned SDK v1 cannot mix source and SDK recipes." />
+    <Exec Command="pwsh -NoProfile -NonInteractive -File &quot;$(MSBuildThisFileDirectory)..\Test-SdkConsumerLease.ps1&quot; -ProjectRoot &quot;$(CiSdkProjectRoot)&quot; -LeasePath &quot;$(CiSdkLeasePath)&quot; -SdkRoot &quot;$(CiSdkRoot)&quot; -Platform &quot;$(Platform)&quot; -Configuration &quot;$(Configuration)&quot;" />
+  </Target>
+  <Target Name="CiValidateSdkConsumer" BeforeTargets="PrepareForBuild;ClCompile" DependsOnTargets="CiRequireSdkConsumerLease" Condition="'$(CiSdkRoot)'!='' or '$(DxUiSdkRoot)'!=''">
+    <Error Condition="'$(EnableASAN)'=='true' or '$(DxUiDisableStlAnnotations)'=='true'" Text="Pinned SDK v1 requires a non-ASan consumer with STL annotations enabled." />
+    <Error Condition="'%(ClCompile.RuntimeLibrary)'!='MultiThreadedDLL' or '%(ClCompile.LanguageStandard)'!='stdcpplatest' or '%(ClCompile.EnableASAN)'=='true'" Text="Pinned SDK v1 requires /MD, stdcpplatest and no ASan in every consumer translation unit." />
+    <Error Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(ClCompile.PreprocessorDefinitions)', '(^|;)(_DEBUG|_DISABLE_(STL|VECTOR|STRING)_ANNOTATION|_ITERATOR_DEBUG_LEVEL|_HAS_ITERATOR_DEBUGGING|_SECURE_SCL)(=|;|$)'))" Text="Pinned SDK v1 forbids Debug, disabled-annotation or custom iterator-layout consumer definitions." />
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('%(ClCompile.PreprocessorDefinitions)', '(^|;)NDEBUG(=1)?(;|$)'))" Text="Pinned SDK v1 requires NDEBUG in every consumer translation unit." />
+    <Error Condition="'%(ClCompile.TreatWChar_tAsBuiltInType)'=='false' or ('%(ClCompile.StructMemberAlignment)'!='' and '%(ClCompile.StructMemberAlignment)'!='Default') or ('%(ClCompile.CallingConvention)'!='' and '%(ClCompile.CallingConvention)'!='Cdecl')" Text="Pinned SDK v1 requires built-in wchar_t, default packing and default calling convention." />
+    <Error Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(ClCompile.AdditionalOptions)', '(?i)(^|\s)[/-](MT|MDd|std:|fsanitize|Zp|vd|Zc:wchar_t-|[DU]\s*&quot;?(_DEBUG|NDEBUG|_DISABLE_(STL|VECTOR|STRING)_ANNOTATION|_ITERATOR_DEBUG_LEVEL|_HAS_ITERATOR_DEBUGGING|_SECURE_SCL))'))" Text="Opaque compiler options cannot replace the pinned SDK's supported ABI profile." />
+  </Target>
+</Project>
