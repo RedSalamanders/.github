@@ -6,6 +6,17 @@ Import-Module (Join-Path $PSScriptRoot 'Ci.Candidate.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.Execution.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.GitHub.psm1')
 
+function Get-CiCandidateExecutionEnvironmentContext {
+    $attempt=0
+    if($env:GITHUB_ACTIONS -cne 'true' -or $env:RUNNER_ENVIRONMENT -cne 'github-hosted' -or
+        $env:GITHUB_RUN_ID -cnotmatch '^[1-9][0-9]{0,19}$' -or
+        -not [int]::TryParse($env:GITHUB_RUN_ATTEMPT,[ref]$attempt) -or $attempt -lt 1 -or $attempt -gt 100000){
+        throw 'Candidate execution requires the actual hosted producer context.'
+    }
+    return [ordered]@{repository=$env:GITHUB_REPOSITORY;event=$env:GITHUB_EVENT_NAME;ref=$env:GITHUB_REF;
+        commit=$env:GITHUB_SHA;workflowRef=$env:GITHUB_WORKFLOW_REF;runId=$env:GITHUB_RUN_ID;runAttempt=$attempt}
+}
+
 function New-CiCandidateExecutionInputs {
     [CmdletBinding()]
     param([Parameter(Mandatory)][Collections.IDictionary]$Candidate,
@@ -44,10 +55,48 @@ function New-CiCandidateExecutionInputs {
     $batch.runId=$Context.runId
     $null=Get-CiNativeExecutionBinding -Descriptor $batch -RunId $Context.runId -RunAttempt ([int]$Context.runAttempt)
     $canonical.identity=$Candidate.identity
+    $batch.candidateExecution=[ordered]@{schemaVersion=1;role='CandidateExecutionBinding';candidate=$canonical;
+        context=($Context|ConvertTo-Json|ConvertFrom-Json -AsHashtable);isolationNonce=$IsolationNonce;controllerWorkflowBlob=$ControllerWorkflowBlob}
     return [ordered]@{schemaVersion=1;role='CandidateExecutionInputs';repository=$Candidate.repository;
         controllerCommit=$Context.commit;controllerWorkflowBlob=$ControllerWorkflowBlob;isolationRef=$branch;
         runId=$Context.runId;runAttempt=[int]$Context.runAttempt;candidate=$canonical;batch=$batch;
         nativeExecutions=0;suppliesNativeVerdict=$false}
+}
+
+function Assert-CiCandidateExecutionBatch {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][Collections.IDictionary]$Descriptor)
+    if(-not $Descriptor.Contains('candidateExecution') -or $Descriptor.candidateExecution -isnot [Collections.IDictionary]){
+        throw 'Isolated native execution requires its original candidate input binding.'
+    }
+    $binding=$Descriptor.candidateExecution
+    $keys=@('schemaVersion','role','candidate','context','isolationNonce','controllerWorkflowBlob')
+    if($binding.Count -ne $keys.Count){throw 'Candidate execution binding has unexpected fields.'}
+    foreach($name in $keys){if(-not $binding.Contains($name)){throw "Candidate execution binding missing: $name"}}
+    if(($binding.schemaVersion -isnot [int] -and $binding.schemaVersion -isnot [long]) -or $binding.schemaVersion -ne 1 -or
+        $binding.role -cne 'CandidateExecutionBinding' -or $binding.context -isnot [Collections.IDictionary]){
+        throw 'Candidate execution binding role or types differ.'
+    }
+    $actual=Get-CiCandidateExecutionEnvironmentContext
+    # The original context is an input binding, not an authenticated test result.
+    # Compare every context field with the live producer before deriving the batch.
+    if($binding.context.Count -ne $actual.Count){throw 'Candidate execution context fields changed.'}
+    foreach($name in $actual.Keys){
+        $typed=if($name -ceq 'runAttempt'){$binding.context[$name] -is [int] -or $binding.context[$name] -is [long]}else{$binding.context[$name] -is [string]}
+        if(-not $binding.context.Contains($name) -or -not $typed -or $binding.context[$name] -cne $actual[$name]){
+            throw "Candidate execution live context changed: $name"
+        }
+    }
+    $expected=New-CiCandidateExecutionInputs -Candidate $binding.candidate -Context $actual `
+        -IsolationNonce $binding.isolationNonce -ControllerWorkflowBlob $binding.controllerWorkflowBlob
+    if($Descriptor.Count -ne $expected.batch.Count){throw 'Candidate native batch fields differ.'}
+    foreach($name in $expected.batch.Keys){
+        if(-not $Descriptor.Contains($name) -or
+            ($Descriptor[$name]|ConvertTo-Json -Depth 20 -Compress) -cne ($expected.batch[$name]|ConvertTo-Json -Depth 20 -Compress)){
+            throw "Candidate native batch changed: $name"
+        }
+    }
+    return $true
 }
 
 function Get-CiCandidateExecutionInputs {
@@ -56,19 +105,14 @@ function Get-CiCandidateExecutionInputs {
         [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{64}$')][string]$ExpectedIdentity,
         [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{32}$')][string]$IsolationNonce)
     $project=Read-CiProject $Root
-    $context=[ordered]@{repository=$env:GITHUB_REPOSITORY;event=$env:GITHUB_EVENT_NAME;ref=$env:GITHUB_REF;
-        commit=$env:GITHUB_SHA;workflowRef=$env:GITHUB_WORKFLOW_REF;runId=$env:GITHUB_RUN_ID;runAttempt=0}
-    $runAttempt=0
+    $context=Get-CiCandidateExecutionEnvironmentContext
     $branch='refs/heads/ci-native/pr'+$PullRequest+'/'+$ExpectedIdentity+'/'+$IsolationNonce
-    if($env:GITHUB_ACTIONS -cne 'true' -or $env:RUNNER_ENVIRONMENT -cne 'github-hosted' -or
-        $context.repository -cne $project.repository -or $context.event -cne 'workflow_dispatch' -or
+    if($context.repository -cne $project.repository -or $context.event -cne 'workflow_dispatch' -or
         $context.ref -cne $branch -or $context.commit -cnotmatch '^[a-f0-9]{40}$' -or
         $context.runId -cnotmatch '^[1-9][0-9]{0,19}$' -or
-        $context.workflowRef -cne ($project.repository+'/.github/workflows/integration-execution.yml@'+$branch) -or
-        -not [int]::TryParse($env:GITHUB_RUN_ATTEMPT,[ref]$runAttempt) -or $runAttempt -lt 1 -or $runAttempt -gt 100000){
+        $context.workflowRef -cne ($project.repository+'/.github/workflows/integration-execution.yml@'+$branch)){
         throw 'Use the exact hosted manual isolated-branch workflow; no remote request or output is permitted.'
     }
-    $context.runAttempt=$runAttempt
     if((Resolve-CiCommit $Root HEAD) -cne $context.commit -or
         (Invoke-CiGit $Root @('status','--porcelain','--untracked-files=all')).stdout.Trim()){
         throw 'Controller checkout differs from its exact clean workflow commit.'
@@ -94,4 +138,4 @@ function Get-CiCandidateExecutionInputs {
     return New-CiCandidateExecutionInputs -Candidate $candidate -Context $context -IsolationNonce $IsolationNonce -ControllerWorkflowBlob $blob
 }
 
-Export-ModuleMember -Function New-CiCandidateExecutionInputs,Get-CiCandidateExecutionInputs
+Export-ModuleMember -Function New-CiCandidateExecutionInputs,Get-CiCandidateExecutionInputs,Assert-CiCandidateExecutionBatch

@@ -123,6 +123,17 @@ JSON identity and this input acquisition do not authenticate a test result. The 
 native workflow, independent artifact/result verification, exact-head reporter, actual
 required-check/stale-base enforcement and main adoption remain separate requirements.
 
+Its native batch retains a `CandidateExecutionBinding`: the original canonical
+candidate, complete controller context, caller blob and isolation nonce. Native project
+contexts rederive this batch against the live hosted repository, event, branch, controller
+commit, workflow ref, run and attempt. Missing, extra, mistyped or changed fields refuse.
+The binding admits only `ReleaseTestBuild` and `ReleaseTest`; isolated production and
+extended qualification roles refuse. SDK preparation can read pinned inputs for the
+bound isolated test-build role, using its real isolated ref. It never emulates main,
+permits isolated production or supplies a native verdict. Existing hosted main SDK
+preparation retains its own guards. These adapter prerequisites do not deploy a native
+workflow, grant check-writing authority or change any validation obligation.
+
 The isolated-branch cache prerequisite passed its original positive branch restore
 and independent main miss on Linux, Windows x64 and Windows ARM64, attempts 42886607587
 and 42887031360. The authenticated pair is retained in TestRuns/I61_2026-11-09.

@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 No remaining slice is waived and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 16, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 17, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -579,10 +579,10 @@ This supersedes earlier progress descriptions without rewriting historical evide
 |---|---|---|
 | Shared SDK v2 | Authenticated transport and actual MSBuild/tool/header/library/per-TU guards implemented. This revision enables the six authenticated inputs listed in SDK2_AuthenticatedInputs_2026-11-10.json | Roll out the exact engine pin to callers and require actual native SDK hits on both architectures. Local candidates remain open. |
 | DxUi SDK producer | Corrected campaigns 42866937316, 42866944166 and 42866951701 passed both architectures through the exact reviewed caller/controller. All six real archives passed authenticated acquisition, independent ABI-reference and byte verification | Earlier failed campaigns 42824735706, 42824740904 and 42824746357 remain failed and inadmissible. Consumer native qualification remains separate. |
-| RedMonitor | PR 46 merged. Local Source profiles, controlled-origin actual SDK/native/ETW/package checks pass. Main 42822249370 passed both native regressions and production/package roles | That main run used Source fallback; hosted SDK v2-hit acceptance is still open. |
-| RedXe | PR 81 merged. Six local Source builds, three x64 native profiles, production/package and controlled-origin SDK checks pass | Main 42827831994 is pending at this checkpoint; hosted SDK v2 hit remains open. |
+| RedMonitor | PR 47 merged. Live main 42883975390 passed both native regressions and both production/package roles using the exact qualified SDK2 inputs | Original run/jobs, SDK selection, native evidence and production ZIP hashes independently verified. Overall controlled acceleration targets remain open. |
+| RedXe | PR 82 merged. Main 42884674473 selected SDK2 and passed all native scopes on both architectures, then failed its AV measurement wrapper's obsolete Source-layout assumption | Campaign failed and production correctly skipped. SDK-aware measurement repair and its separate qualification are in progress; the failed aggregate is not acceptance. |
 | RedPrism | Local application/provenance/package wiring, actual controlled-origin SDK Release build and complete native run pass. Separate corrected production/package pass | Current Source/profile/hosted qualification and normal PR integration remain open. Preserve the earlier modifier-state refusals and SDK-license-path packaging failure. |
-| RedTilde | API-5 snapshot/reopening/package routing implemented locally; 60 role/profile controls and snapshot mutation/refusal controls pass | Actual API-5 SDK hit, current Source profiles and hosted acceptance remain open. Fixture-path failures and the reverted extended-argv experiment are retained; compact full-GUID fixture names are under native validation. |
+| RedTilde | PR 103 merged. Live main 42883990951 passed both native regressions and both production/package roles using the exact API-5 SDK2 inputs | Original run/jobs, SDK selection, native evidence and production ZIP hashes independently verified. Earlier fixture failures remain retained; overall controlled acceleration targets remain open. |
 | RedSalamander | PRs 209/210 merged. PR 211 CI/findings/up-to-date checks pass; Entire reviewer approval is absent. Dependent PR 212 remains draft | Approval/integration, four applicable foreground suites at an agreed time, native acceptance and SDK wiring remain open. A promised review is not approval. |
 | Safe concurrency | DxUi bounded ordinary-suite concurrency deployed. Reproduced vcpkg bootstrap race has a local shared-read/exclusive-mutation plus platform-install fix; concurrent cold x64/ARM64 restores and complete tooling validation pass | Finish scoped/native acceptance and normal integration. Neither this component observation nor passing reruns establishes controlled acceleration acceptance. |
 
@@ -712,3 +712,25 @@ Revision 16 continuation:
 - Root's SDK-preserving Full NonInteractive run has passed tooling and entered native
   execution after its guarded re-attestation. Final canonical acceptance, SDK production/
   package and delivery remain pending. All foreground work remains excluded this session.
+
+Revision 17 continuation:
+
+- RedMonitor #47 and RedTilde #103 deployed the reviewed qualified distribution.
+  Live main campaigns 42883975390 and 42883990951 passed both native architectures
+  and both production/package roles with exact SDK2 selection. Original native
+  evidence and package bytes were checked independently against their receipts;
+  SDK2_LiveConsumers_2026-11-10.json retains the verified identities and hashes.
+- RedXe 42884674473 failed after its native scopes passed because measurement
+  assumed a Source restore layout. Preserve that failure and repair measurement
+  through the actual SDK reader; production remained skipped. RedPrism's new SDK
+  campaign and DxUi's latest main qualification are still in progress.
+- Candidate batch inputs now retain their complete canonical candidate and live
+  run/attempt/controller binding. Native role guards and SDK preparation refuse
+  isolated production or missing/mutated bindings. All 100 engine controls and
+  12 workflow syntax checks pass. No native candidate workflow, authenticated
+  reporter, required native gate, local delegation or main adoption is deployed.
+- RedSalamander's SDK prototype remains under local qualification. Preserve its
+  earlier compiler/PDB failures and filtered runtime evidence as distinct scopes.
+  Interactive suites are excluded for this session at the user's request; they
+  remain outstanding. Keep all unfinished slices and controlled 3x/2x acceptance
+  open, and keep this plan in WIP.

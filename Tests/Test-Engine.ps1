@@ -1734,6 +1734,69 @@ Invoke-Case 'Actual shadow gateway rechecks independent controller refs, workflo
     }
 }
 
+Invoke-Case 'Isolated native batch roundtrips retain live context and cannot enter production' {
+    $f=New-CandidateFixture 'candidate-native-batch'
+    $candidate=New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('a'*40)
+    $nonce='d'*32;$branch='refs/heads/ci-native/pr43/'+$candidate.identity+'/'+$nonce
+    $context=[ordered]@{repository='RedSalamanders/RedMonitor';event='workflow_dispatch';ref=$branch;commit=$f.base;
+        workflowRef=('RedSalamanders/RedMonitor/.github/workflows/integration-execution.yml@'+$branch);runId='678';runAttempt=2}
+    $input=New-CiCandidateExecutionInputs -Candidate $candidate -Context $context -IsolationNonce $nonce -ControllerWorkflowBlob ('e'*40)
+    $batch=$input.batch|ConvertTo-Json -Depth 20|ConvertFrom-Json -AsHashtable
+    $environment=@{GITHUB_ACTIONS='true';RUNNER_ENVIRONMENT='github-hosted';GITHUB_REPOSITORY=$context.repository;
+        GITHUB_EVENT_NAME=$context.event;GITHUB_REF=$context.ref;GITHUB_SHA=$context.commit;
+        GITHUB_WORKFLOW_REF=$context.workflowRef;GITHUB_RUN_ID=$context.runId;GITHUB_RUN_ATTEMPT='2'}
+    $saved=@{};foreach($name in $environment.Keys){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
+    try{
+        foreach($name in $environment.Keys){[Environment]::SetEnvironmentVariable($name,$environment[$name],'Process')}
+        Assert-True (Assert-CiCandidateExecutionBatch -Descriptor $batch)
+        foreach($field in @('commit','version','runId','engine','unknown','binding-role','binding-attempt','binding-ref','binding-candidate','missing-binding')){
+            $changed=$batch|ConvertTo-Json -Depth 20|ConvertFrom-Json -AsHashtable
+            switch($field){
+                'commit'{$changed.commit=$f.head};'version'{$changed.version='0.1.65535'};'runId'{$changed.runId='679'}
+                'engine'{$changed.engine.ref='f'*40};'unknown'{$changed.passed=$true}
+                'binding-role'{$changed.candidateExecution.role='Production'}
+                'binding-attempt'{$changed.candidateExecution.context.runAttempt='2'}
+                'binding-ref'{$changed.candidateExecution.context.ref='refs/heads/main'}
+                'binding-candidate'{$changed.candidateExecution.candidate.headCommit='f'*40}
+                'missing-binding'{$changed.Remove('candidateExecution')}
+            }
+            Assert-Refused {Assert-CiCandidateExecutionBatch -Descriptor $changed}
+        }
+        $env:GITHUB_RUN_ATTEMPT='3';Assert-Refused {Assert-CiCandidateExecutionBatch -Descriptor $batch};$env:GITHUB_RUN_ATTEMPT='2'
+        $tokens=$null;$errors=$null
+        $ast=[Management.Automation.Language.Parser]::ParseFile((Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1'),[ref]$tokens,[ref]$errors)
+        Assert-Equal 0 $errors.Count
+        $guards=@($ast.FindAll({param($node)$node -is [Management.Automation.Language.IfStatementAst] -and $node.Extent.Text -match '^if\(\$batch\.Contains\(''candidateExecution''\)'},$true))
+        Assert-Equal 1 $guards.Count
+        $guard=[scriptblock]::Create($guards[0].Extent.Text)
+        foreach($phase in @('ReleaseTestBuild','ReleaseTest','Production','Qualification')){
+            $passed=& {param($Body,$batch,$Phase)try{& $Body;return $true}catch{return $false}} $guard $batch $phase
+            Assert-Equal ($phase -in @('ReleaseTestBuild','ReleaseTest')) $passed
+        }
+        $without=$batch|ConvertTo-Json -Depth 20|ConvertFrom-Json -AsHashtable;$without.Remove('candidateExecution')
+        Assert-Refused {& {param($Body,$batch)$Phase='ReleaseTestBuild';& $Body} $guard $without}
+        $sdkAst=[Management.Automation.Language.Parser]::ParseFile((Join-Path $engineRoot 'Tools/Modules/Ci.SdkPreparation.psm1'),[ref]$tokens,[ref]$errors)
+        Assert-Equal 0 $errors.Count
+        $function=@($sdkAst.FindAll({param($node)$node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -ceq 'Initialize-CiPinnedSdkInput'},$true))
+        Assert-Equal 1 $function.Count
+        $prefix=@($function[0].Body.EndBlock.Statements|Select-Object -First 3)
+        Assert-True ($prefix[0].Extent.Text -match '^\$main=')
+        Assert-True ($prefix[2].Extent.Text -match '^if\(\$Context.phase')
+        # Extracting an AST drops its source-file automatic variables. Bind only
+        # the original module directory; the actual authorization statements run.
+        $moduleLiteral="'"+(Join-Path $engineRoot 'Tools/Modules').Replace("'","''")+"'"
+        $authorize=[scriptblock]::Create((($prefix.Extent.Text -join "`n").Replace('$PSScriptRoot',$moduleLiteral)))
+        foreach($phase in @('ReleaseTestBuild','ReleaseTest','Production')){
+            $authorized=& {param($Body,$batch,$phase)$Context=@{phase=$phase;batch=$batch};. $Body;return ($main -or $candidate)} $authorize $batch $phase
+            Assert-Equal ($phase -ceq 'ReleaseTestBuild') $authorized
+        }
+        Assert-Refused {& {param($Body,$batch)$Context=@{phase='ReleaseTestBuild';batch=$batch};. $Body} $authorize $without}
+        $env:GITHUB_REF='refs/heads/main'
+        $mainProduction=& {param($Body)$Context=@{phase='Production';batch=@{}};. $Body;return ($main -and -not $candidate)} $authorize
+        Assert-True $mainProduction
+    }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}}
+}
+
 function New-MergeGroupFixture([string]$Name,[switch]$Prose){
     $f=New-CandidateFixture $Name -Prose:$Prose
     $f.event=@{action='checks_requested';repository=@{full_name='RedSalamanders/RedMonitor'};
