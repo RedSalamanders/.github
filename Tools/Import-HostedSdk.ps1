@@ -4,7 +4,7 @@
 .PARAMETER IdentityFile Independently evaluated complete SDK identity JSON below Root/.build, outside the store.
 .PARAMETER RunId Exact reviewed DxUi SDK producer run, not a PR or product qualification run.
 .PARAMETER Attempt Exact successful attempt; no implicit latest-attempt substitution.
-.OUTPUTS JSON with the imported key, original manifest hash and payload location. No build/test verdict.
+.OUTPUTS JSON with the imported key, original manifest hash and payload location, or an explicit compatible-input miss. No build/test verdict.
 .NOTES Requires PowerShell 7.4, GH_TOKEN with repository-read access and network access.
 Validates the reviewed producer caller/engine, native job, source, attempt and server archive digest;
 rejects unsafe archive paths, verifies every payload byte and publishes atomically into an owned store.
@@ -28,4 +28,5 @@ if($path.StartsWith($store+[IO.Path]::DirectorySeparatorChar,[StringComparison]:
     -not(Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Item $path).Length -gt 16KB){throw 'Keep the bounded independently evaluated SDK identity outside its store.'}
 $identity=Get-Content -LiteralPath $path -Raw|ConvertFrom-Json -AsHashtable
 $result=Import-CiHostedSdkArtifact -RepositoryRoot $rootPath -StoreRoot $store -DownloadRoot (Join-Path $build 'sdk-downloads') -Identity $identity -RunId $RunId -Attempt $Attempt
+if($null -eq $result){[ordered]@{role='DependencyCacheMiss';reason='compiler-dependency-environment-mismatch'}|ConvertTo-Json;exit 0}
 [ordered]@{role='DependencyBytesImported';key=$result.Key;manifestSha256=$result.ManifestSha256;payload=$result.Payload}|ConvertTo-Json

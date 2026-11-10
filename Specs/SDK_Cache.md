@@ -132,6 +132,9 @@ byte count freeze the entire archive. The API credential is sent only to api.git
 redirect is fetched using a separate client without authentication headers. Download size/time and expanded
 entry count/bytes are bounded. All archive paths are validated before the first extraction; traversal,
 Windows device/stream names, links/reparse entries and case collisions refuse. Existing files are never overwritten.
+Extraction holds a read handle on the archive and rechecks its authenticated digest on that same stream.
+The independent entry-manifest digest is acquired directly from that verified archive, not from mutable
+extracted files; substitution after download or extraction refuses before publication.
 
 After transfer, read the producer metadata again and require identical provenance. Exactly one SDK entry
 must match its full independent input key and original raw manifest hash. Generic storage verifies the
@@ -143,3 +146,25 @@ Transport supplies dependency bytes only. It does not prove application ABI comp
 native consumer runtime, release qualification or publication. The application must independently bootstrap
 its source/tooling policy, derive its actual compiler/dependency/profile key, acquire and close a reader,
 and run its existing required checks. A different local compiler is a distinct input, even when the source pin matches.
+
+## Hosted main consumer preparation
+
+`Ci.SdkPreparation.psm1` prepares an explicit descriptor only for admitted matching-native Windows hosted
+main ReleaseTestBuild/Production roles. Local, PR/compiler-free, other-profile and emulated execution refuse
+before network or filesystem side effects. The exact source/API must have an explicit run/attempt in
+`Policy/sdk-distribution.json`; absence retains the governed source recipe, never a newer dependency pin.
+
+Each operation uses a unique `.build/sdk-preparation` workspace, so mutable package restores do not collide
+across builds or platforms. Acquire full canonical clean source/tooling/storage-engine checkouts and verify
+their entire reviewed raw maps before importing SDK tooling or running the pinned source's vcpkg restore.
+Independently evaluate the actual complete native input key; preparation never compiles DxUi.lib.
+Authenticate/import its exact hosted bytes through the transport contract, then write the descriptor outside
+the shared byte store. Retain workspace, timings, downloaded evidence and failed attempts without cleanup.
+Revalidate the canonical frozen application context before and after preparation; source, version or engine
+movement during transfer cannot qualify the originally admitted input.
+
+A verified artifact with another compiler, compiler-profile, dependency or environment hash is an exact
+cache miss; retain source fallback and accept no bytes. A different source/API/architecture/ABI/integration
+policy, malformed manifest, corrupt archive or unknown producer fails rather than being relabelled as a
+compatible hit. The application reader still rechecks bootstrap, actual inputs and payload and holds its
+lease through native use. Preparation/transport supplies no test verdict or artifact receipt on its own.

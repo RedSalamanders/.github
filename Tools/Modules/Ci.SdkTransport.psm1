@@ -105,10 +105,17 @@ function Receive-CiSdkArchive {
 }
 
 function Expand-CiSdkArchive {
-    param([string]$Archive,[string]$Destination)
+    param([string]$Archive,[string]$Destination,[Collections.IDictionary]$Envelope)
     $cache=Get-Module Ci.SdkCache
-    $zip=[IO.Compression.ZipFile]::OpenRead($Archive)
+    $archiveStream=[IO.File]::Open($Archive,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)
+    $zip=$null;$manifests=[Collections.Generic.List[object]]::new()
     try{
+        if($null -ne $Envelope){
+            $hash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($archiveStream)).ToLowerInvariant()
+            if($archiveStream.Length -ne $Envelope.archiveBytes -or $hash -cne $Envelope.archiveSha256){throw 'SDK archive changed before extraction.'}
+            $archiveStream.Position=0
+        }
+        $zip=[IO.Compression.ZipArchive]::new($archiveStream,[IO.Compression.ZipArchiveMode]::Read,$true)
         if($zip.Entries.Count -lt 1 -or $zip.Entries.Count -gt 50000){throw 'SDK archive has an invalid entry count.'}
         $names=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
         $total=0L
@@ -125,10 +132,27 @@ function Expand-CiSdkArchive {
         foreach($entry in $zip.Entries){
             $path=Assert-CiContainedPath $Destination (Join-Path $Destination $entry.FullName)
             if($entry.FullName.EndsWith('/')){[void][IO.Directory]::CreateDirectory($path);continue}
+            if(($entry.FullName -split '/')[-1] -ceq 'entry.json'){
+                # Hold the server-digest-verified archive open. The independent manifest digest comes
+                # from these authenticated bytes, never a mutable extracted filesystem manifest.
+                $content=$entry.Open()
+                try{$sha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($content)).ToLowerInvariant()}finally{$content.Dispose()}
+                $manifests.Add([ordered]@{path=$entry.FullName;sha256=$sha})
+            }
             [void][IO.Directory]::CreateDirectory((Split-Path -Parent $path))
             [IO.Compression.ZipFileExtensions]::ExtractToFile($entry,$path,$false)
         }
-    }finally{$zip.Dispose()}
+        return $manifests.ToArray()
+    }finally{if($null -ne $zip){$zip.Dispose()};$archiveStream.Dispose()}
+}
+
+function Test-CiSdkTransportRecipe {
+    param([Collections.IDictionary]$Expected,[Collections.IDictionary]$Actual)
+    $expectedKey=Get-CiSdkCacheKey $Expected;$actualKey=Get-CiSdkCacheKey $Actual
+    foreach($name in @('sourceRepository','sourceCommit','sourceBytes','apiRevision','platform','configuration','runtimeFamily','annotationPolicy','languageStandard','optimizationPolicy','integrationPolicyIdentity')){
+        if([string]$Expected[$name] -cne [string]$Actual[$name]){throw "Hosted SDK has an unexpected source/profile/policy field: $name."}
+    }
+    return $expectedKey -ceq $actualKey
 }
 
 function Import-CiHostedSdkArtifact {
@@ -147,18 +171,30 @@ function Import-CiHostedSdkArtifact {
     [IO.File]::WriteAllText($envelopePath,($envelope|ConvertTo-Json),[Text.UTF8Encoding]::new($false))
     $archive=Join-Path $directory 'artifact.zip';Receive-CiSdkArchive $envelope $archive
     $expanded=Join-Path $directory 'expanded';[void][IO.Directory]::CreateDirectory($expanded)
-    Expand-CiSdkArchive $archive $expanded
+    $catalog=@(Expand-CiSdkArchive $archive $expanded $envelope)
     $entries=@(Get-ChildItem -LiteralPath $expanded -Filter entry.json -Recurse -File)
     if($entries.Count -ne 1){throw 'SDK artifact must contain exactly one immutable input version.'}
     $entry=$entries[0]
-    $manifestSha=(Get-FileHash -LiteralPath $entry.FullName).Hash.ToLowerInvariant()
+    $relative=[IO.Path]::GetRelativePath($expanded,$entry.FullName).Replace('\','/')
+    if($catalog.Count -ne 1 -or $catalog[0].path -cne $relative){throw 'Extracted SDK manifest differs from the authenticated archive catalog.'}
+    $manifestSha=$catalog[0].sha256
+    if((Get-FileHash -LiteralPath $entry.FullName).Hash.ToLowerInvariant() -cne $manifestSha){throw 'Extracted SDK manifest changed after authenticated acquisition.'}
+    $json=Get-Content -LiteralPath $entry.FullName -Raw
+    if(-not(Test-Json -Json $json -SchemaFile (Join-Path $PSScriptRoot '../../Schemas/sdk-cache-entry.schema.json'))){throw 'Invalid hosted SDK entry manifest.'}
+    $remote=$json|ConvertFrom-Json -AsHashtable
+    $remoteKey=Get-CiSdkCacheKey $remote.identity
+    if($remote.key -cne $remoteKey){throw 'Hosted SDK manifest has an inconsistent input identity.'}
     $marker=Join-Path (Split-Path -Parent $entry.DirectoryName) 'input-key.txt'
-    if(-not(Test-Path -LiteralPath $marker -PathType Leaf) -or [IO.File]::ReadAllText($marker) -cne $key){throw 'Downloaded SDK input key differs from the independently evaluated recipe.'}
+    if(-not(Test-Path -LiteralPath $marker -PathType Leaf) -or [IO.File]::ReadAllText($marker) -cne $remoteKey){throw 'Downloaded SDK input key marker is invalid.'}
     if((Split-Path -Leaf $entry.DirectoryName) -cne $manifestSha.Substring(0,16) -or
-        (Split-Path -Leaf (Split-Path -Parent $entry.DirectoryName)) -cne $key.Substring(0,16)){throw 'Downloaded SDK locator does not bind its complete key/manifest.'}
+        (Split-Path -Leaf (Split-Path -Parent $entry.DirectoryName)) -cne $remoteKey.Substring(0,16)){throw 'Downloaded SDK locator does not bind its complete key/manifest.'}
     # Re-read producer metadata after transfer; expiry, deletion or a changed attempt cannot gain acceptance.
     $after=Resolve-CiHostedSdkArtifact -RunId $RunId -Attempt $Attempt -SourceCommit $Identity.sourceCommit -Platform $Identity.platform
     if(($after|ConvertTo-Json -Compress) -cne ($envelope|ConvertTo-Json -Compress)){throw 'SDK artifact provenance changed during transport.'}
+    if(-not(Test-CiSdkTransportRecipe -Expected $Identity -Actual $remote.identity)){
+        Write-Host "Verified SDK uses another compiler/dependency/environment recipe ($remoteKey); exact requested key $key is unavailable."
+        return $null
+    }
     Initialize-CiSdkStore -RepositoryRoot $RepositoryRoot -StoreRoot $StoreRoot
     $result=Import-CiSdkCacheEntry -StoreRoot $StoreRoot -Identity $Identity -EntryRoot $entry.DirectoryName -ManifestSha256 $manifestSha
     [IO.File]::WriteAllText((Join-Path $directory 'import.json'),([ordered]@{role='DependencyBytesImported';key=$result.Key;manifestSha256=$result.ManifestSha256;envelope=$envelope}|ConvertTo-Json -Depth 6),[Text.UTF8Encoding]::new($false))
