@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 No remaining slice is waived and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 11, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 12, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -570,3 +570,23 @@ This table preserves the original identifiers for handoff continuity; the correc
 | 4B local DxUi override | Prioritize immutable local candidate SDKs with isolated outputs and enforced taint/provenance; S3 | Medium / medium–high |
 
 The implementation record and linked evidence state the delivered subparts, native outcomes and measured limits. Overall 3x/2x targets and unfinished acceptance remain open. The initial catalog's universal percentage savings and low-risk labels are replaced with source-backed constraints, ordered work and observable acceptance.
+
+## 14. Execution checkpoint - 2026-11-10
+
+This supersedes earlier progress descriptions without rewriting historical evidence. The plan remains WIP.
+
+| Repository/area | Current evidence | Remaining acceptance |
+|---|---|---|
+| Shared SDK v2 | PRs 37-40 merged. Original SDK identity/receipt retained; authenticated transport and actual MSBuild/tool/header/library/per-TU guards implemented | Transport policy remains disabled. Local candidates and live hosted consumer hits remain open. |
+| DxUi SDK producer | All three unchanged pin campaigns passed x64 SDK checks. ARM64 SDK checks completed, then final ABI metadata refused a mismatched compiler host: runs 42824735706, 42824740904, 42824746357 | Shared PR 41 fixes native MSBuild and explicit compiler-host metadata. All 83 local controls and hosted checks pass. Review/deploy the DxUi caller and repeat native campaigns before admitting exact successful run/attempts. |
+| RedMonitor | PR 46 merged. Local Source profiles, controlled-origin actual SDK/native/ETW/package checks pass. Main 42822249370 passed both native regressions and production/package roles | That main run used Source fallback; hosted SDK v2-hit acceptance is still open. |
+| RedXe | PR 81 merged. Six local Source builds, three x64 native profiles, production/package and controlled-origin SDK checks pass | Main 42827831994 is pending at this checkpoint; hosted SDK v2 hit remains open. |
+| RedPrism | Local application/provenance/package wiring, actual controlled-origin SDK Release build and complete native run pass. Separate corrected production/package pass | Current Source/profile/hosted qualification and normal PR integration remain open. Preserve the earlier modifier-state refusals and SDK-license-path packaging failure. |
+| RedTilde | API-5 snapshot/reopening/package routing implemented locally; 60 role/profile controls and snapshot mutation/refusal controls pass | Actual API-5 SDK hit, current Source profiles and hosted acceptance remain open. Fixture-path failures and the reverted extended-argv experiment are retained; compact full-GUID fixture names are under native validation. |
+| RedSalamander | PRs 209/210 merged. PR 211 CI/findings/up-to-date checks pass; Entire reviewer approval is absent. Dependent PR 212 remains draft | Approval/integration, four applicable foreground suites at an agreed time, native acceptance and SDK wiring remain open. A promised review is not approval. |
+| Safe concurrency | DxUi bounded ordinary-suite concurrency deployed. Reproduced vcpkg bootstrap race has a local shared-read/exclusive-mutation plus platform-install fix; concurrent cold x64/ARM64 restores and complete tooling validation pass | Finish scoped/native acceptance and normal integration. Neither this component observation nor passing reruns establishes controlled acceleration acceptance. |
+
+S2/S4/S5/S6B and S9/S10 remain partial or open. S7's required trusted native candidate gate/local delegation
+and S8's cross-run main adoption are not deployed. Keep existing local and main obligations. The controlled
+3x/2x organization targets remain unproved. The [execution evidence](../../TestRuns/I61_2026-11-09/README.md)
+retains snapshots, failures, provenance boundaries and rollout details.
