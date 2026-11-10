@@ -1319,6 +1319,8 @@ function Write-CiQualifiedSdkAbiReference {
     $Probe.calls.Add('reference');$Probe.hosts.Add($env:PreferredToolArchitecture)
     if($Probe.fail -ceq 'reference'){throw 'controlled reference failure'}
     if($Version -cne '0.1.123' -or $Platform -cne $env:SDK_PLATFORM){throw 'Qualified reference lost its version/architecture.'}
+    $nativeHost=if($Platform -ceq 'x64'){'amd64'}else{'arm64'}
+    if($MSBuildPath.Replace('\','/') -cnotmatch ('/MSBuild/Current/Bin/'+$nativeHost+'/MSBuild.exe$')){throw 'Qualified reference selected another MSBuild host.'}
     return $OutputFile
 }
 '@ + "`n"+$code)
@@ -1344,6 +1346,25 @@ function Write-CiQualifiedSdkAbiReference {
         Set-Location -LiteralPath $location
         foreach($name in $names){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}
     }
+}
+Invoke-Case 'Actual qualified producer ABI query explicitly preserves each native compiler host' {
+    $tokens=$null;$errors=$null
+    $ast=[Management.Automation.Language.Parser]::ParseFile((Join-Path $engineRoot 'Tools/Modules/Ci.SdkQualifiedProducer.psm1'),[ref]$tokens,[ref]$errors)
+    Assert-Equal 0 $errors.Count
+    $query=@($ast.FindAll({param($n)$n -is [Management.Automation.Language.CommandAst] -and $n.GetCommandName() -ceq 'Get-CiSdkAbiReference'},$true))
+    Assert-Equal 1 $query.Count
+    $stage=[scriptblock]::Create(@'
+param($expectedHost,$Platform)
+$ToolingRoot='controlled-tooling';$MSBuildPath='controlled-msbuild';$SourceRoot='controlled-source'
+function Get-CiSdkAbiReference {
+    param($ToolingRoot,$MSBuildPath,$ProjectPath,$Platform,$PreferredToolArchitecture)
+    if($PreferredToolArchitecture -cne $expectedHost.ToLowerInvariant()){throw 'Native compiler-host selection was lost.'}
+    if($Platform -cne $(if($expectedHost -ceq 'X64'){'x64'}else{'ARM64'})){throw 'Target platform was lost.'}
+    return $PreferredToolArchitecture
+}
+'@+"`n"+$query[0].Extent.Text)
+    Assert-Equal x64 (& $stage X64 x64)
+    Assert-Equal arm64 (& $stage Arm64 ARM64)
 }
 Invoke-Case 'SDK workflow keeps reviewed tooling separate, read-only tokens and native-success attempt-bound artifacts' {
     function Assert-SdkProducerWorkflow([string]$Text){
