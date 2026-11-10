@@ -66,6 +66,9 @@ forges the local mode environment, checks the repository cache catalog independe
 and retains the original save-step log/report. A reported read mode and missing entry
 alone do not distinguish permission denial from a service/network failure: inspect the
 raw save-step result before accepting the boundary. It creates no native or merge verdict.
+Mode observation writes a partial non-confirming report before refusal, including when
+the mode is missing. A skipped save cannot confirm the boundary. Evidence retention
+must still run for these early failures.
 The pinned older workflow linter admits only literal block-mapping `cache-mode: read`
 or `none` at workflow/job scope through the shared validator; write, dynamic, inline,
 duplicate and misplaced forms refuse. Only its two exact obsolete unknown-key messages

@@ -16,11 +16,17 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          if($env:ACTIONS_CACHE_MODE -cne 'read'){throw 'Explicit server-issued read-only cache mode is unavailable.'}
           $root=Join-Path $env:RUNNER_TEMP 'integration-cache-capability'
           [void][IO.Directory]::CreateDirectory($root)
+          $mode=[string]$env:ACTIONS_CACHE_MODE
+          $report=[ordered]@{schemaVersion=1;role='IntegrationCacheCapability';repository=$env:GITHUB_REPOSITORY;
+            runId=$env:GITHUB_RUN_ID;attempt=$env:GITHUB_RUN_ATTEMPT;sourceCommit=$env:GITHUB_SHA;
+            effectiveMode=$mode;phase='mode-observed';saveStepOutcome='not-attempted';
+            nativeExecutions=0;suppliesNativeVerdict=$false;requiresSaveLogReview=$true;confirmed=$false}
+          [IO.File]::WriteAllText((Join-Path $root 'capability.json'),($report|ConvertTo-Json))
+          [IO.File]::WriteAllText((Join-Path $root 'effective-mode.txt'),$mode)
+          if($mode -cne 'read'){throw 'Explicit server-issued read-only cache mode is unavailable; partial capability evidence is retained.'}
           [IO.File]::WriteAllText((Join-Path $root 'synthetic.txt'),'Synthetic capability fixture; no product inputs.')
-          [IO.File]::WriteAllText((Join-Path $root 'effective-mode.txt'),$env:ACTIONS_CACHE_MODE)
       - name: Attempt an isolated cache save with a forged local mode
         id: save
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -46,9 +52,9 @@ jobs:
           $mode=[IO.File]::ReadAllText((Join-Path $root 'effective-mode.txt'))
           $report=[ordered]@{schemaVersion=1;role='IntegrationCacheCapability';repository=$env:GITHUB_REPOSITORY;
             runId=$env:GITHUB_RUN_ID;attempt=$env:GITHUB_RUN_ATTEMPT;sourceCommit=$env:GITHUB_SHA;
-            effectiveMode=$mode;forgedLocalMode='write';saveStepOutcome=$env:SAVE_OUTCOME;matchingCacheEntries=$matching.Count;
+            effectiveMode=$mode;phase='catalog-observed';forgedLocalMode='write';saveStepOutcome=$env:SAVE_OUTCOME;matchingCacheEntries=$matching.Count;
             nativeExecutions=0;suppliesNativeVerdict=$false;requiresSaveLogReview=$true;
-            confirmed=($mode -ceq 'read' -and $matching.Count -eq 0)}
+            confirmed=($mode -ceq 'read' -and $env:SAVE_OUTCOME -ceq 'success' -and $matching.Count -eq 0)}
           [IO.File]::WriteAllText((Join-Path $root 'capability.json'),($report|ConvertTo-Json))
           if(-not $report.confirmed){throw 'Read-only cache boundary was not confirmed; keep candidate execution disabled.'}
       - name: Retain capability evidence

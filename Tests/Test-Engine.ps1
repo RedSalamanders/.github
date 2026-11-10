@@ -2225,6 +2225,32 @@ Invoke-Case 'Read-only cache syntax admits scoped capabilities and refuses write
     Assert-True ($probe -notmatch '(?m)^\s+(contents|actions|statuses|checks): write')
 }
 
+Invoke-Case 'Cache capability refusal retains its actual early report before any save attempt' {
+    $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/integration-capabilities.yml'))
+    $match=[regex]::Match($text,'(?ms)^      - name: Retain the effective server-issued cache mode\r?\n.*?^        run: \|\r?\n(?<body>.*?)(?=^      - name:)')
+    Assert-True $match.Success
+    $body=[scriptblock]::Create([regex]::Replace($match.Groups['body'].Value,'(?m)^          ',''))
+    $root=New-Fixture 'cache-capability-early-evidence'
+    $oldTemp=$env:RUNNER_TEMP;$oldMode=$env:ACTIONS_CACHE_MODE
+    try{
+        foreach($mode in @('','write','none','read')){
+            $env:RUNNER_TEMP=Join-Path $root ([guid]::NewGuid().ToString('N'))
+            $env:ACTIONS_CACHE_MODE=$mode
+            $threw=$false
+            try{& $body}catch{$threw=$true}
+            Assert-Equal ($mode -cne 'read') $threw
+            $evidence=Join-Path $env:RUNNER_TEMP 'integration-cache-capability'
+            $record=Get-Content (Join-Path $evidence 'capability.json') -Raw|ConvertFrom-Json
+            Assert-Equal $mode $record.effectiveMode
+            Assert-Equal 'mode-observed' $record.phase
+            Assert-Equal 'not-attempted' $record.saveStepOutcome
+            Assert-True (-not $record.confirmed -and -not $record.suppliesNativeVerdict)
+            Assert-Equal 0 $record.nativeExecutions
+            Assert-Equal ($mode -ceq 'read') (Test-Path (Join-Path $evidence 'synthetic.txt'))
+        }
+    }finally{$env:RUNNER_TEMP=$oldTemp;$env:ACTIONS_CACHE_MODE=$oldMode}
+}
+
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count
 $summary = [ordered]@{ schemaVersion = 1; passed = $failed -eq 0; executed = $script:rows.Count; failed = $failed; cases = $script:rows.ToArray() }
 $resultPath = Join-Path $runRoot 'results.json'

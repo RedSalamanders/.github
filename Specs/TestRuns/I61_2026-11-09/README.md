@@ -575,9 +575,12 @@ artifact, HTTP 302 download authorization. Credential-free report retained benea
 Z:/RedSalamander.Perf/evidence/i61-resume-20261110/sdk-access-42867096863/.
 This is one caller's access capability, not product qualification.
 
-The new compiler-free integration cache capability diagnostic has not yet been run
-on hosted infrastructure. Local syntax/behavior checks and server denial evidence
-must remain distinct. No native candidate gate, branch-policy change, delegated local
+The first hosted compiler-free cache capability probe, 42871006199, failed before
+a save attempt: ACTIONS_CACHE_MODE was unavailable. Its original job log is retained
+at Z:/RedSalamander.Perf/evidence/i61-resume-20261110/cache-capability-42871006199.log.
+The original early failure also preceded report creation; the follow-up writes a
+partial non-confirming report before refusal and requires a completed save attempt.
+Published cache-mode documentation is not proof of availability on this runner. No native candidate gate, branch-policy change, delegated local
 coverage or main adoption is enabled. The user's foreground exclusion remains active;
 Root 211 still has no human reviewer approval and 212 remains draft.
 
