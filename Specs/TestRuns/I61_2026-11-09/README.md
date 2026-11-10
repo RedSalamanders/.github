@@ -520,4 +520,27 @@ contract in [SDK_Cache.md](../../SDK_Cache.md); no JSON file authenticates itsel
 All controlled-origin SDK work uses real SDK/native bytes with a private origin resolver fixture. It establishes
 neither live GitHub producer authentication nor a product test verdict from a dependency cache. Required native
 candidate integration, local delegation, main adoption, local candidates and controlled 3x/2x acceptance remain
-open. See revision 12 of the [WIP plan](../../Plans/WIP/TestingAndIntegrationAcceleration_2026-11-09.md).
+open. See revision 13 of the [WIP plan](../../Plans/WIP/TestingAndIntegrationAcceleration_2026-11-09.md).
+
+### Merge-queue input foundation and subsequent qualification
+
+All 89 engine cases pass at
+`Z:/RedSalamander.Perf/unified-ci/engine-20261110T154756136Z-f812d25a95704ac48e44a5a797daab91/results.json`.
+The public acquisition control uses actual local Git fetch/object resolution and an isolated committed
+controller, with independently controlled API responses. Advanced main, replaced/deleted queue refs,
+fetch-time movement and a modified controller refuse. The queue suffix supplies no PR membership claim.
+The ten workflow syntax checks pass. Required candidate native execution/enforcement/delegation/adoption
+remain undeployed. A preceding fixture attempt is retained at
+`engine-20261110T154529507Z-9cf7ab0cd97d4710a3f79b8fc47c80ae/results.json`: its URL-rewrite transport
+correctly failed the exact-origin guard. The final fixture substitutes only owned fetch transport while
+leaving the production origin guard and all actual Git object checks active.
+
+Xe main 42827831994 and DxUi main 42825563314 completed all regression/production branches successfully.
+Tilde PR 102 merged as a025648236a9ed9db1c96141f735b52ec0a6a3d2; detailed Source and actual local API-5
+SDK receipts, input/log hashes, earlier failures and package identities are retained in its
+`Measurements/TestingAcceleration_2026-11-10_SDK2/`. The controlled local producer 6111103 is not hosted
+authentication. Tilde main 42847307500 and live cross-repository SDK2 hits remain pending.
+
+The user excluded interactive tests for this session. No foreground suite was started; the four Root
+foreground obligations and DxUi's separate focus suites remain unexecuted locally. Root 211 still has
+no Entire reviewer approval; 212 remains a dependent draft. No background GitHub Actions was cancelled.

@@ -1574,6 +1574,144 @@ Invoke-Case 'Prose-only candidate inputs create no native obligation and supply 
     foreach($field in @('passed','qualified','outcome','executed','adopted')){Assert-True (-not $candidate.Contains($field))}
 }
 
+function New-MergeGroupFixture([string]$Name,[switch]$Prose){
+    $f=New-CandidateFixture $Name -Prose:$Prose
+    $f.event=@{action='checks_requested';repository=@{full_name='RedSalamanders/RedMonitor'};
+        merge_group=@{base_ref='refs/heads/main';base_sha=$f.base;head_ref='refs/heads/gh-readonly-queue/main/pr-43-fixture';head_sha=$f.merge}}
+    return $f
+}
+Invoke-Case 'Merge queue input freeze binds the complete integration tree, cumulative inputs and proposed version' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.MergeGroup.psm1')
+    $f=New-MergeGroupFixture 'merge-group-native'
+    $d=New-CiMergeGroupInputs -Root $f.root -Repository RedSalamanders/RedMonitor -Event $f.event -CurrentMainCommit $f.base -CurrentGroupCommit $f.merge -ControllerEngineRef ('f'*40)
+    Assert-Equal 'MergeGroupInputs' $d.role
+    Assert-Equal $f.tree $d.groupTree
+    Assert-Equal $f.merge $d.input.commit
+    Assert-True $d.nativeRequired
+    Assert-Equal (New-CiInputDescriptor $f.root -Ref $f.merge).version $d.input.version
+    Assert-CiMergeGroupInputsCurrent -Root $f.root -Descriptor $d -Event $f.event -CurrentMainCommit $f.base -CurrentGroupCommit $f.merge -ControllerEngineRef ('f'*40)
+    $batch=(Invoke-CiGit $f.root @('commit-tree',$f.tree,'-p',$f.merge,'-p',$f.head,'-m','Second queued integration')).stdout.Trim()
+    $f.event.merge_group.head_sha=$batch
+    $next=New-CiMergeGroupInputs -Root $f.root -Repository RedSalamanders/RedMonitor -Event $f.event -CurrentMainCommit $f.base -CurrentGroupCommit $batch -ControllerEngineRef ('f'*40)
+    Assert-True ($next.identity -cne $d.identity)
+    Assert-Equal $batch $next.groupCommit
+}
+Invoke-Case 'Merge queue inputs refuse other events, repositories, branches, malformed refs and non-descendant heads' {
+    $f=New-MergeGroupFixture 'merge-group-invalid'
+    foreach($field in @('action','repository','base_ref','base_sha','head_sha','head_ref','double-slash','trailing-slash','ref-option')){
+        $eventData=$f.event|ConvertTo-Json -Depth 8|ConvertFrom-Json -AsHashtable
+        switch($field){
+            'action'{$eventData.action='destroyed'};'repository'{$eventData.repository.full_name='outside/project'}
+            'base_ref'{$eventData.merge_group.base_ref='refs/heads/feature'};'base_sha'{$eventData.merge_group.base_sha='1'*40}
+            'head_sha'{$eventData.merge_group.head_sha='2'*40};'head_ref'{$eventData.merge_group.head_ref='refs/pull/43/merge'}
+            'double-slash'{$eventData.merge_group.head_ref='refs/heads/gh-readonly-queue/main/a//b'}
+            'trailing-slash'{$eventData.merge_group.head_ref='refs/heads/gh-readonly-queue/main/a/'}
+            'ref-option'{$eventData.merge_group.head_ref='--upload-pack=unexpected'}
+        }
+        Assert-Refused {New-CiMergeGroupInputs -Root $f.root -Repository RedSalamanders/RedMonitor -Event $eventData -CurrentMainCommit $f.base -CurrentGroupCommit $f.merge -ControllerEngineRef ('f'*40)}
+    }
+    $detached=(Invoke-CiGit $f.root @('commit-tree',$f.tree,'-m','Unrelated root')).stdout.Trim()
+    foreach($head in @($detached,$f.base)){
+        $f.event.merge_group.head_sha=$head
+        Assert-Refused {New-CiMergeGroupInputs -Root $f.root -Repository RedSalamanders/RedMonitor -Event $f.event -CurrentMainCommit $f.base -CurrentGroupCommit $head -ControllerEngineRef ('f'*40)}
+    }
+}
+Invoke-Case 'Merge queue recheck refuses advanced main, replaced queue heads and self-rehashed descriptor changes' {
+    $f=New-MergeGroupFixture 'merge-group-drift'
+    $d=New-CiMergeGroupInputs -Root $f.root -Repository RedSalamanders/RedMonitor -Event $f.event -CurrentMainCommit $f.base -CurrentGroupCommit $f.merge -ControllerEngineRef ('f'*40)
+    Assert-Refused {Assert-CiMergeGroupInputsCurrent -Root $f.root -Descriptor $d -Event $f.event -CurrentMainCommit $f.head -CurrentGroupCommit $f.merge -ControllerEngineRef ('f'*40)}
+    Assert-Refused {Assert-CiMergeGroupInputsCurrent -Root $f.root -Descriptor $d -Event $f.event -CurrentMainCommit $f.base -CurrentGroupCommit $f.head -ControllerEngineRef ('f'*40)}
+    foreach($field in @('groupTree','groupRef','controllerEngineRef','input','nativeRequired','passed','pullRequests')){
+        $changed=$d|ConvertTo-Json -Depth 15|ConvertFrom-Json -AsHashtable
+        switch($field){'groupTree'{$changed.groupTree='1'*40};'groupRef'{$changed.groupRef+='-replaced'};'controllerEngineRef'{$changed.controllerEngineRef='2'*40};
+            'input'{$changed.input.buildNumber++};'nativeRequired'{$changed.nativeRequired=$false};'passed'{$changed.passed=$true};'pullRequests'{$changed.pullRequests=@(43)}}
+        $changed.Remove('identity');$changed.identity=Get-CiSha256 ($changed|ConvertTo-Json -Depth 15 -Compress)
+        Assert-Refused {Assert-CiMergeGroupInputsCurrent -Root $f.root -Descriptor $changed -Event $f.event -CurrentMainCommit $f.base -CurrentGroupCommit $f.merge -ControllerEngineRef ('f'*40)}
+    }
+}
+Invoke-Case 'Merge queue REST ref parsing refuses another ref, a tag and an invalid commit' {
+    $module=Get-Module Ci.MergeGroup
+    $ref='refs/heads/gh-readonly-queue/main/pr-43-fixture'
+    $valid=@{ref=$ref;object=@{type='commit';sha=('b'*40)}}
+    Assert-Equal ('b'*40) (& $module {param($v,$r) Get-CiMergeGroupRefCommit $v $r} $valid $ref)
+    foreach($field in @('ref','type','sha')){
+        $bad=$valid|ConvertTo-Json -Depth 3|ConvertFrom-Json -AsHashtable
+        switch($field){'ref'{$bad.ref='refs/heads/main'};'type'{$bad.object.type='tag'};'sha'{$bad.object.sha='not-a-commit'}}
+        Assert-Refused {& $module {param($v,$r) Get-CiMergeGroupRefCommit $v $r} $bad $ref}
+    }
+}
+Invoke-Case 'Prose-only merge queue snapshots grant no baseline success, membership, native execution or adoption' {
+    $f=New-MergeGroupFixture 'merge-group-prose' -Prose
+    $d=New-CiMergeGroupInputs -Root $f.root -Repository RedSalamanders/RedMonitor -Event $f.event -CurrentMainCommit $f.base -CurrentGroupCommit $f.merge -ControllerEngineRef ('f'*40)
+    Assert-True (-not $d.nativeRequired)
+    Assert-Equal $d.baseNativeDigest $d.input.nativeDigest
+    foreach($field in @('passed','qualified','outcome','executed','adopted','pullRequests')){Assert-True (-not $d.Contains($field))}
+    Write-FixtureFile $f.root 'src/must-not-execute.ps1' 'throw "source execution is forbidden"'
+    $again=New-CiMergeGroupInputs -Root $f.root -Repository RedSalamanders/RedMonitor -Event $f.event -CurrentMainCommit $f.base -CurrentGroupCommit $f.merge -ControllerEngineRef ('f'*40)
+    Assert-Equal $d.identity $again.identity
+}
+
+Invoke-Case 'Public merge group acquisition cross-checks real fetched objects and refuses API, ref and controller races' {
+    $f=New-MergeGroupFixture 'merge-group-acquisition'
+    $bare=Join-Path $runRoot 'merge-group-remote.git'
+    $null=Invoke-CiGit $f.root @('clone','--bare',$f.root,$bare)
+    $null=Invoke-CiGit $bare @('update-ref','refs/heads/main',$f.base)
+    $ref=$f.event.merge_group.head_ref
+    $null=Invoke-CiGit $bare @('update-ref',$ref,$f.merge)
+    $null=Invoke-CiGit $f.root @('remote','add','origin','https://github.com/RedSalamanders/RedMonitor.git')
+    $controller=New-Fixture 'merge-group-clean-controller'
+    foreach($path in @('Tools/Modules/Ci.Policy.psm1','Tools/Modules/Ci.GitHub.psm1','Tools/Modules/Ci.MergeGroup.psm1','Schemas/project.schema.json','Schemas/merge-group-inputs.schema.json')){
+        Write-FixtureFile $controller $path ([IO.File]::ReadAllText((Join-Path $engineRoot $path)))
+    }
+    $controllerCommit=Save-Fixture $controller 'Commit exact isolated input controller'
+    $module=Import-Module (Join-Path $controller 'Tools/Modules/Ci.MergeGroup.psm1') -Force -PassThru
+    try {
+        & $module {
+            param($fixture,$remoteRoot,$controllerRoot)
+            $script:groupControl=@{fixture=$fixture;bare=$remoteRoot;controller=$controllerRoot;mode='';calls=[Collections.Generic.List[object]]::new();git=(Get-Command Invoke-CiGit).ScriptBlock}
+            function script:Invoke-CiGit {
+                param($Root,[string[]]$Arguments,[switch]$AllowFailure)
+                # Substitute only this fixture's network transport. Real Git still fetches and
+                # resolves all objects; the production origin check reads its unchanged URL.
+                if($Arguments[0] -ceq 'fetch'){
+                    if($Arguments[2] -cne 'origin'){throw 'Unexpected fetch transport.'}
+                    $Arguments=$Arguments.Clone();$Arguments[2]=$script:groupControl.bare
+                }
+                & $script:groupControl.git -Root $Root -Arguments $Arguments -AllowFailure:$AllowFailure
+            }
+            function script:Invoke-CiApi {
+                param($Route,$Method='GET')
+                $s=$script:groupControl;$s.calls.Add(@{route=$Route;method=$Method})
+                $call=$s.calls.Count
+                if($Method -cne 'GET'){throw 'Mutation is forbidden.'}
+                if($call -eq 3 -and $s.mode -ceq 'controller-change'){[IO.File]::WriteAllText((Join-Path $s.controller 'README.md'),'Controller changed during acquisition')}
+                if($Route.EndsWith('/heads/main')){
+                    return @{object=@{sha=$(if($call -eq 3 -and $s.mode -ceq 'advanced-main'){$s.fixture.head}else{$s.fixture.base})}}
+                }
+                if($call -eq 4 -and $s.mode -ceq 'deleted-group'){throw 'Queue ref no longer exists.'}
+                if($call -eq 2 -and $s.mode -ceq 'fetch-race'){$null=Invoke-CiGit $s.bare @('update-ref',$s.fixture.event.merge_group.head_ref,$s.fixture.head)}
+                return @{ref=$s.fixture.event.merge_group.head_ref;object=@{type='commit';sha=$(if($call -eq 4 -and $s.mode -ceq 'replaced-group'){$s.fixture.head}else{$s.fixture.merge})}}
+            }
+            function script:Get-CiMainHead {param($Repository) return [string](Invoke-CiApi ('repos/'+$Repository+'/git/ref/heads/main') -Method GET).object.sha}
+        } $f $bare $controller
+        $d=& $module {param($r,$e) Get-CiMergeGroupInputs -Root $r -Event $e} $f.root $f.event
+        Assert-Equal $controllerCommit $d.controllerEngineRef
+        Assert-Equal $f.merge $d.groupCommit
+        Assert-Equal 4 (& $module {$script:groupControl.calls.Count})
+        foreach($mode in @('advanced-main','replaced-group','deleted-group','fetch-race','controller-change')){
+            $null=Invoke-CiGit $bare @('update-ref',$ref,$f.merge)
+            & $module {param($m) $script:groupControl.mode=$m;$script:groupControl.calls.Clear()} $mode
+            Assert-Refused {& $module {param($r,$e) Get-CiMergeGroupInputs -Root $r -Event $e} $f.root $f.event}
+            Write-FixtureFile $controller 'README.md' 'Initial prose.'
+        }
+        Assert-Equal '' (Invoke-CiGit $f.root @('status','--porcelain')).stdout.Trim()
+        Assert-Equal $f.head (Resolve-CiCommit $f.root HEAD)
+        Assert-Equal 'candidate-feature' (Invoke-CiGit $f.root @('branch','--show-current')).stdout.Trim()
+        $refs=(Invoke-CiGit $f.root @('for-each-ref','--format=%(refname)','refs/ci/merge-groups/')).stdout.Trim() -split "`n"
+        Assert-Equal 12 $refs.Count
+    } finally {Remove-Module $module;Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.MergeGroup.psm1') -Force}
+}
+
 Invoke-Case 'Hosted SDK envelopes bind the reviewed workflow, engine, selected native job and server archive digest' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkTransport.psm1')
     $transport=Get-Module Ci.SdkTransport

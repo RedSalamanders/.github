@@ -34,6 +34,30 @@ It does not alter working files, the index, user branches, CI state, merge setti
 choose an owned output location when retaining stdout. Ref cleanup requires its own ownership/preservation
 review; this command never deletes historical refs or evidence.
 
+## Merge queue input acquisition
+
+`Tools/Get-MergeGroupInputs.ps1 -Root <checkout> -EventPath <event.json>` freezes a
+`merge_group` / `checks_requested` event targeting main. The event is untrusted data;
+it must agree with independently read current-main and exact queue-ref API identities,
+then separately fetched Git objects, before and after acquisition. The controller must
+remain clean at the same committed revision throughout. A stale/deleted/replaced queue
+ref, advanced main, unrelated Git history or mismatched manifest refuses.
+
+The complete queue integration must descend from current main. Its exact commit/tree,
+meaningful inputs, engine and proposed Git-count version are recorded under strict
+`Schemas/merge-group-inputs.schema.json`, role `MergeGroupInputs`. Batched synthetic
+integrations are supported; no single-PR parent topology is assumed. The queue-ref suffix
+is opaque: this role makes no PR-membership, workflow-authentication or execution claim.
+Prose-only identity equality grants no baseline success or adopted verdict.
+
+Acquisition imports no product code, performs only GET requests and retains its unique
+`refs/ci/merge-groups/<guid>/` diagnostic refs without changing user branches or worktrees.
+This command neither installs a merge queue nor enables native execution or delegation.
+The future authoritative workflow must additionally authenticate its event/workflow,
+enforce queue/branch policy and coverage, and authenticate result/artifact provenance.
+GitHub's documented [merge queue event](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#merge_group)
+is distinct from per-PR feedback; required checks must also run on that event before queue enforcement.
+
 ## Required continuation before changing obligations
 
 This foundation does not admit native PR work. A future deployment must define one authoritative event
