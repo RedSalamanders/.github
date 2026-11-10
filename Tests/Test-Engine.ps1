@@ -1180,6 +1180,10 @@ Invoke-Case 'Pinned SDK admission is manual main only and preserves independent 
             Assert-Equal $source.contentIdentity $r.sourceContentIdentity
             Assert-Equal $policy.storageEngineRef $r.storageEngineRef
             Assert-Equal $policy.storageEngineContentIdentity $r.storageEngineContentIdentity
+            Assert-Equal LegacyV1 $r.contract
+            $qualified=Resolve-CiSdkProducerRequest -Repository RedSalamanders/DxUi -Ref refs/heads/main -Event workflow_dispatch -SourceCommit $source.commit -RunId 123 -Platform $platform -Contract QualifiedAbiV2
+            Assert-Equal QualifiedAbiV2 $qualified.contract
+            Assert-Equal $r.sourceContentIdentity $qualified.sourceContentIdentity
             Assert-Equal $(if($platform -ceq 'All'){2}else{1}) @($r.matrix.include).Count
             if($platform -cne 'All'){Assert-Equal $platform $r.matrix.include[0].platform}
         }
@@ -1256,7 +1260,7 @@ Invoke-Case 'SDK producer checks actual clean Git identities, main ancestry, API
     $request.sourceContentIdentity=Get-CiSdkCheckoutContentIdentity $source
     Assert-Refused {Assert-CiSdkProducerCheckouts $request $tooling $source $storage}
 }
-Invoke-Case 'Actual SDK workflow resolver writes five independent outputs without compilation' {
+Invoke-Case 'Actual SDK workflow resolver writes six independent outputs including its validated contract without compilation' {
     $root=New-Fixture 'sdk-workflow-output'
     $clone=Join-Path $root '.ci-engine'
     $null=Invoke-CiProcess git @('clone','--no-local','--no-hardlinks','--no-checkout',$engineRoot,$clone) $root
@@ -1269,7 +1273,7 @@ Invoke-Case 'Actual SDK workflow resolver writes five independent outputs withou
     Write-FixtureFile $root 'resolve.ps1' $code
     $policy=Read-CiSdkProducerPolicy
     $output=Join-Path $root 'github-output.txt'
-    $values=@{CI_ENGINE_REF=$head;SDK_SOURCE=$policy.sources[1].commit;SDK_PLATFORM='ARM64';GITHUB_REPOSITORY='RedSalamanders/DxUi';
+    $values=@{CI_ENGINE_REF=$head;SDK_SOURCE=$policy.sources[1].commit;SDK_PLATFORM='ARM64';SDK_CONTRACT='QualifiedAbiV2';GITHUB_REPOSITORY='RedSalamanders/DxUi';
         GITHUB_REF='refs/heads/main';GITHUB_EVENT_NAME='workflow_dispatch';GITHUB_RUN_ID='321';GITHUB_OUTPUT=$output}
     $saved=@{}
     try{
@@ -1278,17 +1282,68 @@ Invoke-Case 'Actual SDK workflow resolver writes five independent outputs withou
         Assert-True ($result.exitCode -eq 0) $result.stderr
     }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name])}}
     $lines=@(Get-Content $output)
-    Assert-Equal 5 $lines.Count
+    Assert-Equal 6 $lines.Count
     $actual=@{}
     foreach($line in $lines){$pair=$line -split '=',2;Assert-Equal 2 $pair.Count;Assert-True (-not $actual.ContainsKey($pair[0]));$actual[$pair[0]]=$pair[1]}
     Assert-Equal $policy.sources[1].commit $actual.source
     Assert-Equal $policy.toolingRef $actual.tooling
     Assert-Equal $policy.storageEngineRef $actual.storage_engine
     Assert-Equal '0.1.321' $actual.version
+    Assert-Equal QualifiedAbiV2 $actual.sdk_contract
     $matrix=$actual.matrix|ConvertFrom-Json
     Assert-Equal 1 @($matrix.include).Count
     Assert-Equal 'ARM64' $matrix.include[0].platform
     Assert-True (-not(Test-Path (Join-Path $root '.build')))
+}
+Invoke-Case 'Actual SDK producer branch emits a qualified reference only after every SDK gate succeeds' {
+    $root=New-Fixture 'sdk-qualified-workflow-branch'
+    $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/sdk-inputs.yml'))
+    $body=[regex]::Match($text,'(?m)^      - name: Build and natively check pinned SDK input bytes\r?\n[\s\S]*?^        run: \|\r?\n(?<body>(?:          [^\r\n]*\r?\n)+)').Groups['body'].Value
+    Assert-True ($body.Length -gt 0)
+    $code=($body -split '\r?\n'|ForEach-Object{$_ -replace '^          ',''}) -join "`n"
+    foreach($pair in @(@('.build/sdk-source/vcpkg-install.ps1','restore'),@('.build/sdk-producer/build.ps1','build'),@('.build/sdk-producer/Tools/New-SdkPackage.ps1','sdk'))){
+        Write-FixtureFile $root $pair[0] (@'
+param()
+$Probe.calls.Add('STAGE')
+$Probe.hosts.Add($env:PreferredToolArchitecture)
+if($Probe.fail -ceq 'STAGE'){throw 'controlled STAGE failure'}
+$global:LASTEXITCODE=0
+'@.Replace('STAGE',$pair[1]))
+    }
+    $stage=[scriptblock]::Create(@'
+param($Probe)
+function Import-Module {param($Name) if(-not ($Name.EndsWith('Ci.SdkQualifiedProducer.psm1') -or $Name.EndsWith('VisualStudio.psm1'))){throw 'Unexpected SDK producer import.'}}
+function Get-DxUiVisualStudioInstallation {return Join-Path $PWD '.build/controlled-vs'}
+function Write-CiQualifiedSdkAbiReference {
+    param($SourceRoot,$ToolingRoot,$StorageEngineRoot,$StoreRoot,$Version,$Platform,$MSBuildPath,$OutputFile)
+    $Probe.calls.Add('reference');$Probe.hosts.Add($env:PreferredToolArchitecture)
+    if($Probe.fail -ceq 'reference'){throw 'controlled reference failure'}
+    if($Version -cne '0.1.123' -or $Platform -cne $env:SDK_PLATFORM){throw 'Qualified reference lost its version/architecture.'}
+    return $OutputFile
+}
+'@ + "`n"+$code)
+    $names=@('SDK_CONTRACT','SDK_PLATFORM','SDK_VERSION','RUNNER_TEMP','GITHUB_OUTPUT','PreferredToolArchitecture','VCPKG_BINARY_SOURCES')
+    $saved=@{};foreach($name in $names){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
+    $location=Get-Location
+    try{
+        Set-Location -LiteralPath $root
+        $env:SDK_VERSION='0.1.123';$env:RUNNER_TEMP=Join-Path $root '.build/smoke';$env:GITHUB_OUTPUT=Join-Path $root '.build/outputs.txt'
+        foreach($contract in @('LegacyV1','QualifiedAbiV2')){foreach($platform in @('x64','ARM64')){foreach($failure in @('','restore','build','sdk','reference')){
+            if($contract -ceq 'LegacyV1' -and $failure -ceq 'reference'){continue}
+            $env:SDK_CONTRACT=$contract;$env:SDK_PLATFORM=$platform;$env:PreferredToolArchitecture='fixture-caller'
+            $probe=@{calls=[Collections.Generic.List[string]]::new();hosts=[Collections.Generic.List[string]]::new();fail=$failure};$message=''
+            try{& $stage $probe}catch{$message=$_.Exception.Message}
+            $expected=@('restore','build','sdk');if($contract -ceq 'QualifiedAbiV2'){$expected+=@('reference')}
+            if($failure){$expected=$expected[0..[Array]::IndexOf($expected,$failure)]}
+            Assert-Equal ($expected -join ',') ($probe.calls -join ',')
+            if($failure){Assert-True ($message.Contains("controlled $failure failure"))}else{Assert-Equal '' $message}
+            $hostValue=if($contract -ceq 'QualifiedAbiV2'){if($platform -ceq 'x64'){'x64'}else{'arm64'}}else{'fixture-caller'}
+            foreach($observed in $probe.hosts){Assert-Equal $hostValue $observed}
+        }}}
+    }finally{
+        Set-Location -LiteralPath $location
+        foreach($name in $names){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}
+    }
 }
 Invoke-Case 'SDK workflow keeps reviewed tooling separate, read-only tokens and native-success attempt-bound artifacts' {
     function Assert-SdkProducerWorkflow([string]$Text){
@@ -1627,6 +1682,110 @@ Invoke-Case 'A successful SDK preparation constructs a complete descriptor accep
     $record.Remove('role')
     [IO.File]::WriteAllText($path,($record|ConvertTo-Json))
     Assert-Refused {& $consumer {param($r,$d) Read-CiLocalSdkDescriptor $r $d} $fixture $path}
+}
+
+Invoke-Case 'Portable SDK file references bind complete bytes and roles while surviving relocation and metadata-only changes' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkAbi.psm1')
+    $fixture=New-Fixture 'sdk-portable-byte-reference'
+    $first=Join-Path $fixture 'first';$second=Join-Path $fixture 'relocated'
+    foreach($root in @($first,$second)){
+        Write-FixtureFile $root 'include/nested/header.h' 'header A'
+        Write-FixtureFile $root 'lib/fixture.lib' 'library A'
+    }
+    $a=Get-CiPortableSdkFileReference @{Headers=(Join-Path $first 'include');Libraries=(Join-Path $first 'lib')}
+    $b=Get-CiPortableSdkFileReference @{Libraries=(Join-Path $second 'lib');Headers=(Join-Path $second 'include')}
+    Assert-Equal $a.digest $b.digest
+    Assert-Equal 2 $a.files.Count
+    Assert-True (-not (($a|ConvertTo-Json -Depth 8).Contains($fixture)))
+    $file=Join-Path $second 'include/nested/header.h';$stamp=[IO.File]::GetLastWriteTimeUtc($file)
+    [IO.File]::SetLastWriteTimeUtc($file,$stamp.AddDays(-1))
+    Assert-Equal $a.digest (Get-CiPortableSdkFileReference @{Headers=(Join-Path $second 'include');Libraries=(Join-Path $second 'lib')}).digest
+    [IO.File]::WriteAllText($file,'header B');[IO.File]::SetLastWriteTimeUtc($file,$stamp)
+    Assert-True ($a.digest -cne (Get-CiPortableSdkFileReference @{Headers=(Join-Path $second 'include');Libraries=(Join-Path $second 'lib')}).digest)
+    Assert-True ($a.digest -cne (Get-CiPortableSdkFileReference @{OtherHeaders=(Join-Path $first 'include');Libraries=(Join-Path $first 'lib')}).digest)
+    Write-FixtureFile $second 'include/added.h' 'new input'
+    Assert-Equal 3 (Get-CiPortableSdkFileReference @{Headers=(Join-Path $second 'include');Libraries=(Join-Path $second 'lib')}).files.Count
+    Assert-Refused {Get-CiPortableSdkFileReference @{Missing=(Join-Path $fixture 'missing')}}
+    $empty=Join-Path $fixture 'empty';[void][IO.Directory]::CreateDirectory($empty)
+    Assert-Refused {Get-CiPortableSdkFileReference @{Empty=$empty}}
+    Assert-Refused {Get-CiPortableSdkFileReference @{Relative='relative'}}
+    Assert-Refused {Get-CiPortableSdkFileReference @{Drive=([IO.Path]::GetPathRoot($fixture))}}
+    if(-not $IsWindows){
+        Write-FixtureFile $second 'include/ADDED.h' 'case collision'
+        Assert-Refused {Get-CiPortableSdkFileReference @{Headers=(Join-Path $second 'include')}}
+    }
+    $link=Join-Path $first 'include/link'
+    $kind=if($IsWindows){'Junction'}else{'SymbolicLink'}
+    $null=New-Item -ItemType $kind -Path $link -Target (Join-Path $second 'lib')
+    Assert-Refused {Get-CiPortableSdkFileReference @{Headers=(Join-Path $first 'include')}}
+    Assert-Refused {Get-CiPortableSdkFileReference @{LinkedRoot=$link}}
+}
+
+Invoke-Case 'Portable SDK references reject incomplete, duplicate, inconsistent and tampered records without granting admission' {
+    $abi=Get-Module Ci.SdkAbi
+    $fixture=New-Fixture 'sdk-portable-reference-schema'
+    Write-FixtureFile $fixture 'inputs/fixture.h' 'synthetic reference bytes, not a native toolchain'
+    $roots=[ordered]@{}
+    foreach($role in @('MSBuild','VCTargets','MSVCHeaders','MSVCLibraries','MSVCTools','WindowsHeaders','WindowsLibraries','CRuntimeLibraries','WindowsTools')){$roots[$role]=Join-Path $fixture 'inputs'}
+    $files=Get-CiPortableSdkFileReference $roots
+    $compiler=[ordered]@{platform='x64';configuration='Release';toolset='v145';vcToolsVersion='14.52.37025';windowsSdkVersion='10.0.26100.0';
+        preferredToolArchitecture='x64';vcToolArchitecture='Native64Bit';windowsSdkToolArchitecture='Native64Bit'}
+    $reference=& $abi {param($c,$f) New-CiSdkAbiReference -Compiler $c -FileReference $f} $compiler $files
+    Assert-CiSdkAbiReference $reference
+    $otherStorage=New-Module -Name Ci.SdkCache -ScriptBlock {
+        function Test-CiSdkRelativePath {param($Path) throw 'Another pinned storage implementation must not be selected by name.'}
+        Export-ModuleMember -Function Test-CiSdkRelativePath
+    }
+    Import-Module $otherStorage
+    try{Assert-CiSdkAbiReference $reference}finally{Remove-Module -ModuleInfo $otherStorage}
+    $reordered=$reference|ConvertTo-Json -Depth 8|ConvertFrom-Json -AsHashtable
+    [Array]::Reverse($reordered.fileReference.files)
+    Assert-CiSdkAbiReference $reordered
+    foreach($mutation in @('missing-role','duplicate-path','header-bytes','compiler','host','unsafe-path','verdict')){
+        $changed=$reference|ConvertTo-Json -Depth 8|ConvertFrom-Json -AsHashtable
+        switch($mutation){
+            missing-role {$changed.fileReference.files=@($changed.fileReference.files|Select-Object -Skip 1)}
+            duplicate-path {$changed.fileReference.files+=@($changed.fileReference.files[0])}
+            header-bytes {$changed.fileReference.files[0].sha256='0'*64}
+            compiler {$changed.compiler.vcToolsVersion='14.52.99999'}
+            host {$changed.compiler.vcToolArchitecture='Native32Bit'}
+            unsafe-path {$changed.fileReference.files[0].path='../foreign.h'}
+            verdict {$changed.passed=$true}
+        }
+        Assert-Refused {Assert-CiSdkAbiReference $changed}
+    }
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkQualifiedProducer.psm1')
+    $sdkReference=[ordered]@{schemaVersion=2;role='QualifiedSdkAbiReference';sourceCommit=('a'*40);sourceBytes=('b'*64);publicHeadersGitTree=('4'*40);apiRevision=4;platform='x64';
+        inputKey=('c'*64);manifestSha256=('d'*64);producerTooling=@{commit=('e'*40);contentIdentity=('f'*64)};
+        producerStorageEngine=@{commit=('1'*40);contentIdentity=('2'*64)};sdkReceiptSha256=('3'*64);toolchainReference=$reference}
+    Assert-CiQualifiedSdkAbiReference $sdkReference
+    foreach($mutation in @('architecture','unknown-verdict','invalid-source','nested-verdict')){
+        $changed=$sdkReference|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable
+        switch($mutation){
+            architecture {$changed.platform='ARM64'}
+            unknown-verdict {$changed.productPassed=$true}
+            invalid-source {$changed.sourceCommit='0'*40}
+            nested-verdict {$changed.toolchainReference.passed=$true}
+        }
+        Assert-Refused {Assert-CiQualifiedSdkAbiReference $changed}
+    }
+}
+
+Invoke-Case 'Portable SDK ABI evaluation refuses compiler overrides and compiler-free execution before native evaluation' {
+    $abi=Get-Module Ci.SdkAbi
+    $names=@('CL','_CL_','INCLUDE','LIB','LIBPATH','CI_NATIVE_BUILDS_DISABLED');$original=@{}
+    foreach($name in $names){$original[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
+    try{
+        foreach($name in $names){[Environment]::SetEnvironmentVariable($name,$null,'Process')}
+        & $abi {Assert-CiSdkAbiCompilerEnvironment}
+        foreach($name in $names){
+            [Environment]::SetEnvironmentVariable($name,$(if($name -ceq 'CI_NATIVE_BUILDS_DISABLED'){'true'}else{'controlled unsupported override'}),'Process')
+            $message=''
+            try{& $abi {Assert-CiSdkAbiCompilerEnvironment}}catch{$message=$_.Exception.Message}
+            if($name -ceq 'CI_NATIVE_BUILDS_DISABLED'){Assert-True ($message.Contains('compiler-free'))}else{Assert-True ($message.Contains("the $name compiler environment override"))}
+            [Environment]::SetEnvironmentVariable($name,$null,'Process')
+        }
+    }finally{foreach($name in $names){[Environment]::SetEnvironmentVariable($name,$original[$name],'Process')}}
 }
 
 Invoke-Case 'Public SDK import binds the held authenticated archive and refuses post-transfer or extracted-manifest substitution' {

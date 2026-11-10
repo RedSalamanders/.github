@@ -444,3 +444,43 @@ plus `.github`, all active with main default branches. Inspected RedMonitor and
 RedXe branch rules require the compiler-free CI/CodeQL/dependency checks and have
 strict up-to-date status disabled. No required native candidate gate, local native
 delegation or cross-run main adoption is deployed. Existing obligations remain.
+
+## Portable SDK reference producer pilot
+
+This input-only continuation adds an explicit `QualifiedAbiV2` producer option;
+the existing `LegacyV1` default and all consumer admission remain unchanged.
+The new producer emits a portable toolchain reference only after the normal
+SDK gates and independently rechecks the complete original producer recipe.
+It preserves the original SDK key, manifest, payload and native gate receipt.
+Hosted reference production, authenticated reference transport and actual
+consumer compatibility are still required before automatic SDK-hit acceptance.
+
+Local controls and measurements:
+
+- The complete engine suite passed 78 cases on implementation
+  `15c7f822bdfa4b5de65674fd096f15e0de40d031`, zero failures. Controls execute
+  the actual workflow resolver and build branch with controlled dependencies,
+  proving that failed restore/build/SDK qualification/reference blocks emission.
+  Synthetic workflow controls are not native SDK qualification.
+- The real x64 toolchain reference covered 6,716 files and matched after source
+  relocation, taking 3,015ms and 3,156ms. That is byte-reference acquisition, not
+  an overall build/qualification speedup.
+- The actual producer reference bound the already qualified unchanged f2 SDK
+  at key `5868120cc91a06d158d7c4ccf617517e457546b0dcc92201099ad707a231fc98`
+  and original manifest `8bb5b8de037adf5e4ee522bd96cfa8db9ea82629c10edae5121c205162499ee1`.
+  Final local execution took 101,352ms, including the full producer recipe before
+  (37,497ms) and after (35,039ms), portable toolchain acquisition (3,837ms), raw
+  bootstrap and integrity checks. Attempted replacement of the output refused
+  and preserved its original bytes.
+- Both actual pinned storage modules can coexist during validation; the helper
+  retains the exact imported implementation rather than selecting by module name.
+- The public-header Git-tree addition was checked against the actual f2 source
+  (`afca31c268d9d750beecc7d8c4023467d9ce4d1e`) and strict reference schema.
+  Its final hosted producer execution remains pending.
+
+Raw logs and full reference catalogs remain under
+`Z:/RedSalamander.Perf/evidence/i61-resume-20261110/` (portable-sdk-abi and
+qualified-sdk-abi prefixes); create-only producer references remain beneath the
+verified producer tooling's `.build/qualified-sdk/`. Earlier failed enum-path
+probes remain preserved. Full helper source and the schema own the implemented
+contract in [SDK_Cache.md](../../SDK_Cache.md); no JSON file authenticates itself.

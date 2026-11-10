@@ -201,3 +201,54 @@ the changed field names and producer run/attempt in a create-only
 `.build/evidence/sdk-recipe-misses` record. It supplies no dependency bytes and does
 not initialize the input store. The ordinary native workspace artifact retains this
 record so a successful source fallback cannot be mistaken for SDK-hit acceptance.
+
+## Portable SDK toolchain references
+
+`Ci.SdkAbi.psm1` supplies a separate v2 byte-reference format. It does not alter
+the v1 recipe, authenticate an SDK origin, admit a consumer, or cache a product
+verdict. Automatic distribution and application readers still use the v1 contract
+above until their separate versioned continuation is implemented and accepted.
+
+The portable reference names explicit tool/header/library roles and relative
+paths, not installation or checkout locations. Every file's actual SHA-256 and
+length remain binding; timestamps are not an identity shortcut. It covers the
+selected MSBuild, VC targets/tasks, MSVC headers/libraries/host tools, Windows
+headers/target libraries, CRT libraries and SDK tools. Required roots must exist
+and contain files. Reparse ancestors, internal links, case collisions, drive
+roots, oversized/empty inventories and unreadable files refuse. The real Windows
+acquisition uses the reviewed producer's canonical tool-selection guard rather
+than duplicating MSBuild architecture or executable-selection rules. Its caller
+must authenticate that producer-tooling snapshot before importing it.
+
+Real acquisition is explicit native tooling, never a compiler-free PR action.
+Unsupported `CL`, `_CL_`, `INCLUDE`, `LIB` and `LIBPATH` environment overrides
+refuse. The strict schema and canonical digest checks reject changed bytes,
+missing roles, duplicate/unsafe paths, inconsistent compiler hosts and injected
+verdict fields. A valid self-computed reference establishes data integrity only;
+it is not evidence of trusted origin or compatibility with arbitrary consumers.
+
+`Ci.SdkQualifiedProducer.psm1` can create a separate ABI reference for an already
+qualified SDK. It bootstraps the exact source/API/tooling/storage pins, requires
+every existing native SDK receipt gate, rederives the complete v1 producer key,
+holds the original input's reader lease and binds its original key/manifest hash.
+It retains the exact source's public-header Git tree for consumer provenance;
+an application need not reconstruct that committed tree from a source build.
+The full producer identity is checked again after portable acquisition. Source
+and payload close checks must pass before the create-only reference is written
+outside the immutable store. The original SDK entry and receipts are preserved.
+The reference's nested toolchain record is independently schema/digest-validated.
+
+This producer-side file cannot authenticate itself. Hosted provenance, an
+archive-bound reference, actual per-consumer ABI/tool selection, reader lifetime,
+native tests and package qualification remain separate required work in I61.
+
+The explicit SDK producer accepts `sdk_contract=QualifiedAbiV2` alongside the
+backward-compatible `LegacyV1` default. The resolver validates and freezes that
+choice. V2 selects the matching native compiler host before restore/build and
+creates its ABI reference only after all existing native SDK gates succeed. A
+failed reference prevents the successful SDK artifact upload. Its separate file
+travels in that same source/platform/attempt-bound archive; it does not mutate
+the SDK entry. Read-only tokens, manual main admission and independent native
+architecture gates remain unchanged. Existing v1 producer attempts stay governed
+by their original pinned transport policy. No consumer trusts a new producer
+attempt until its distinct caller/engine and archive contract are accepted.
