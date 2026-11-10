@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 No remaining slice is waived and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 18, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 19, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -30,6 +30,20 @@ Current authority remains:
 - The shared engine's `AGENTS.md` and `Specs/CI.md`.
 
 The native candidate gate and cross-run adoption described below require deliberate revisions to current compiler-free-PR and evidence trust-domain contracts. Implement and qualify those revisions before reducing local or post-merge obligations. Until then, retain the existing gates.
+
+Latest deployment: optional shadow callers are merged in RedTilde #104, RedMonitor
+#48, RedPrism #16 and DxUi #244, all pinned to shared engine `dffe8b6bfc6d2d6d5f700378d59c85b35bf44bec`.
+Their complete independent tooling/validation and formatting checks passed; new main
+native campaigns and actual shadow acceptance retain separate gates. Candidate run
+metadata authentication is implemented for current candidate/attempt, caller/engine,
+native jobs and server artifact digests. Independent bounded original archive,
+input/receipt/profile/canonical-evidence byte verification is also implemented, with
+live post-transfer reacquisition. Hosted shadow/verifier acceptance, the trusted
+required-check reporter, stale-base enforcement, local delegation and main adoption
+remain open. DxUi's four authorized foreground suites passed Debug, Release and ASan
+Debug with restoration verified. Root's active Full retains one tooling-fixture failure; a corrected
+empty-array fixture passed focused routing controls in a separate checkout. No active
+run was rewritten or cancelled, and this plan remains WIP.
 
 ## 2. Why do local tests, PR checks and main seem to repeat everything?
 

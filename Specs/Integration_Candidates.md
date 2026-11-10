@@ -1,8 +1,71 @@
 # Frozen integration candidate inputs
 
-Status: input acquisition and the manual native shadow workflow are implemented. Project caller rollout,
-authenticated result verification, a required merge gate, delegation and main-result adoption remain open.
+Status: input acquisition, manual native shadow execution and independent native-result
+verification are implemented. Hosted shadow/verifier acceptance, a required merge gate,
+delegation and main-result adoption remain open.
 Current compiler-free PR and native main obligations remain.
+
+## Independent producer metadata acquisition
+
+`Tools/Get-CandidateRunEnvelope.ps1` reacquires the current canonical candidate and
+requires the independently supplied candidate identity, original isolated nonce, run
+and attempt. It authenticates both the original attempt and the current run through
+separate GitHub GET requests. Both must retain the exact successful manual event,
+trusted-main commit, isolated branch, repository/head repository, caller and reviewed
+reusable engine. Caller bytes agree with the independently fetched Git object.
+
+The complete job catalog must contain the successful freeze plus both declared
+GitHub-hosted native architecture jobs. Their original build, regression/assertion
+probe and profile-retention steps must have succeeded. The complete artifact catalog
+must retain exactly one original attempt-qualified inputs, regression, profile and
+workspace-evidence artifact per declared role. Optional sandbox-evidence artifacts
+retain their own root. Expired, duplicate, foreign, truncated, stale or digest-less
+metadata refuses. Original server archive digests and sizes are retained.
+
+Expected input JSON is reconstructed from the independently acquired candidate and
+producer context. Reacquisition at the end refuses a changed candidate/main or a new
+producer attempt. The command performs no remote writes and executes no product
+code. `CandidateRunArtifactEnvelope` explicitly leaves artifact bytes and native
+results unverified and supplies no verdict. Downloaded input/receipt JSON, tested
+profile bytes and canonical evidence still need independent bounded archive/hash
+verification. Metadata authentication alone must never enable a required merge check,
+local delegation, qualification-state update, production or main adoption.
+
+## Original artifact and native-result verification
+
+`Tools/Get-CandidateNativeResult.ps1` acquires the metadata envelope above, downloads
+the original attempt-qualified artifact ZIPs and retains them in a new unique evidence
+directory. API credentials go only to GitHub; the signed storage URL uses a separate
+client without those headers. Streaming transport refuses excess/truncated bytes and
+requires the original server SHA-256 and size. The same transport primitive is reused
+by existing SDK downloads, whose source/ABI/import contracts remain separate.
+
+Candidate archives are held read-only, bounded by catalog count, compressed/expanded
+size and per-entry streaming limits. Unsafe/duplicate/case-colliding paths, links,
+special files, ambiguous Windows names and duplicate JSON properties refuse before
+data is accepted. The verifier never extracts files, runs candidate code, imports
+downloaded scripts or restores candidate caches. Native profile and diagnostic archive
+reading is deliberately separate from dependency-store initialization and SDK import.
+
+Both original input JSON files must equal independently reconstructed producer inputs.
+Each architecture retains exactly one bound regression receipt, successful Release
+execution and assertion probe, the complete matching exe/dll/lib profile, and every
+original canonical evidence reference with matching bytes. Hosted workspace paths map
+only from the declared project's Windows runner workspace; Root sandbox references map
+only from the governed RedSalamander.Perf/evidence root into its separate archive.
+Missing, extra, changed, cross-profile or unbound inputs refuse. Original receipts are
+never rewritten for another run, commit or version.
+
+After transfer, the verifier reacquires current candidate/main, latest producer attempt
+and complete server catalog. A changed value refuses before `verified-result.json`
+publication. Partial downloads, original envelopes and failed diagnostics remain for
+investigation. Local Root evidence uses the existing marked sandbox; sibling local
+projects may use their own .build; hosted output remains beneath real RUNNER_TEMP.
+`AuthenticatedCandidateNativeResult` records the independently verified original
+execution and bytes. It explicitly authorizes no merge, local delegation, main adoption
+or production. A later controller must perform its own live verification; reading a
+self-declared saved JSON record never recreates authentication. Actual hosted positive
+and negative acceptance plus the required-check reporter/enforcement remain open.
 
 `Tools/Get-IntegrationCandidate.ps1 -Root <project checkout> -PullRequest <number>` acquires one exact
 open, non-draft, mergeable main-targeting PR. It uses the existing repository-read `GH_TOKEN`, GET requests,
@@ -121,8 +184,9 @@ inputs bound to the actual producer run. It explicitly records nativeExecutions 
 and suppliesNativeVerdict false. It writes no remote branch, output file, check or
 qualification state, imports no product code and executes no native work. The supplied
 JSON identity and this input acquisition do not authenticate a test result. Manual
-native shadow execution, independent artifact/result verification, exact-head reporter, actual
-required-check/stale-base enforcement and main adoption remain separate requirements.
+native execution and independent verification use the separate commands above;
+hosted acceptance, exact-head reporting, required-check/stale-base enforcement and
+main adoption remain separate requirements.
 
 Its native batch retains a `CandidateExecutionBinding`: the original canonical
 candidate, complete controller context, caller blob and isolation nonce. Native project
@@ -169,11 +233,11 @@ The source-adapter binding still independently rejects any isolated production r
 The caller never cancels an active execution. Original evidence from superseded inputs
 remains diagnostic and must not authorize another candidate.
 
-This is shadow execution until independent workflow/job/artifact-byte authentication,
-exact-head reporting and actual required-check/stale-base enforcement are implemented
-and qualified. Existing local and main coverage remains active. Project pin/caller
-rollout and actual hosted shadow acceptance remain open;
-successful script/structural controls do not establish those results.
+This remains shadow execution until the independent verifier passes actual hosted
+acceptance and exact-head reporting plus required-check/stale-base enforcement are
+implemented and qualified. Existing local and main coverage remains active. Project
+caller rollout is implemented in four projects; Root and Xe plus actual hosted shadow
+acceptance remain open. Successful script/structural controls do not establish them.
 
 `Tools/Start-CandidateShadow.ps1` provides operator admission for a clean exact current
 main checkout and its exact clean reviewed engine. Supply an independently acquired

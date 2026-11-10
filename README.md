@@ -107,3 +107,15 @@ Tools/Get-CandidateExecutionInputs.ps1 freezes only future manual shadow-run inp
 under an exact hosted isolated-controller context. Its canonical batch and original
 candidate snapshot supply no native verdict, merge check or adoption permission.
 The required native execution and trusted result/reporting path remain under development.
+
+`Tools/Get-CandidateRunEnvelope.ps1 -Root <project> -PullRequest <number>
+-ExpectedIdentity <canonical identity> -RunId <run> -Attempt <attempt>
+-IsolationNonce <original nonce>` independently authenticates the successful isolated
+producer metadata and original artifact digests. It reacquires current candidate and
+attempt state, runs no product code and supplies no native/merge/adoption verdict.
+Use `Tools/Get-CandidateNativeResult.ps1` with the same inputs and `-OutputRoot <existing
+owned evidence directory>` to download and independently verify original archive,
+receipt, tested profile and canonical evidence bytes. It retains failures and refuses
+post-transfer candidate/attempt/catalog movement. It executes no downloaded code and
+does not grant merge, local delegation, adoption or production permission. Actual
+hosted verifier acceptance and required merge enforcement remain open.
