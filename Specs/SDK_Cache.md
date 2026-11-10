@@ -231,6 +231,8 @@ it is not evidence of trusted origin or compatibility with arbitrary consumers.
 qualified SDK. It bootstraps the exact source/API/tooling/storage pins, requires
 every existing native SDK receipt gate, rederives the complete v1 producer key,
 holds the original input's reader lease and binds its original key/manifest hash.
+It retains the exact source's public-header Git tree for consumer provenance;
+an application need not reconstruct that committed tree from a source build.
 The full producer identity is checked again after portable acquisition. Source
 and payload close checks must pass before the create-only reference is written
 outside the immutable store. The original SDK entry and receipts are preserved.

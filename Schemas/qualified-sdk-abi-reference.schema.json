@@ -1,10 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object", "additionalProperties": false,
-  "required": ["schemaVersion", "role", "sourceCommit", "sourceBytes", "apiRevision", "platform", "inputKey", "manifestSha256", "producerTooling", "producerStorageEngine", "sdkReceiptSha256", "toolchainReference"],
+  "required": ["schemaVersion", "role", "sourceCommit", "sourceBytes", "publicHeadersGitTree", "apiRevision", "platform", "inputKey", "manifestSha256", "producerTooling", "producerStorageEngine", "sdkReceiptSha256", "toolchainReference"],
   "properties": {
     "schemaVersion": {"const": 2}, "role": {"const": "QualifiedSdkAbiReference"},
     "sourceCommit": {"$ref": "#/$defs/commit"}, "sourceBytes": {"$ref": "#/$defs/hash"},
+    "publicHeadersGitTree": {"$ref": "#/$defs/commit"},
     "apiRevision": {"type": "integer", "minimum": 1, "maximum": 65535},
     "platform": {"enum": ["x64", "ARM64"]},
     "inputKey": {"$ref": "#/$defs/hash"}, "manifestSha256": {"$ref": "#/$defs/hash"},

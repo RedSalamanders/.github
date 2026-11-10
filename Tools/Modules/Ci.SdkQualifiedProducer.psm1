@@ -73,8 +73,10 @@ function Write-CiQualifiedSdkAbiReference {
         Write-Host "[SDK_ABI_REFERENCE] phase=ProducerRecipeAfter state=end elapsedMs=$($timer.ElapsedMilliseconds)"
         if((& $cache {param($i) Get-CiSdkCacheKey $i} $after) -cne $key){throw 'Producer inputs changed while acquiring the portable ABI reference.'}
         Assert-CiSdkProducerCheckouts -Request $request -ToolingRoot $ToolingRoot -SourceRoot $SourceRoot -StorageEngineRoot $StorageEngineRoot
+        $headers=(Invoke-CiGit $SourceRoot @('rev-parse',($sourceCommit+':include'))).stdout.Trim()
+        if($headers -cnotmatch '^[a-f0-9]{40}$'){throw 'The qualified SDK public-header Git tree cannot be identified.'}
         $receiptStream.Position=0
-        $record=[ordered]@{schemaVersion=2;role='QualifiedSdkAbiReference';sourceCommit=$sourceCommit;sourceBytes=$source.contentIdentity;
+        $record=[ordered]@{schemaVersion=2;role='QualifiedSdkAbiReference';sourceCommit=$sourceCommit;sourceBytes=$source.contentIdentity;publicHeadersGitTree=$headers;
             apiRevision=$source.apiRevision;platform=$Platform;inputKey=$key;manifestSha256=$entry.ManifestSha256;
             producerTooling=[ordered]@{commit=$producer.toolingRef;contentIdentity=$producer.toolingContentIdentity};
             producerStorageEngine=[ordered]@{commit=$producer.storageEngineRef;contentIdentity=$producer.storageEngineContentIdentity};

@@ -1755,7 +1755,7 @@ Invoke-Case 'Portable SDK references reject incomplete, duplicate, inconsistent 
         Assert-Refused {Assert-CiSdkAbiReference $changed}
     }
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkQualifiedProducer.psm1')
-    $sdkReference=[ordered]@{schemaVersion=2;role='QualifiedSdkAbiReference';sourceCommit=('a'*40);sourceBytes=('b'*64);apiRevision=4;platform='x64';
+    $sdkReference=[ordered]@{schemaVersion=2;role='QualifiedSdkAbiReference';sourceCommit=('a'*40);sourceBytes=('b'*64);publicHeadersGitTree=('4'*40);apiRevision=4;platform='x64';
         inputKey=('c'*64);manifestSha256=('d'*64);producerTooling=@{commit=('e'*40);contentIdentity=('f'*64)};
         producerStorageEngine=@{commit=('1'*40);contentIdentity=('2'*64)};sdkReceiptSha256=('3'*64);toolchainReference=$reference}
     Assert-CiQualifiedSdkAbiReference $sdkReference
