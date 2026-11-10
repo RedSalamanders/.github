@@ -1371,7 +1371,8 @@ Invoke-Case 'SDK workflow keeps reviewed tooling separate, read-only tokens and 
         foreach($required in @("github.event_name == 'workflow_dispatch'","github.ref == 'refs/heads/main'",'contents: read','actions: read',
             'ref: ${{ needs.resolve.outputs.tooling }}','ref: ${{ needs.resolve.outputs.source }}','ref: ${{ needs.resolve.outputs.storage_engine }}',
             'Assert-CiSdkProducerCheckouts','git config --global core.autocrlf true','if: steps.build.outcome == ''success''','-${{ github.run_attempt }}',
-            '-SdkStoreRoot','-ProductionOnly','-SmokeRoot $env:RUNNER_TEMP')){Assert-True ($Text.Contains($required))}
+            '-SdkStoreRoot','-ProductionOnly','-SmokeRoot $env:RUNNER_TEMP',
+            '    name: sdk (${{ matrix.platform }}, ${{ matrix.runner }})')){Assert-True ($Text.Contains($required))}
         Assert-True (-not($Text.Contains('contents: write') -or $Text.Contains('statuses: write') -or $Text.Contains('secrets: inherit')))
         Assert-True ($Text.IndexOf('Assert-CiSdkProducerCheckouts') -lt $Text.IndexOf('uses: ./.build/sdk-producer/.github/actions/setup-msvc'))
         Assert-True (-not($Text.Contains('Invoke-Admission') -or $Text.Contains('ci-state') -or $Text.Contains('ProductionRelease')))
@@ -1381,7 +1382,8 @@ Invoke-Case 'SDK workflow keeps reviewed tooling separate, read-only tokens and 
     foreach($bad in @($text.Replace("github.event_name == 'workflow_dispatch'",'true'),
         $text.Replace('contents: read','contents: write'),$text.Replace("if: steps.build.outcome == 'success'",'if: always()'),
         $text.Replace('-${{ github.run_attempt }}',''),$text.Replace('core.autocrlf true','core.autocrlf false'),
-        $text.Replace('Assert-CiSdkProducerCheckouts','UncheckedSdkInputs'))){Assert-Refused {Assert-SdkProducerWorkflow $bad}}
+        $text.Replace('Assert-CiSdkProducerCheckouts','UncheckedSdkInputs'),
+        $text.Replace('    name: sdk (${{ matrix.platform }}, ${{ matrix.runner }})','    name: sdk (${{ matrix.runner }}, ${{ matrix.platform }})'))){Assert-Refused {Assert-SdkProducerWorkflow $bad}}
 }
 
 Invoke-Case 'SDK compilation checks the actual live reader handle across processes and refuses stale or mismatched settings' {

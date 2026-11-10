@@ -53,6 +53,7 @@ jobs:
           $outputs=[ordered]@{matrix=($request.matrix|ConvertTo-Json -Depth 4 -Compress);source=$request.sourceCommit;tooling=$request.toolingRef;storage_engine=$request.storageEngineRef;version=$request.version;sdk_contract=$request.contract}
           foreach($output in $outputs.GetEnumerator()){"$($output.Key)=$($output.Value)"|Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append}
   sdk:
+    name: sdk (${{ matrix.platform }}, ${{ matrix.runner }})
     needs: resolve
     strategy:
       fail-fast: false
