@@ -94,3 +94,8 @@ dispatch mode=write there, then mode=read on the same frozen main commit. Use th
 isolation_ref, expected_commit and matching integration-branch-<suffix> cache_key in both.
 Authenticate both original reports and actual run/ref/attempt/controller identities before
 claiming the pair. No candidate code executes and no validation obligation is delegated.
+
+Tools/Get-CandidateExecutionInputs.ps1 freezes only future manual shadow-run inputs
+under an exact hosted isolated-controller context. Its canonical batch and original
+candidate snapshot supply no native verdict, merge check or adoption permission.
+The required native execution and trusted result/reporting path remain under development.

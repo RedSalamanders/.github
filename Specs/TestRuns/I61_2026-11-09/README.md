@@ -656,3 +656,25 @@ rules. The first verifier compared serialized property order and refused althoug
 the server values matched; the corrected field-wise verifier preserved those expected
 values. Original before/request/after evidence is retained under the governed sandbox.
 RedPrism_StaticPolicy_2026-11-10.json records this repair, not native-gate acceptance.
+
+### Native-host cache pair and shadow-input gateway
+
+The expanded live pair passed Linux, Windows x64 and Windows ARM64: writer 42886607587
+and independent main reader 42887031360, attempt 1, controller
+3c69c7454d4524dfbc1f24c9bad4bd5d2cf36fa4 and workflow blob
+7364fcd6ac7ca946d350490e27c0e27d002251da. All six original reports were authenticated
+against actual GitHub-hosted job labels, OS/architecture, run/event/source/ref/attempt,
+unchanged main/isolated refs and caller bytes. Every platform's exact cache ID/version
+persisted under the isolated branch while main missed its key/path. The curated
+BranchCache_NativeHostPair_2026-11-10.json records original report hashes. It executes
+no native consumer and supplies no native verdict.
+
+The shadow-input module/CLI retains complete canonical candidate data and the exact
+producer-bound batch, with no execution/check/state authority. Controls execute the
+actual pure binder for native/prose candidates and malformed contexts/candidates, the
+actual public pre-API guard and an actual gateway positive/race matrix. Only canonical
+candidate acquisition and remote API responses are recording stand-ins; actual Git
+controller objects, workflow blob reads, input binding and rechecks execute. Moved
+main/candidate/isolated refs, another workflow blob/engine and untracked controller
+inputs refuse. Complete engine validation passes all 99 cases. An actual native
+candidate workflow and authenticated result/reporting path are still unimplemented.
