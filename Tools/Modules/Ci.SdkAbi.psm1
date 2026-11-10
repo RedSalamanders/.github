@@ -75,7 +75,8 @@ function Assert-CiSdkAbiCompilerEnvironment {
 function Get-CiSdkAbiReference {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$ToolingRoot,[Parameter(Mandatory)][string]$MSBuildPath,[Parameter(Mandatory)][string]$ProjectPath,
-        [Parameter(Mandatory)][ValidateSet('x64','ARM64')][string]$Platform)
+        [Parameter(Mandatory)][ValidateSet('x64','ARM64')][string]$Platform,[switch]$PassThruBinding,
+        [ValidateSet('','x86','x64','arm64')][string]$PreferredToolArchitecture='')
     if(-not $IsWindows){throw 'The real SDK ABI reference requires the selected Windows native toolchain.'}
     Assert-CiSdkAbiCompilerEnvironment
     if([IO.Path]::GetFileName($MSBuildPath) -ine 'MSBuild.exe'){throw 'The SDK ABI reference requires the actual selected MSBuild executable.'}
@@ -87,7 +88,9 @@ function Get-CiSdkAbiReference {
         'PreferredToolArchitecture','VCTargetsPath','VCToolArchitecture','WindowsSDKToolArchitecture')
     $names=$required+@('CLToolExe','CLToolPath','CLToolArchitecture','LinkToolExe','LinkToolPath','LinkToolArchitecture',
         'LibToolExe','LibToolPath','LibToolArchitecture','FxCompileToolArchitecture','FXCToolPath','MultiProcFXC','FxCompileToolExe')
-    $evaluation=Invoke-CiProcess -FilePath $MSBuildPath -Arguments @($ProjectPath,'/nologo','/p:Configuration=Release',"/p:Platform=$Platform",('-getProperty:'+($names -join ','))) `
+    $arguments=@($ProjectPath,'/nologo','/p:Configuration=Release',"/p:Platform=$Platform",('-getProperty:'+($names -join ',')))
+    if($PreferredToolArchitecture){$arguments+=@('/p:PreferredToolArchitecture='+$PreferredToolArchitecture)}
+    $evaluation=Invoke-CiProcess -FilePath $MSBuildPath -Arguments $arguments `
         -WorkingDirectory ([IO.Path]::GetDirectoryName($ProjectPath)) -TimeoutSeconds 120
     $properties=($evaluation.stdout|ConvertFrom-Json -AsHashtable).Properties
     foreach($name in $required){if(-not $properties.Contains($name) -or [string]::IsNullOrWhiteSpace([string]$properties[$name])){throw "SDK ABI evaluation is missing $name."}}
@@ -117,7 +120,9 @@ function Get-CiSdkAbiReference {
         vcToolsVersion=[string]$properties.VCToolsVersion;windowsSdkVersion=$sdkVersion;preferredToolArchitecture=$hostTool;
         vcToolArchitecture=[string]$properties.VCToolArchitecture;windowsSdkToolArchitecture=[string]$properties.WindowsSDKToolArchitecture}
     $files=Get-CiPortableSdkFileReference -Roots $roots
-    return New-CiSdkAbiReference -Compiler $compiler -FileReference $files
+    $reference=New-CiSdkAbiReference -Compiler $compiler -FileReference $files
+    if($PassThruBinding){return [pscustomobject]@{Reference=$reference;Properties=$properties;SelectedTools=$selected;Roots=$roots}}
+    return $reference
 }
 
 function New-CiSdkAbiReference {

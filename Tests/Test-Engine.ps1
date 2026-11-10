@@ -1799,6 +1799,69 @@ Invoke-Case 'Qualified SDK transport stays disabled before API calls and filesys
     Assert-True (-not(Test-Path -LiteralPath (Join-Path $fixture '.build')))
 }
 
+Invoke-Case 'Qualified SDK preparation constructs the actual strict archive-bound reader descriptor' {
+    $preparation=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkPreparation.psm1') -PassThru
+    $consumer=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkConsumer.psm1') -PassThru
+    $fixture=New-Fixture 'qualified-sdk-descriptor-schema'
+    $build=Join-Path $fixture '.build';[void][IO.Directory]::CreateDirectory($build)
+    $imported=[pscustomobject]@{Entry=[pscustomobject]@{ManifestSha256=('b'*64)};ArchivePath=(Join-Path $build 'artifact.zip');EntryPath='entries/input/version/entry.json';
+        ReferencePath='qualified-sdk/abi-reference.json';ReceiptPath='receipts/DxUi-SDK-0.1.123-x64.zip.receipt.json'}
+    $record=& $preparation {param($b,$i) New-CiQualifiedSdkInputDescriptor -SourceCommit ('a'*40) -ApiRevision 4 -Platform x64 -SourceRoot (Join-Path $b 'source') `
+        -ToolingRoot (Join-Path $b 'tooling') -StorageEngineRoot (Join-Path $b 'storage') -StoreRoot (Join-Path $b 'store') -ProducerRun 123 -Attempt 1 -Imported $i} $build $imported
+    $path=Join-Path $build 'descriptor.json';[IO.File]::WriteAllText($path,($record|ConvertTo-Json))
+    $read=& $consumer {param($r,$p) Read-CiLocalSdkDescriptor $r $p} $fixture $path
+    Assert-Equal HostedQualifiedDependencyInput $read.Value.role
+    Assert-Equal $imported.ArchivePath $read.Value.archivePath
+    foreach($mutation in @('unknown-verdict','missing-receipt','zero-attempt','wrong-role')){
+        $changed=$record|ConvertTo-Json|ConvertFrom-Json -AsHashtable
+        switch($mutation){unknown-verdict{$changed.passed=$true};missing-receipt{$changed.Remove('receiptPath')};zero-attempt{$changed.attempt=0};wrong-role{$changed.role='LocalPinnedDependencyInput'}}
+        [IO.File]::WriteAllText($path,($changed|ConvertTo-Json))
+        Assert-Refused {& $consumer {param($r,$p) Read-CiLocalSdkDescriptor $r $p} $fixture $path}
+    }
+}
+
+Invoke-Case 'Qualified SDK witnesses bind actual compiler roots and reject downgrade, changed tools, missing metadata and closed owners' {
+    $consumer=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkConsumer.psm1') -PassThru
+    $fixture=New-Fixture 'qualified-sdk-actual-tool-binding'
+    $build=Join-Path $fixture '.build';[void][IO.Directory]::CreateDirectory($build)
+    $expected=[ordered]@{PlatformToolset='v145';VCToolsVersion='14.52.37025';WindowsTargetPlatformVersion='10.0.26100.0';
+        PreferredToolArchitecture='x64';VCToolArchitecture='Native64Bit';WindowsSDKToolArchitecture='Native64Bit';
+        VCToolsInstallDir=(Join-Path $build 'msvc');WindowsSdkDir=(Join-Path $build 'windows');VCTargetsPath=(Join-Path $build 'targets');MSBuildBinPath=(Join-Path $build 'msbuild');
+        CL=(Join-Path $build 'msvc/bin/cl.exe');Link=(Join-Path $build 'msvc/bin/link.exe');Lib=(Join-Path $build 'msvc/bin/lib.exe');FXC=(Join-Path $build 'windows/bin/fxc.exe')}
+    $actual=@{};foreach($name in @('PlatformToolset','VCToolsInstallDir','VCToolsVersion','WindowsSdkDir','WindowsTargetPlatformVersion','PreferredToolArchitecture','VCTargetsPath','VCToolArchitecture','WindowsSDKToolArchitecture','MSBuildBinPath')){$actual[$name]=$expected[$name]}
+    foreach($name in @('CLToolPath','CLToolExe','CLToolArchitecture','LinkToolPath','LinkToolExe','LinkToolArchitecture','LibToolPath','LibToolExe','LibToolArchitecture','FXCToolPath','FxCompileToolExe','FxCompileToolArchitecture','MultiProcFXC')){$actual[$name]=''}
+    $propertyPath=Join-Path $build 'actual-tools.txt'
+    $payload=Join-Path $build 'sdk'
+    $witness=& $consumer {param($r,$s,$b) New-CiSdkConsumerWitness $r $s x64 $b} $fixture $payload $expected
+    $names=@('CI_NATIVE_BUILDS_DISABLED','CL','_CL_','INCLUDE','LIB','LIBPATH');$saved=@{}
+    foreach($name in $names){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process');[Environment]::SetEnvironmentVariable($name,$null,'Process')}
+    try{
+        [IO.File]::WriteAllLines($propertyPath,[string[]]@($actual.Keys|Sort-Object|ForEach-Object {$_+'='+$actual[$_]}),[Text.UTF8Encoding]::new($false))
+        Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath
+        $command=Join-Path $engineRoot 'Tools/Test-SdkConsumerLease.ps1'
+        $arguments=@('-NoProfile','-NonInteractive','-File',$command,'-ProjectRoot',$fixture,'-LeasePath',$witness.Path,'-SdkRoot',$payload,'-Platform','x64','-Configuration','Release','-SdkContract','QualifiedAbiV2','-ToolPropertyFile',$propertyPath)
+        $child=Invoke-CiProcess (Get-Process -Id $PID).Path $arguments $engineRoot -AllowFailure
+        Assert-True ($child.exitCode -eq 0) $child.stderr
+        Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release}
+        foreach($field in @('VCToolsVersion','VCToolsInstallDir','WindowsTargetPlatformVersion','WindowsSdkDir','VCTargetsPath','MSBuildBinPath','CLToolPath','CLToolExe','LinkToolExe','LibToolPath','FXCToolPath','FxCompileToolArchitecture')){
+            $changed=$actual|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$changed[$field]='controlled-incompatible-value'
+            [IO.File]::WriteAllLines($propertyPath,[string[]]@($changed.Keys|Sort-Object|ForEach-Object {$_+'='+$changed[$_]}))
+            Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath}
+        }
+        $changed=$actual|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$changed.Remove('CLToolPath')
+        [IO.File]::WriteAllLines($propertyPath,[string[]]@($changed.Keys|Sort-Object|ForEach-Object {$_+'='+$changed[$_]}))
+        Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath}
+        [IO.File]::WriteAllLines($propertyPath,[string[]]@($actual.Keys|Sort-Object|ForEach-Object {$_+'='+$actual[$_]}))
+        $env:CL='/controlled-backend-override'
+        Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath}
+    }finally{
+        $witness.Stream.Dispose()
+        foreach($name in $names){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}
+    }
+    $child=Invoke-CiProcess (Get-Process -Id $PID).Path $arguments $engineRoot -AllowFailure
+    Assert-True ($child.exitCode -ne 0)
+}
+
 Invoke-Case 'Qualified SDK import binds original entry and reference from held archive bytes and preserves all v1 identities' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkCache.psm1')
     $qualified=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkQualifiedTransport.psm1') -PassThru

@@ -5,6 +5,7 @@ Import-Module (Join-Path $PSScriptRoot 'Ci.Policy.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.Project.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.SdkProducer.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.SdkTransport.psm1')
+Import-Module (Join-Path $PSScriptRoot 'Ci.SdkQualifiedTransport.psm1')
 
 function Get-CiDistributedSdkRequest {
     param([string]$SourceCommit,[int]$ApiRevision)
@@ -56,6 +57,16 @@ function New-CiPinnedSdkInputDescriptor {
     return $descriptor
 }
 
+function New-CiQualifiedSdkInputDescriptor {
+    param([string]$SourceCommit,[int]$ApiRevision,[string]$Platform,[string]$SourceRoot,[string]$ToolingRoot,
+        [string]$StorageEngineRoot,[string]$StoreRoot,[string]$ProducerRun,[int]$Attempt,$Imported)
+    $descriptor=[ordered]@{schemaVersion=2;role='HostedQualifiedDependencyInput';sourceCommit=$SourceCommit;apiRevision=$ApiRevision;platform=$Platform;
+        sourceRoot=$SourceRoot;toolingRoot=$ToolingRoot;storageEngineRoot=$StorageEngineRoot;storeRoot=$StoreRoot;manifestSha256=$Imported.Entry.ManifestSha256;
+        producerRun=$ProducerRun;attempt=$Attempt;archivePath=$Imported.ArchivePath;entryPath=$Imported.EntryPath;referencePath=$Imported.ReferencePath;receiptPath=$Imported.ReceiptPath}
+    if(-not(Test-Json -Json ($descriptor|ConvertTo-Json) -SchemaFile (Join-Path $PSScriptRoot '../../Schemas/sdk-consumer-qualified.schema.json'))){throw 'Invalid prepared qualified SDK descriptor.'}
+    return $descriptor
+}
+
 function Initialize-CiPinnedSdkInput {
     [CmdletBinding()]
     param([Parameter(Mandatory)][Collections.IDictionary]$Context,
@@ -103,6 +114,23 @@ function Initialize-CiPinnedSdkInput {
         $storage=New-CiSdkPreparationCheckout $workspace (Join-Path $tooling '.ci-engine') RedSalamanders/.github $producer.storageEngineRef
     }finally{[Environment]::SetEnvironmentVariable('GIT_TERMINAL_PROMPT',$prompt,'Process')}
     Assert-CiSdkProducerCheckouts -Request $bootstrap -SourceRoot $source -ToolingRoot $tooling -StorageEngineRoot $storage
+    if($request.PSObject.Properties['contract'] -and $request.contract -ceq 'QualifiedAbiV2'){
+        # The independently authenticated producer reference supplies its original
+        # build recipe. Consumers prove actual ABI/tool bytes when opening it;
+        # do not restore/rebuild that producer's package inventory here.
+        $store=Assert-CiContainedPath $Context.root (Join-Path $Context.root '.build/sdk-input-store')
+        Write-CiSdkPreparationEvidence $Context @{status='QualifiedRequested';workspace=$workspace;producerRun=$request.runId;attempt=$request.attempt}
+        $imported=Import-CiQualifiedHostedSdkArtifact -RepositoryRoot $Context.root -StoreRoot $store -DownloadRoot (Join-Path $workspace 'downloads') `
+            -SourceCommit $SourceCommit -ApiRevision $ApiRevision -Platform $Context.platform -RunId $request.runId -Attempt $request.attempt
+        [void](New-CiProjectContext -Root $Context.root -EngineRoot $Context.engineRoot -Phase $Context.phase -Platform $Context.platform -Descriptor $batchPath)
+        $descriptor=New-CiQualifiedSdkInputDescriptor -SourceCommit $SourceCommit -ApiRevision $ApiRevision -Platform $Context.platform -SourceRoot $source -ToolingRoot $tooling `
+            -StorageEngineRoot $storage -StoreRoot $store -ProducerRun $request.runId -Attempt $request.attempt -Imported $imported
+        $path=Join-Path $workspace 'descriptor.json'
+        [IO.File]::WriteAllText($path,($descriptor|ConvertTo-Json -Depth 4),[Text.UTF8Encoding]::new($false))
+        Write-CiSdkPreparationEvidence $Context @{status='QualifiedPrepared';workspace=$workspace;producerRun=$request.runId;attempt=$request.attempt;
+            key=$imported.Entry.Key;manifestSha256=$imported.Entry.ManifestSha256;elapsedMs=$timer.ElapsedMilliseconds}
+        return $path
+    }
     # Only independently authenticated source code may now execute. This restores package inputs, not DxUi.lib.
     [void](Invoke-CiProcess -FilePath pwsh -Arguments @('-NoProfile','-NonInteractive','-File',(Join-Path $source 'vcpkg-install.ps1'),'-Platform',$Context.platform) -WorkingDirectory $source -TimeoutSeconds 1800 -Stream)
     $inputs=Import-Module (Join-Path $tooling 'Tools/SdkCacheInputs.psm1') -PassThru
