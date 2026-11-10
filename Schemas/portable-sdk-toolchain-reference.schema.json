@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "role", "compiler", "fileReference", "digest"],
+  "properties": {
+    "schemaVersion": {"const": 2}, "role": {"const": "PortableSdkToolchainReference"},
+    "digest": {"$ref": "#/$defs/hash"},
+    "compiler": {
+      "type": "object", "additionalProperties": false,
+      "required": ["platform", "configuration", "toolset", "vcToolsVersion", "windowsSdkVersion", "preferredToolArchitecture", "vcToolArchitecture", "windowsSdkToolArchitecture"],
+      "properties": {
+        "platform": {"enum": ["x64", "ARM64"]}, "configuration": {"const": "Release"},
+        "toolset": {"type": "string", "pattern": "^v[0-9]+$"},
+        "vcToolsVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "windowsSdkVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "preferredToolArchitecture": {"enum": ["x86", "x64", "arm64"]},
+        "vcToolArchitecture": {"enum": ["Native32Bit", "Native64Bit", "NativeARM64"]},
+        "windowsSdkToolArchitecture": {"enum": ["Native32Bit", "Native64Bit", "NativeARM64"]}
+      }
+    },
+    "fileReference": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "role", "files", "digest"],
+      "properties": {
+        "schemaVersion": {"const": 2}, "role": {"const": "PortableSdkFileReference"},
+        "digest": {"$ref": "#/$defs/hash"},
+        "files": {"type": "array", "minItems": 9, "maxItems": 200000,
+          "items": {"type": "object", "additionalProperties": false,
+            "required": ["role", "path", "bytes", "sha256"],
+            "properties": {
+              "role": {"enum": ["MSBuild", "VCTargets", "MSVCHeaders", "MSVCLibraries", "MSVCTools", "WindowsHeaders", "WindowsLibraries", "CRuntimeLibraries", "WindowsTools"]},
+              "path": {"type": "string", "minLength": 1, "maxLength": 32767},
+              "bytes": {"type": "integer", "minimum": 0, "maximum": 68719476736},
+              "sha256": {"$ref": "#/$defs/hash"}
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}

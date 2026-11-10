@@ -15,6 +15,11 @@ on:
         type: choice
         options: [All, x64, ARM64]
         default: All
+      sdk_contract:
+        description: Producer byte reference only; consumer admission remains independently enforced
+        type: choice
+        options: [LegacyV1, QualifiedAbiV2]
+        default: LegacyV1
 permissions:
   contents: read
   actions: read
@@ -30,3 +35,4 @@ jobs:
       engine_ref: @ENGINE@
       source_commit: ${{ inputs.source_commit }}
       platform: ${{ inputs.platform }}
+      sdk_contract: ${{ inputs.sdk_contract }}

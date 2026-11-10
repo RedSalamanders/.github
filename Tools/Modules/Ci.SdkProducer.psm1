@@ -48,14 +48,15 @@ function Get-CiSdkCheckoutContentIdentity {
 function Resolve-CiSdkProducerRequest {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Repository,[Parameter(Mandatory)][string]$Ref,[Parameter(Mandatory)][string]$Event,
-        [Parameter(Mandatory)][string]$SourceCommit,[Parameter(Mandatory)][string]$RunId,[ValidateSet('All','x64','ARM64')][string]$Platform='All')
+        [Parameter(Mandatory)][string]$SourceCommit,[Parameter(Mandatory)][string]$RunId,[ValidateSet('All','x64','ARM64')][string]$Platform='All',
+        [ValidateSet('LegacyV1','QualifiedAbiV2')][string]$Contract='LegacyV1')
     $policy=Read-CiSdkProducerPolicy
     if($Repository -cne $policy.repository -or $Ref -cne 'refs/heads/main' -or $Event -cne 'workflow_dispatch' -or
         $RunId -cnotmatch '^[1-9][0-9]{0,19}$'){throw 'SDK input production requires an explicit DxUi main dispatch.'}
     $source=@($policy.sources|Where-Object{$_.commit -ceq $SourceCommit})
     if($source.Count -ne 1){throw 'Requested source is not an exact reviewed SDK pin.'}
     $platforms=if($Platform -ceq 'All'){@('x64','ARM64')}else{@($Platform)}
-    return [ordered]@{sourceCommit=$SourceCommit;sourceContentIdentity=$source[0].contentIdentity;apiRevision=$source[0].apiRevision;toolingRef=$policy.toolingRef;toolingContentIdentity=$policy.toolingContentIdentity;
+    return [ordered]@{contract=$Contract;sourceCommit=$SourceCommit;sourceContentIdentity=$source[0].contentIdentity;apiRevision=$source[0].apiRevision;toolingRef=$policy.toolingRef;toolingContentIdentity=$policy.toolingContentIdentity;
         storageEngineRef=$policy.storageEngineRef;storageEngineContentIdentity=$policy.storageEngineContentIdentity;version=('0.1.'+$RunId);
         matrix=@{include=@($platforms|ForEach-Object{@{platform=$_;runner=if($_ -ceq 'x64'){'windows-2025-vs2026'}else{'windows-11-vs2026-arm'}}})}}
 }
