@@ -4,6 +4,13 @@ $ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'Ci.Candidate.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.Project.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.GitHub.psm1')
+Import-Module (Join-Path $PSScriptRoot 'Ci.CandidateReadiness.psm1')
+
+function Get-CiCandidateReadyChecks {
+    param([Collections.IDictionary]$Candidate)
+    $catalog=Invoke-CiApi ('repos/'+$Candidate.repository+'/commits/'+$Candidate.headCommit+'/check-runs?filter=latest&per_page=100') -Method GET
+    Test-CiCandidateReadinessCatalog -Candidate $Candidate -Catalog $catalog
+}
 
 function Write-CiCandidateDispatchEvent {
     param([string]$Directory,[string]$Stage,[Collections.IDictionary]$Request)
@@ -53,6 +60,7 @@ function Start-CiCandidateShadow {
         controllerCommit=$main;controllerEngineRef=$controller;controllerWorkflowBlob=$blob;
         candidate=$candidate;isolationNonce=$nonce;isolationRef=$branch;nativeExecutions=0;suppliesNativeVerdict=$false}
     if(-not $candidate.nativeRequired){$request.stage='NoNativeRequired';return $request}
+    $request.readyChecks=@(Get-CiCandidateReadyChecks -Candidate $candidate)
     if(-not $PSCmdlet.ShouldProcess($project.repository,('Create '+$branch+' at trusted main and dispatch native shadow'))){
         $request.stage='Preview';return $request
     }
@@ -64,6 +72,7 @@ function Start-CiCandidateShadow {
     $after=Get-CiIntegrationCandidate -Root $Root -PullRequest $PullRequest
     if(($after|ConvertTo-Json -Depth 15 -Compress) -cne ($candidate|ConvertTo-Json -Depth 15 -Compress) -or
         (Get-CiMainHead $project.repository) -cne $main){throw 'Candidate/main moved before branch creation; frozen journal retained.'}
+    $null=Get-CiCandidateReadyChecks -Candidate $after
     $created=Invoke-CiApi ('repos/'+$project.repository+'/git/refs') -Method POST -Body @{ref=$branch;sha=$main}
     if($created.ref -cne $branch -or $created.object.type -cne 'commit' -or $created.object.sha -cne $main){
         throw 'Isolated ref creation did not confirm the trusted controller; no dispatch was requested.'
@@ -76,6 +85,7 @@ function Start-CiCandidateShadow {
         $ref.object.type -cne 'commit' -or $ref.object.sha -cne $main){
         throw 'Candidate, main or isolated ref moved before dispatch; original ref and journal retained.'
     }
+    $null=Get-CiCandidateReadyChecks -Candidate $after
     $null=Invoke-CiApi ('repos/'+$project.repository+'/actions/workflows/integration-execution.yml/dispatches') -Method POST -Body @{
         ref=$branch.Substring(11);inputs=@{pull_request=[string]$PullRequest;identity=$ExpectedIdentity;nonce=$nonce}}
     Write-CiCandidateDispatchEvent $directory '03-dispatch-requested' $request

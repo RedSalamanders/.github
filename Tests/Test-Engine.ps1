@@ -1886,7 +1886,8 @@ Invoke-Case 'Trusted shadow admission creates only an exact main ref and dispatc
     $admission=Get-Module Ci.CandidateAdmission
     $originalCommands=& $admission {@{GetMain=(Get-Command Get-CiMainHead).ScriptBlock;GetCandidate=(Get-Command Get-CiIntegrationCandidate).ScriptBlock;Api=(Get-Command Invoke-CiApi).ScriptBlock}}
     $controller=Resolve-CiCommit $engineRoot HEAD
-    foreach($scenario in @('native','preview','prose','wrong-identity','caller-blob','pre-create-main','pre-dispatch-candidate','pre-dispatch-ref','dispatch-refusal')){
+    foreach($scenario in @('native','preview','prose','wrong-identity','caller-blob','pre-create-main','pre-dispatch-candidate','pre-dispatch-ref','dispatch-refusal',
+        'checks-missing','checks-pending','checks-pre-create','checks-pre-dispatch')){
         $root=New-Fixture ('shadow-admission-'+$scenario)
         $project=Read-CiProject $root;$project.engine.ref=$controller
         Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 10)
@@ -1928,6 +1929,22 @@ Invoke-Case 'Trusted shadow admission creates only an exact main ref and dispatc
             }
             function script:Invoke-CiApi {
                 param($Route,$Method='GET',$Body)
+                if($Method -ceq 'GET' -and $Route.EndsWith('/check-runs?filter=latest&per_page=100')){
+                    if(-not $script:dispatchControl.ContainsKey('checkReads')){$script:dispatchControl.checkReads=0}
+                    $script:dispatchControl.checkReads++
+                    if($Route -cne ('repos/'+$script:dispatchControl.candidate.repository+'/commits/'+$script:dispatchControl.candidate.headCommit+'/check-runs?filter=latest&per_page=100')){throw 'Readiness queried another head.'}
+                    $checks=@(foreach($name in @('checks / ci-gate','security / codeql','security / dependency-review')){
+                        @{id=([array]::IndexOf(@('checks / ci-gate','security / codeql','security / dependency-review'),$name)+1);
+                            name=$name;head_sha=$script:dispatchControl.candidate.headCommit;app=@{id=15368};status='completed';conclusion='success'}
+                    })
+                    if($script:dispatchControl.scenario -ceq 'checks-missing'){$checks=@($checks[0],$checks[1])}
+                    if($script:dispatchControl.scenario -ceq 'checks-pending' -or
+                        ($script:dispatchControl.scenario -ceq 'checks-pre-create' -and $script:dispatchControl.checkReads -eq 2) -or
+                        ($script:dispatchControl.scenario -ceq 'checks-pre-dispatch' -and $script:dispatchControl.checkReads -eq 3)){
+                        $checks[0].status='in_progress';$checks[0].conclusion=$null
+                    }
+                    return @{total_count=$checks.Count;check_runs=$checks}
+                }
                 if($Method -ceq 'GET' -and $Route.Contains('/contents/.github/workflows/integration-execution.yml?ref=')){
                     return @{path='.github/workflows/integration-execution.yml';sha=$(if($script:dispatchControl.scenario -ceq 'caller-blob'){'d'*40}else{$script:dispatchControl.blob})}
                 }
@@ -1959,12 +1976,12 @@ Invoke-Case 'Trusted shadow admission creates only an exact main ref and dispatc
             try{$result=Start-CiCandidateShadow -Root $root -PullRequest 43 -ExpectedIdentity $expected -WhatIf:($scenario -ceq 'preview')}catch{$failed=$true}
             Assert-Equal ($scenario -notin @('native','preview','prose')) $failed
             $observed=& $admission {$script:dispatchControl}
-            $writes=$scenario -in @('native','pre-dispatch-candidate','pre-dispatch-ref','dispatch-refusal')
+            $writes=$scenario -in @('native','pre-dispatch-candidate','pre-dispatch-ref','dispatch-refusal','checks-pre-dispatch')
             Assert-Equal ([int]$writes) $observed.creates
             Assert-Equal ([int]($scenario -in @('native','dispatch-refusal'))) $observed.dispatches
             $journals=Join-Path $root '.build/ci/candidate-requests'
             $stages=@(if(Test-Path $journals){Get-ChildItem -LiteralPath $journals -Recurse -File|Select-Object -ExpandProperty Name})
-            Assert-Equal ($scenario -in @('native','pre-create-main','pre-dispatch-candidate','pre-dispatch-ref','dispatch-refusal')) ($stages -contains '01-frozen.json')
+            Assert-Equal ($scenario -in @('native','pre-create-main','pre-dispatch-candidate','pre-dispatch-ref','dispatch-refusal','checks-pre-create','checks-pre-dispatch')) ($stages -contains '01-frozen.json')
             Assert-Equal $writes ($stages -contains '02-ref-created.json')
             Assert-Equal ($scenario -ceq 'native') ($stages -contains '03-dispatch-requested.json')
             if($scenario -in @('native','preview','prose')){
@@ -2718,6 +2735,7 @@ Invoke-Case 'Actual branch cache observer retains refusals for failed saves, for
 . (Join-Path $PSScriptRoot 'ExecutionBinding.Cases.ps1')
 . (Join-Path $PSScriptRoot 'CandidateResults.Cases.ps1')
 . (Join-Path $PSScriptRoot 'CandidateArchives.Cases.ps1')
+. (Join-Path $PSScriptRoot 'CandidateReadiness.Cases.ps1')
 
 Invoke-Case 'Read-only cache syntax admits scoped capabilities and refuses write, dynamic and misplaced authority' {
     $lf=[string][char]10

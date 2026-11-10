@@ -256,3 +256,20 @@ passed. Authenticate the actual original run/attempt/jobs/artifacts separately. 
 performs normal read/fetch reacquisition (retaining diagnostic local Git refs) but creates
 no journal, remote ref or dispatch. Operator credentials remain in the trusted command;
 the candidate workflow still receives only its own read-only token.
+
+Native admission additionally requires the exact head's successful `checks / ci-gate`,
+`security / codeql` and `security / dependency-review` checks from GitHub Actions app
+15368. RedSalamander retains its existing `Entire Gates` review prerequisite from
+Entire app 2626939. These IDs were independently inspected on the actual check
+catalog; a same-name check from another app does not substitute. Missing, duplicated,
+truncated, pending, failed, cancelled, neutral, skipped or wrong-head prerequisites
+refuse. A pending native integration check is a separate obligation and must not
+deadlock the admission needed to run it.
+
+The trusted controller reads the complete original check catalog before journaling,
+rechecks readiness immediately before ref creation and rechecks again before dispatch.
+The frozen journal retains the original successful check IDs/apps/head. Readiness
+moving back to pending prevents the next remote write while preserving any earlier
+ref/journal. Prose-only acquisition still supplies no baseline success. These cheap
+prerequisites avoid starting an expensive native campaign for an unready head; they
+provide no native pass, required native gate, capacity lease or merge authority.

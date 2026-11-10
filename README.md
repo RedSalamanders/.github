@@ -119,3 +119,9 @@ receipt, tested profile and canonical evidence bytes. It retains failures and re
 post-transfer candidate/attempt/catalog movement. It executes no downloaded code and
 does not grant merge, local delegation, adoption or production permission. Actual
 hosted verifier acceptance and required merge enforcement remain open.
+
+Shadow admission waits for the exact candidate head's cheap CI/security prerequisites;
+Root also retains its existing Entire approval. Missing/pending/failed/stale or
+wrong-app checks stop admission before the next remote write. Original successful
+check identities are retained in the frozen journal. These prerequisites supply no
+native or merge verdict and do not replace the still-open capacity/enforcement gates.
