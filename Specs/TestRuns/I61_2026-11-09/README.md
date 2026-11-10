@@ -334,3 +334,17 @@ also passed. Sixty-seven engine controls and thirteen storage controls passed, i
 workflow/engine, missing/duplicate/expired metadata, corruption, unsafe archives and cross-store raw manifest
 preservation. Synthetic fixtures establish refusal/integrity behavior; consumer adoption and native runtime
 remain separate. The local compiler recipe has another key, so this hosted import does not prove a local hit.
+
+The hosted preparation continuation passed 70 engine controls under
+`Z:/RedSalamander.Perf/unified-ci/engine-20261110T075410788Z-4e8af9cbc1c04893a6413eeaf8eea70e/results.json`.
+It adds explicit distribution, compiler-free/local refusal, precise compatibility misses and real public-import
+substitution controls. Extracted manifest digests now come directly from the held server-digest-verified archive;
+changed archives and coherently replaced extracted manifests fail before storage publication. The public command
+again imported the real exact x64 input and returned an explicit cache miss after changing only its environment
+identity. Automatic native hosted preparation remains unaccepted until a consumer executes it on both architectures.
+
+RedMonitor main [42773597824](https://github.com/RedSalamanders/RedMonitor/actions/runs/42773597824)
+at 3eabe20239fc8382f3b5143694657b36cc20cb32 completed successfully: x64/ARM64 regression, the global test gate,
+both production/package branches and completion. This normal campaign uses the source recipe; it does not yet
+establish hosted SDK consumer adoption. Root-pin SDK producer
+[42775919520](https://github.com/RedSalamanders/DxUi/actions/runs/42775919520) passed x64; ARM64 remains pending.

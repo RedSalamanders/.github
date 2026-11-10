@@ -1529,6 +1529,89 @@ Invoke-Case 'SDK archive validation refuses traversal, links and case collisions
     Assert-Refused {& $transport {param($z,$d) Expand-CiSdkArchive $z $d} $zipPath (Join-Path $directory 'out')}
 }
 
+Invoke-Case 'SDK compatibility misses retain source fallback while source, ABI policy and corruption cannot become hits' {
+    $transport=Get-Module Ci.SdkTransport
+    $expected=[ordered]@{schemaVersion=1;role='DependencySdkInputs';sourceRepository='RedSalamanders/DxUi';sourceCommit=('a'*40);sourceBytes=('b'*64);apiRevision=4;
+        platform='x64';configuration='Release';runtimeFamily='MD';annotationPolicy='enabled';languageStandard='stdcpplatest';optimizationPolicy='GL-LTCG-full';
+        toolchainIdentity=('c'*64);compilerProfileIdentity=('d'*64);dependencyIdentity=('e'*64);integrationPolicyIdentity=('f'*64);environmentIdentity=('0'*64)}
+    Assert-True (& $transport {param($e,$a) Test-CiSdkTransportRecipe $e $a} $expected $expected)
+    foreach($field in @('toolchainIdentity','compilerProfileIdentity','dependencyIdentity','environmentIdentity')){
+        $changed=$expected|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$changed[$field]='1'*64
+        Assert-True (-not (& $transport {param($e,$a) Test-CiSdkTransportRecipe $e $a} $expected $changed))
+    }
+    foreach($field in @('sourceCommit','sourceBytes','apiRevision','platform','annotationPolicy','integrationPolicyIdentity')){
+        $changed=$expected|ConvertTo-Json|ConvertFrom-Json -AsHashtable
+        $changed[$field]=switch($field){sourceCommit{'1'*40};apiRevision{5};platform{'ARM64'};annotationPolicy{'disabled'};default{'1'*64}}
+        Assert-Refused {& $transport {param($e,$a) Test-CiSdkTransportRecipe $e $a} $expected $changed}
+    }
+}
+Invoke-Case 'SDK main preparation has explicit distribution and refuses local or compiler-free execution before side effects' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkPreparation.psm1')
+    $preparation=Get-Module Ci.SdkPreparation
+    $known=& $preparation {Get-CiDistributedSdkRequest f2e328a0a26a18ca66bf4b2aea77bf010c9515e1 4}
+    Assert-Equal '42695804476' $known.runId
+    Assert-True ($null -eq (& $preparation {Get-CiDistributedSdkRequest 4cdf1ce52c7785446698e346b8aec058ed6a9283 4}))
+    $saved=[Environment]::GetEnvironmentVariable('CI_NATIVE_BUILDS_DISABLED','Process')
+    try{
+        $env:CI_NATIVE_BUILDS_DISABLED='true'
+        Assert-Refused {Initialize-CiPinnedSdkInput -Context @{} -SourceCommit f2e328a0a26a18ca66bf4b2aea77bf010c9515e1 -ApiRevision 4}
+    }finally{[Environment]::SetEnvironmentVariable('CI_NATIVE_BUILDS_DISABLED',$saved,'Process')}
+}
+
+Invoke-Case 'Public SDK import binds the held authenticated archive and refuses post-transfer or extracted-manifest substitution' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkCache.psm1')
+    $transport=Get-Module Ci.SdkTransport
+    $fixture=New-Fixture 'sdk-transport-boundary'
+    $payload=Join-Path $fixture '.build/payload';[void][IO.Directory]::CreateDirectory($payload)
+    [IO.File]::WriteAllText((Join-Path $payload 'fixture.lib'),'synthetic input bytes, not a native SDK')
+    $identity=[ordered]@{schemaVersion=1;role='DependencySdkInputs';sourceRepository='RedSalamanders/DxUi';sourceCommit=('a'*40);sourceBytes=('b'*64);apiRevision=4;
+        platform='x64';configuration='Release';runtimeFamily='MD';annotationPolicy='enabled';languageStandard='stdcpplatest';optimizationPolicy='GL-LTCG-full';
+        toolchainIdentity=('c'*64);compilerProfileIdentity=('d'*64);dependencyIdentity=('e'*64);integrationPolicyIdentity=('f'*64);environmentIdentity=('0'*64)}
+    $store=Join-Path $fixture '.build/source-store';Initialize-CiSdkStore $fixture $store
+    $published=Publish-CiSdkCacheEntry $store $identity $payload
+    $zip=Join-Path $fixture '.build/source.zip'
+    [IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $store 'entries'),$zip)
+    $envelope=[ordered]@{archiveBytes=(Get-Item $zip).Length;archiveSha256=(Get-FileHash $zip).Hash.ToLowerInvariant()}
+    $originals=@{};foreach($name in @('Resolve-CiHostedSdkArtifact','Receive-CiSdkArchive','Expand-CiSdkArchive')){
+        $originals[$name]=& $transport {param($n) (Get-Command $n).ScriptBlock} $name
+    }
+    try{
+        & $transport {
+            param($z,$e,$expand)
+            $script:transportControl=@{zip=$z;envelope=$e;corrupt='';expand=$expand}
+            function script:Resolve-CiHostedSdkArtifact {param($RunId,$Attempt,$SourceCommit,$Platform) return $script:transportControl.envelope}
+            function script:Receive-CiSdkArchive {
+                param($Envelope,$Destination)
+                [IO.File]::Copy($script:transportControl.zip,$Destination,$false)
+                if($script:transportControl.corrupt -ceq 'archive'){
+                    $b=[IO.File]::ReadAllBytes($Destination);$b[0]=$b[0] -bxor 1;[IO.File]::WriteAllBytes($Destination,$b)
+                }
+            }
+            function script:Expand-CiSdkArchive {
+                param($Archive,$Destination,$Envelope)
+                $catalog=& $script:transportControl.expand @PSBoundParameters
+                if($script:transportControl.corrupt -ceq 'manifest'){
+                    $manifest=Get-ChildItem $Destination -Recurse -File -Filter entry.json
+                    [IO.File]::WriteAllText($manifest.FullName,'{}')
+                }
+                return $catalog
+            }
+        } $zip $envelope $originals['Expand-CiSdkArchive']
+        $destination=Join-Path $fixture '.build/destination-store'
+        $imported=Import-CiHostedSdkArtifact $fixture $destination (Join-Path $fixture '.build/downloads') $identity 123 1
+        Assert-Equal $published.ManifestSha256 $imported.ManifestSha256
+        foreach($failure in @('archive','manifest')){
+            & $transport {param($f) $script:transportControl.corrupt=$f} $failure
+            $message=''
+            try{Import-CiHostedSdkArtifact $fixture $destination (Join-Path $fixture '.build/downloads') $identity 123 1|Out-Null}catch{$message=$_.Exception.Message}
+            $expected=if($failure -ceq 'archive'){'SDK archive changed before extraction.'}else{'Extracted SDK manifest changed after authenticated acquisition.'}
+            Assert-Equal $expected $message
+        }
+    }finally{
+        & $transport {param($saved) foreach($name in $saved.Keys){Set-Item ("Function:script:"+$name) -Value $saved[$name]};Remove-Variable transportControl -Scope Script} $originals
+    }
+}
+
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count
 $summary = [ordered]@{ schemaVersion = 1; passed = $failed -eq 0; executed = $script:rows.Count; failed = $failed; cases = $script:rows.ToArray() }
 $resultPath = Join-Path $runRoot 'results.json'

@@ -19,6 +19,10 @@ Authenticated SDK transfer uses `Tools/Import-HostedSdk.ps1 -Root <consumer> -Id
 The [SDK transport contract](Specs/SDK_Cache.md#authenticated-hosted-sdk-transport) binds the reviewed producer
 workflow/engine, native architecture job and server archive digest, then atomically imports verified dependency
 bytes. It retains original manifests and diagnostics. Consumer adoption and product qualification remain separate.
+`Ci.SdkPreparation.psm1` supplies admitted main Release adapters with a lock-bound descriptor after canonical
+bootstrap and independent actual-key acquisition. Only explicit entries in `Policy/sdk-distribution.json` are
+eligible. Missing distribution or a verified compiler/environment mismatch retains source; corrupted data fails.
+Local/manual qualification keeps the existing source recipe. Hosted consumer acceptance is tracked separately.
 
 Organization-owned implementation plans are indexed in [Specs/Plans/WIP](Specs/Plans/WIP/README.md). Completed plans move to [Specs/Plans/Done](Specs/Plans/Done/README.md) under the [plan lifecycle rule](AGENTS.md#plan-lifecycle), after implementation, validation and normative documentation closeout.
 
