@@ -1,6 +1,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Ci.Policy.psm1') -ErrorAction Stop
+Import-Module (Join-Path $PSScriptRoot 'Ci.Execution.psm1') -ErrorAction Stop
 
 function New-CiProjectContext {
     [CmdletBinding()]
@@ -174,6 +175,7 @@ function Write-CiRegressionReceipt {
         [ValidateSet('case','required-case','suite','scenario')][string]$CountUnit='case',
         [int]$Registered=0,[int]$ExpectedSkipped=0)
     if ($Discovered -le 0 -or $Executed -ne $Discovered -or -not $AssertionProbePassed -or -not $CanonicalEvidence.Count) { throw 'Incomplete native regression execution; no passing receipt can be written.' }
+    $execution=Get-CiNativeExecutionBinding -Descriptor $Context.batch -RunId $env:GITHUB_RUN_ID -RunAttempt $env:GITHUB_RUN_ATTEMPT
     Assert-CiSourceFrozen $Context
     if($Registered -eq 0){$Registered=$Discovered+$ExpectedSkipped}
     $receipt = [ordered]@{ schemaVersion = 1; repository = $Context.batch.repository; commit = $Context.batch.commit;
@@ -182,7 +184,8 @@ function Write-CiRegressionReceipt {
         discovered = $Discovered; executed = $Executed; failed = 0; unexpectedSkipped = 0;
         assertionProbePassed = $AssertionProbePassed; artifacts = $Artifacts; canonicalEvidence = $CanonicalEvidence;
         runId = $env:GITHUB_RUN_ID; completedAt = [DateTimeOffset]::UtcNow.ToString('o') }
-    $null = Test-CiRegressionReceipt $receipt $Context.batch $Context.platform
+    foreach($field in $execution.Keys){$receipt[$field]=$execution[$field]}
+    $null = Test-CiRegressionExecutionBinding -Receipt $receipt -Descriptor $Context.batch -Platform $Context.platform -RunId $env:GITHUB_RUN_ID -RunAttempt $env:GITHUB_RUN_ATTEMPT
     [void][IO.Directory]::CreateDirectory($EvidenceDirectory)
     $path = Assert-CiContainedPath $EvidenceDirectory (Join-Path $EvidenceDirectory ("regression-$($Context.platform).json"))
     [IO.File]::WriteAllText($path, ($receipt | ConvertTo-Json -Depth 20), [Text.UTF8Encoding]::new($false))
@@ -195,6 +198,7 @@ function Write-CiProductionReceipt {
     param([Parameter(Mandatory)][System.Collections.IDictionary]$Context, [Parameter(Mandatory)][string[]]$Archives,
         [Parameter(Mandatory)][bool]$TestModeDisabled, [Parameter(Mandatory)][bool]$SmokePassed)
     if (-not $TestModeDisabled -or -not $SmokePassed -or -not $Archives.Count) { throw 'Production mode and native smoke are required before retaining a distributable ZIP.' }
+    $execution=Get-CiNativeExecutionBinding -Descriptor $Context.batch -RunId $env:GITHUB_RUN_ID -RunAttempt $env:GITHUB_RUN_ATTEMPT
     Assert-CiSourceFrozen $Context
     if($Context.project.kind -ceq 'application'){
         $binary=Join-Path $Context.root ".build/$($Context.platform)/Release/$($Context.project.winget.executable)"
@@ -219,6 +223,7 @@ function Write-CiProductionReceipt {
         nativeDigest = $Context.batch.nativeDigest; engine = $Context.batch.engine; platform = $Context.platform;
         version = $Context.batch.version; buildNumber = $Context.batch.buildNumber; role = 'ProductionRelease';
         testModeDisabled = $true; smokePassed = $true; kind = $Context.project.kind; archives = $rows.ToArray(); runId = $env:GITHUB_RUN_ID }
+    foreach($field in $execution.Keys){$receipt[$field]=$execution[$field]}
     $path = Assert-CiContainedPath $Context.root (Join-Path $stage ("production-$($Context.platform).json"))
     [IO.File]::WriteAllText($path, ($receipt | ConvertTo-Json -Depth 15), [Text.UTF8Encoding]::new($false))
     if ($env:GITHUB_OUTPUT) {

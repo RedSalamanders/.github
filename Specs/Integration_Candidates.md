@@ -60,6 +60,17 @@ is distinct from per-PR feedback; required checks must also run on that event be
 
 ## Required continuation before changing obligations
 
+`Ci.Execution.psm1` defines the additional native execution input binding. New
+regression/production writers retain the frozen engine, version/build number and
+actual run attempt. `Test-CiRegressionExecutionBinding` requires an independently
+frozen descriptor and expected producer run/attempt, completed ordinary Release
+execution and failure probe, unique profile artifacts and nonempty original evidence
+references. Missing, mistyped, stale, duplicated and out-of-profile data refuse.
+Historical receipt reading remains available, with no upgrade into this stronger
+contract. The module does not acquire/authenticate workflows, verify downloaded
+artifact/evidence bytes or make a merge/adoption decision; those remain controller
+and transport obligations before candidate activation.
+
 The manual shared `integration-capabilities.yml` is a compiler-free diagnostic for the
 server-issued read-only cache mode. It saves only a unique synthetic fixture, deliberately
 forges the local mode environment, checks the repository cache catalog independently,
