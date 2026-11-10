@@ -2238,7 +2238,7 @@ Invoke-Case 'Branch cache diagnostic permits only its frozen isolated writer and
     Assert-True $match.Success
     $body=[scriptblock]::Create([regex]::Replace($match.Groups['body'].Value,'(?m)^          ',''))
     $baseline=@{PROBE_MODE='write';ISOLATION_REF=('refs/heads/ci-integration-probe/'+('a'*32));
-        PROBE_KEY=('integration-branch-'+('a'*32));EXPECTED_COMMIT=('b'*40);ACTUAL_COMMIT=('b'*40);
+        PROBE_PLATFORM='linux';PROBE_KEY=('integration-branch-'+('a'*32)+'-linux');EXPECTED_COMMIT=('b'*40);ACTUAL_COMMIT=('b'*40);
         ACTUAL_REF=('refs/heads/ci-integration-probe/'+('a'*32))}
     $saved=@{};foreach($name in $baseline.Keys){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
     try{
@@ -2249,7 +2249,11 @@ Invoke-Case 'Branch cache diagnostic permits only its frozen isolated writer and
             @{change=@{PROBE_MODE='read'};pass=$false},
             @{change=@{ACTUAL_COMMIT=('c'*40)};pass=$false},
             @{change=@{EXPECTED_COMMIT=('B'*40);ACTUAL_COMMIT=('B'*40)};pass=$false},
-            @{change=@{PROBE_KEY=('integration-branch-'+('c'*32))};pass=$false},
+            @{change=@{PROBE_KEY=('integration-branch-'+('c'*32)+'-linux')};pass=$false},
+            @{change=@{PROBE_PLATFORM='x64';PROBE_KEY=('integration-branch-'+('a'*32)+'-x64')};pass=$true},
+            @{change=@{PROBE_PLATFORM='ARM64';PROBE_KEY=('integration-branch-'+('a'*32)+'-ARM64')};pass=$true},
+            @{change=@{PROBE_PLATFORM='arm64'};pass=$false},
+            @{change=@{PROBE_PLATFORM='self-hosted'};pass=$false},
             @{change=@{PROBE_MODE='WRITE'};pass=$false},
             @{change=@{ISOLATION_REF='refs/heads/main';ACTUAL_REF='refs/heads/main'};pass=$false},
             @{change=@{ISOLATION_REF=('refs/heads/ci-integration-probe/'+('A'*32))};pass=$false}
@@ -2272,9 +2276,9 @@ Invoke-Case 'Actual branch cache observer retains refusals for failed saves, for
     $body=[scriptblock]::Create([regex]::Replace($match.Groups['body'].Value,'(?m)^          ',''))
     $fixture=New-Fixture 'branch-cache-observer'
     $baseline=@{PROBE_MODE='write';ISOLATION_REF=('refs/heads/ci-integration-probe/'+('a'*32));
-        PROBE_KEY=('integration-branch-'+('a'*32));EXPECTED_COMMIT=('b'*40);ACTUAL_COMMIT=('b'*40);
+        PROBE_PLATFORM='linux';PROBE_KEY=('integration-branch-'+('a'*32)+'-linux');EXPECTED_COMMIT=('b'*40);ACTUAL_COMMIT=('b'*40);
         ACTUAL_REF=('refs/heads/ci-integration-probe/'+('a'*32));SAVE_OUTCOME='success';RESTORE_OUTCOME='success';
-        CACHE_HIT='true';MATCHED_KEY=('integration-branch-'+('a'*32));RUNNER_TEMP='';
+        CACHE_HIT='true';MATCHED_KEY=('integration-branch-'+('a'*32)+'-linux');RUNNER_TEMP='';RUNNER_OS='Linux';RUNNER_ARCH='X64';
         GITHUB_REPOSITORY='RedSalamanders/.github';GITHUB_RUN_ID='123';GITHUB_RUN_ATTEMPT='1'}
     $saved=@{};foreach($name in $baseline.Keys){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
     try{

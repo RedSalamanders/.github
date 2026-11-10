@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "role": "AuthenticatedBranchCacheCapabilityPair",
+  "repository": "RedSalamanders/.github",
+  "controllerCommit": "ef7d68ed3aae7784802c60e98db72d383ca4214e",
+  "workflowBlob": "24f9fe609eac5a223e499b1ee2092fd82e80861f",
+  "isolationRef": "refs/heads/ci-integration-probe/f68347f168684ea385300ecc4a84aa14",
+  "cacheKey": "integration-branch-f68347f168684ea385300ecc4a84aa14",
+  "writerRun": "42884352948",
+  "readerRun": "42884592829",
+  "attempt": 1,
+  "entry": {
+    "id": 10315041064,
+    "key": "integration-branch-f68347f168684ea385300ecc4a84aa14",
+    "ref": "refs/heads/ci-integration-probe/f68347f168684ea385300ecc4a84aa14",
+    "version": "764261e574927a397234130441c9fd7081d9efad17ce87165e0a110a48821340",
+    "size_in_bytes": 248
+  },
+  "positiveBranchRestore": true,
+  "independentMainRestoreMiss": true,
+  "nativeExecutions": 0,
+  "suppliesNativeVerdict": false
+}

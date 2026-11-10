@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 No remaining slice is waived and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 15, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 16, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -690,3 +690,25 @@ Revision 15 continuation (supersedes previous deployment-status snapshots):
   reviewer approval; #212 is a dependent draft. Do not cancel background Actions, reduce
   obligations or close this WIP plan. Isolated local SDK candidates, remaining slices
   and controlled 3x/2x organization acceptance remain open.
+
+Revision 16 continuation:
+
+- Shared #48 enabled authenticated SDK2 distribution after all six original inputs
+  passed live verification. Monitor #47, Xe #82, Tilde #103 and Prism #15 merged the
+  exact cd9f01d1711d1abce1856ca4052f49e93eaef3ac engine and unchanged dependency pins.
+  Static/tooling checks passed; live native SDK selection and complete hosted regression/
+  production acceptance remain pending. DxUi's matching controller update is under validation.
+- Shared #49's first live isolated-branch/main cache pair passed on Linux, attempts
+  42884352948 and 42884592829. The original reports were independently authenticated
+  against unchanged refs, run/event/attempt/source and workflow bytes; main could not
+  restore the entry that positively restored under the isolated branch. This is a
+  narrow service-scope prerequisite and supplies no native verdict. The diagnostic now
+  covers literal Linux/Windows x64/Windows ARM64 hosts with independent platform keys;
+  live paired acceptance on those native Windows hosts remains pending.
+- All six project main policies were inspected. RedPrism's missing existing static/
+  security requirements were repaired and read back with every unrelated rule preserved.
+  No native gate, strict stale-base enforcement, local delegation or result adoption
+  has been enabled. Those S7/S8 implementation and actual negative gates remain open.
+- Root's SDK-preserving Full NonInteractive run has passed tooling and entered native
+  execution after its guarded re-attestation. Final canonical acceptance, SDK production/
+  package and delivery remain pending. All foreground work remains excluded this session.

@@ -143,3 +143,15 @@ Emergency PR merge eligibility is governed by [Specs/EmergencyMerge.md](Emergenc
 The central dependency-status.yml performs a weekly/manual metadata-only inventory of the six exact default-branch trees, engine tags, vcpkg baseline/tool/floor/override declarations and Dependencies source locks. It supplements the individual Actions/vcpkg feeds and the Ghostty observer. Reports retain missing/private coverage and native vulnerability-coverage limitations; an upstream main difference is advisory, never qualified upgrade evidence. No source writes, producer restores or native builds occur. This observer uses the central trusted default branch and does not alter deployed product engine pins.
 
 Generated manifests start with the yaml-language-server schema header for their manifest type and version, because winget validate otherwise exits with a warning code. Windows 11 hosted images provision App Installer without registering it for the runner account, so a missing winget registers that inbox package by family name; nothing is downloaded, and the engine's own hosted check proves resolution on both publication runners. Native qualification records the hosted winget version and accepts only validate's succeeded-with-warnings code (0x8A150028) beside success; any other nonzero owned command fails. Every nonzero owned command prints its captured log, because a failed job uploads no scratch evidence. Native winget qualification reads the exact portable Apps & features identity/version/location directly, because an unpublished package may not correlate with winget list. It refuses pre-existing products/aliases, probes every installed command through its real alias, runs declared bounded product smokeTests, and uninstalls only the exact version in its operation-owned location through the same manifest. Actual cleanup is rechecked. Submission requires matching per-architecture source/run/manifest receipts with every alias/probe count; no list-only or cleanup-incomplete result qualifies. Provider fixtures do not establish a real product install pass.
+
+The branch-cache capability diagnostic uses literal reviewed Linux, Windows x64 and
+Windows ARM64 runners, independent platform-suffixed keys and separate original reports.
+Qualify the positive isolated-branch and negative main pair on every intended native host;
+a Linux-only observation is retained as that narrower scope. Never accept a user-supplied
+runner label or let one architecture's cache version substitute for another's proof.
+
+All six project main rulesets require checks / ci-gate, security / codeql and
+security / dependency-review from GitHub Actions (integration 15368). The RedPrism
+rollout repairs its missing required-status rule while preserving existing review,
+merge-method, bypass, strict-update and create semantics. This static policy supplies
+no native verdict and does not enable candidate delegation or cross-run adoption.

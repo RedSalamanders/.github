@@ -20,13 +20,24 @@ permissions:
   actions: read
 jobs:
   scope-probe:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux
+            runner: ubuntu-24.04
+          - platform: x64
+            runner: windows-2025-vs2026
+          - platform: ARM64
+            runner: windows-11-vs2026-arm
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 5
     env:
       PROBE_MODE: ${{ inputs.mode }}
       ISOLATION_REF: ${{ inputs.isolation_ref }}
       EXPECTED_COMMIT: ${{ inputs.expected_commit }}
-      PROBE_KEY: ${{ inputs.cache_key }}
+      PROBE_PLATFORM: ${{ matrix.platform }}
+      PROBE_KEY: ${{ inputs.cache_key }}-${{ matrix.platform }}
       ACTUAL_REF: ${{ github.ref }}
       ACTUAL_COMMIT: ${{ github.sha }}
     steps:
@@ -36,7 +47,8 @@ jobs:
           $ErrorActionPreference='Stop'
           if($env:ISOLATION_REF -cnotmatch '^refs/heads/ci-integration-probe/([a-f0-9]{32})$'){throw 'Invalid isolated probe branch.'}
           $suffix=$Matches[1]
-          if($env:PROBE_KEY -cne ('integration-branch-'+$suffix)){throw 'Cache key must belong to this exact isolated branch.'}
+          if($env:PROBE_PLATFORM -cnotin @('linux','x64','ARM64') -or
+             $env:PROBE_KEY -cne ('integration-branch-'+$suffix+'-'+$env:PROBE_PLATFORM)){throw 'Cache key must belong to this exact isolated branch and host.'}
           if($env:EXPECTED_COMMIT -cnotmatch '^[a-f0-9]{40}$' -or $env:ACTUAL_COMMIT -cne $env:EXPECTED_COMMIT){throw 'Controller commit differs from the frozen trusted commit.'}
           if(($env:PROBE_MODE -ceq 'write' -and $env:ACTUAL_REF -ceq $env:ISOLATION_REF) -or
              ($env:PROBE_MODE -ceq 'read' -and $env:ACTUAL_REF -ceq 'refs/heads/main')){return}
@@ -57,7 +69,7 @@ jobs:
           ACTIONS_CACHE_MODE: write
         with:
           path: ${{ runner.temp }}/integration-branch-capability/synthetic.txt
-          key: ${{ inputs.cache_key }}
+          key: ${{ env.PROBE_KEY }}
       - name: Remove the owned synthetic source before positive restore
         if: inputs.mode == 'write'
         shell: pwsh
@@ -67,7 +79,7 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/integration-branch-capability/synthetic.txt
-          key: ${{ inputs.cache_key }}
+          key: ${{ env.PROBE_KEY }}
       - name: Independently observe repository cache scope and actual restore
         if: always()
         shell: pwsh
@@ -84,11 +96,12 @@ jobs:
           $report=[ordered]@{schemaVersion=1;role='IntegrationBranchCacheCapability';repository=$env:GITHUB_REPOSITORY;
             runId=$env:GITHUB_RUN_ID;attempt=$env:GITHUB_RUN_ATTEMPT;sourceCommit=$env:ACTUAL_COMMIT;
             actualRef=$env:ACTUAL_REF;isolationRef=$env:ISOLATION_REF;key=$env:PROBE_KEY;mode=$env:PROBE_MODE;
+            platform=$env:PROBE_PLATFORM;runnerOs=$env:RUNNER_OS;runnerArch=$env:RUNNER_ARCH;
             saveOutcome=$env:SAVE_OUTCOME;restoreOutcome=$env:RESTORE_OUTCOME;cacheHit=$env:CACHE_HIT;matchedKey=$env:MATCHED_KEY;
             entries=@();nativeExecutions=0;suppliesNativeVerdict=$false;confirmed=$false}
           $reportPath=Join-Path $root 'capability.json'
           [IO.File]::WriteAllText($reportPath,($report|ConvertTo-Json -Depth 6))
-          if($env:PROBE_KEY -cnotmatch '^integration-branch-[a-f0-9]{32}$'){throw 'Invalid key; do not query arbitrary cache data.'}
+          if($env:PROBE_KEY -cnotmatch '^integration-branch-[a-f0-9]{32}-(linux|x64|ARM64)$'){throw 'Invalid key; do not query arbitrary cache data.'}
           $raw=& gh api ('repos/'+$env:GITHUB_REPOSITORY+'/actions/caches?key='+$env:PROBE_KEY+'&per_page=100')
           if($LASTEXITCODE){throw 'Cannot independently query cache scope.'}
           $catalog=($raw -join "`n")|ConvertFrom-Json
@@ -111,7 +124,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: integration-branch-capability-${{ inputs.mode }}
+          name: integration-branch-capability-${{ inputs.mode }}-${{ matrix.platform }}
           path: ${{ runner.temp }}/integration-branch-capability/capability.json
           if-no-files-found: error
           retention-days: 30

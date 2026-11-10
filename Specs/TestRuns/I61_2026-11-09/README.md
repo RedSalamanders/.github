@@ -639,3 +639,20 @@ reader restores. Complete merged engine controls and twelve workflow syntax chec
 These are local workflow-script controls, not a live service-isolation result. Both actual
 dispatches and independent run/attempt/source/workflow authentication remain pending.
 The diagnostic supplies no native, merge, local-delegation or adoption authority.
+
+The first live Linux pair passed: writer 42884352948 and independent main reader
+42884592829, attempt 1 at controller ef7d68ed3aae7784802c60e98db72d383ca4214e,
+workflow blob 24f9fe609eac5a223e499b1ee2092fd82e80861f. Both original reports were
+downloaded and independently checked against API run/event/ref/attempt/workflow identity
+and unchanged main/isolated refs. The same cache ID/version remained isolated while main
+could not restore it. BranchCache_LinuxPair_2026-11-10.json preserves this no-native-verdict
+pair. Windows x64/ARM64 cache-scope acceptance remains pending the expanded host matrix.
+
+Live policy inspection found RedPrism's active Main ruleset 26372036 lacked the three
+existing static/security requirements. It now requires the same exact contexts and
+GitHub Actions integration 15368 as its five peers. Field-wise readback confirmed all
+three requirements and preservation of review, merge methods, bypass actors and other
+rules. The first verifier compared serialized property order and refused although
+the server values matched; the corrected field-wise verifier preserved those expected
+values. Original before/request/after evidence is retained under the governed sandbox.
+RedPrism_StaticPolicy_2026-11-10.json records this repair, not native-gate acceptance.
