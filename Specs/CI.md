@@ -31,6 +31,19 @@ Native child commands always capture stdout/stderr, including on windowless Wind
 
 ## Admission and persistent state
 
+The manual `integration-branch-capability.yml` diagnostic tests a separate cache-scope
+fallback when server-issued read-only cache mode is unavailable. An owner creates one
+unique `ci-integration-probe/<32 lowercase hex>` branch at a frozen trusted main commit.
+Its read-only-token writer saves synthetic bytes while forging the local default-branch
+ref, then positively restores them. A separate dispatch of the same immutable workflow
+on main must fail to restore that exact key/path while the independent cache catalog
+still records exactly one entry under the isolated branch. Both original reports,
+run/attempts, actual refs, source commits and workflow bytes must be authenticated.
+Partial observations or missing/failed restores do not prove the pair. The diagnostic
+executes no candidate/product code and grants no native, merge, delegation or adoption
+authority. A qualified native implementation must separately freeze/recheck its isolated
+ref and keep every writer credential and trusted main reporter outside candidate jobs.
+
 The [integration candidate input contract](Integration_Candidates.md) freezes the exact PR/head/base/merge
 tree through independent API/Git checks, with a separate strict role for current merge-queue integrations.
 These data-only roles do not enable native PR execution or replace

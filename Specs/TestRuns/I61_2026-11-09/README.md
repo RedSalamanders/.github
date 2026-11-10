@@ -621,3 +621,21 @@ preserves the independently reopened SDK descriptor before suspension and compar
 restored recipe/key/manifest/descriptor hash before native execution. Its five helper
 and two actual runner-flow controls pass; complete SDK runtime qualification is pending.
 No foreground suite ran and none is authorized for the remainder of this session.
+
+### Isolated-branch cache capability prerequisite
+
+The server read-only-mode probe 42876515777 retained its original nonconfirming report:
+effective mode absent, save skipped, zero matching entries, confirmed false, native executions
+zero. No native candidate execution follows from that result.
+
+The alternative manual integration-branch-capability workflow is compiler-free and uses
+read-only contents/actions credentials. It freezes a unique owned branch and controller,
+attempts a synthetic save with a forged local main ref, positively restores on that branch,
+and requires a separate immutable-main dispatch to miss the same exact key/path while
+the catalog retains exactly one isolated-branch entry. The actual validation script passed
+ten valid/refusal contexts. The actual observer passed writer/reader controls and retained
+six refusals for skipped saves, failed restores, foreign scope, changed bytes and leaked
+reader restores. Complete merged engine controls and twelve workflow syntax checks pass.
+These are local workflow-script controls, not a live service-isolation result. Both actual
+dispatches and independent run/attempt/source/workflow authentication remain pending.
+The diagnostic supplies no native, merge, local-delegation or adoption authority.

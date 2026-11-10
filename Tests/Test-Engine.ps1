@@ -2232,6 +2232,86 @@ Invoke-Case 'Public SDK import binds the held authenticated archive and refuses 
     }
 }
 
+Invoke-Case 'Branch cache diagnostic permits only its frozen isolated writer and independent main reader' {
+    $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/integration-branch-capability.yml'))
+    $match=[regex]::Match($text,'(?ms)^      - name: Validate the exact owned branch and immutable controller\r?\n.*?^        run: \|\r?\n(?<body>.*?)(?=^      - name:)')
+    Assert-True $match.Success
+    $body=[scriptblock]::Create([regex]::Replace($match.Groups['body'].Value,'(?m)^          ',''))
+    $baseline=@{PROBE_MODE='write';ISOLATION_REF=('refs/heads/ci-integration-probe/'+('a'*32));
+        PROBE_KEY=('integration-branch-'+('a'*32));EXPECTED_COMMIT=('b'*40);ACTUAL_COMMIT=('b'*40);
+        ACTUAL_REF=('refs/heads/ci-integration-probe/'+('a'*32))}
+    $saved=@{};foreach($name in $baseline.Keys){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
+    try{
+        $controls=@(
+            @{change=@{};pass=$true},
+            @{change=@{PROBE_MODE='read';ACTUAL_REF='refs/heads/main'};pass=$true},
+            @{change=@{ACTUAL_REF='refs/heads/main'};pass=$false},
+            @{change=@{PROBE_MODE='read'};pass=$false},
+            @{change=@{ACTUAL_COMMIT=('c'*40)};pass=$false},
+            @{change=@{EXPECTED_COMMIT=('B'*40);ACTUAL_COMMIT=('B'*40)};pass=$false},
+            @{change=@{PROBE_KEY=('integration-branch-'+('c'*32))};pass=$false},
+            @{change=@{PROBE_MODE='WRITE'};pass=$false},
+            @{change=@{ISOLATION_REF='refs/heads/main';ACTUAL_REF='refs/heads/main'};pass=$false},
+            @{change=@{ISOLATION_REF=('refs/heads/ci-integration-probe/'+('A'*32))};pass=$false}
+        )
+        foreach($control in $controls){
+            foreach($name in $baseline.Keys){[Environment]::SetEnvironmentVariable($name,$baseline[$name],'Process')}
+            foreach($name in $control.change.Keys){[Environment]::SetEnvironmentVariable($name,$control.change[$name],'Process')}
+            $passed=$true;try{& $body}catch{$passed=$false}
+            Assert-Equal $control.pass $passed
+        }
+    }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}}
+    Assert-True ($text -notmatch '(?m)^\s+(contents|actions|statuses|checks): write')
+    Assert-True ($text -notmatch 'actions/checkout|Invoke-ProjectCi|build\.ps1')
+}
+
+Invoke-Case 'Actual branch cache observer retains refusals for failed saves, foreign scopes and leaked restores' {
+    $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/integration-branch-capability.yml'))
+    $match=[regex]::Match($text,'(?ms)^      - name: Independently observe repository cache scope and actual restore\r?\n.*?^        run: \|\r?\n(?<body>.*?)(?=^      - name:)')
+    Assert-True $match.Success
+    $body=[scriptblock]::Create([regex]::Replace($match.Groups['body'].Value,'(?m)^          ',''))
+    $fixture=New-Fixture 'branch-cache-observer'
+    $baseline=@{PROBE_MODE='write';ISOLATION_REF=('refs/heads/ci-integration-probe/'+('a'*32));
+        PROBE_KEY=('integration-branch-'+('a'*32));EXPECTED_COMMIT=('b'*40);ACTUAL_COMMIT=('b'*40);
+        ACTUAL_REF=('refs/heads/ci-integration-probe/'+('a'*32));SAVE_OUTCOME='success';RESTORE_OUTCOME='success';
+        CACHE_HIT='true';MATCHED_KEY=('integration-branch-'+('a'*32));RUNNER_TEMP='';
+        GITHUB_REPOSITORY='RedSalamanders/.github';GITHUB_RUN_ID='123';GITHUB_RUN_ATTEMPT='1'}
+    $saved=@{};foreach($name in $baseline.Keys){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
+    try{
+        foreach($scenario in @('writer','reader','save-skipped','restore-failed','foreign-scope','bad-bytes','reader-hit','reader-file')){
+            foreach($name in $baseline.Keys){[Environment]::SetEnvironmentVariable($name,$baseline[$name],'Process')}
+            $env:RUNNER_TEMP=Join-Path $fixture $scenario
+            $folder=Join-Path $env:RUNNER_TEMP 'integration-branch-capability'
+            [void][IO.Directory]::CreateDirectory($folder)
+            $path=Join-Path $folder 'synthetic.txt'
+            $entry=@{id=321;key=$env:PROBE_KEY;ref=$env:ISOLATION_REF;version=('c'*64);size_in_bytes=100}
+            if($scenario.StartsWith('reader')){
+                $env:PROBE_MODE='read';$env:ACTUAL_REF='refs/heads/main';$env:SAVE_OUTCOME='skipped';$env:CACHE_HIT='';$env:MATCHED_KEY=''
+            }else{[IO.File]::WriteAllText($path,'Synthetic branch-scoped cache capability; no product inputs.')}
+            switch($scenario){
+                'save-skipped' {$env:SAVE_OUTCOME='skipped'}
+                'restore-failed' {$env:RESTORE_OUTCOME='failure'}
+                'foreign-scope' {$entry.ref='refs/heads/main'}
+                'bad-bytes' {[IO.File]::WriteAllText($path,'altered')}
+                'reader-hit' {$env:CACHE_HIT='true';$env:MATCHED_KEY=$env:PROBE_KEY}
+                'reader-file' {[IO.File]::WriteAllText($path,'leaked')}
+            }
+            $catalogJson=@{actions_caches=@($entry)}|ConvertTo-Json -Depth 5
+            $passed=& {
+                param($Observer,$Catalog)
+                function gh {$global:LASTEXITCODE=0;return $Catalog}
+                try{& $Observer;return $true}catch{return $false}
+            } $body $catalogJson
+            Assert-Equal ($scenario -in @('writer','reader')) $passed
+            $report=Get-Content (Join-Path $folder 'capability.json') -Raw|ConvertFrom-Json
+            Assert-Equal $passed $report.confirmed
+            Assert-Equal 0 $report.nativeExecutions
+            Assert-True (-not $report.suppliesNativeVerdict)
+            Assert-Equal $env:SAVE_OUTCOME $report.saveOutcome
+        }
+    }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}}
+}
+
 . (Join-Path $PSScriptRoot 'ExecutionBinding.Cases.ps1')
 
 Invoke-Case 'Read-only cache syntax admits scoped capabilities and refuses write, dynamic and misplaced authority' {

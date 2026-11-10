@@ -1,0 +1,117 @@
+name: Integration branch cache capability
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        options: [write, read]
+        required: true
+      isolation_ref:
+        type: string
+        required: true
+      expected_commit:
+        type: string
+        required: true
+      cache_key:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  scope-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PROBE_MODE: ${{ inputs.mode }}
+      ISOLATION_REF: ${{ inputs.isolation_ref }}
+      EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+      PROBE_KEY: ${{ inputs.cache_key }}
+      ACTUAL_REF: ${{ github.ref }}
+      ACTUAL_COMMIT: ${{ github.sha }}
+    steps:
+      - name: Validate the exact owned branch and immutable controller
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if($env:ISOLATION_REF -cnotmatch '^refs/heads/ci-integration-probe/([a-f0-9]{32})$'){throw 'Invalid isolated probe branch.'}
+          $suffix=$Matches[1]
+          if($env:PROBE_KEY -cne ('integration-branch-'+$suffix)){throw 'Cache key must belong to this exact isolated branch.'}
+          if($env:EXPECTED_COMMIT -cnotmatch '^[a-f0-9]{40}$' -or $env:ACTUAL_COMMIT -cne $env:EXPECTED_COMMIT){throw 'Controller commit differs from the frozen trusted commit.'}
+          if(($env:PROBE_MODE -ceq 'write' -and $env:ACTUAL_REF -ceq $env:ISOLATION_REF) -or
+             ($env:PROBE_MODE -ceq 'read' -and $env:ACTUAL_REF -ceq 'refs/heads/main')){return}
+          throw 'Only the isolated branch may write; the independent reader must run on main.'
+      - name: Prepare synthetic bytes only
+        if: inputs.mode == 'write'
+        shell: pwsh
+        run: |
+          $root=Join-Path $env:RUNNER_TEMP 'integration-branch-capability'
+          [void][IO.Directory]::CreateDirectory($root)
+          [IO.File]::WriteAllText((Join-Path $root 'synthetic.txt'),'Synthetic branch-scoped cache capability; no product inputs.')
+      - name: Attempt a save while forging the local default-branch ref
+        id: save
+        if: inputs.mode == 'write'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        env:
+          GITHUB_REF: refs/heads/main
+          ACTIONS_CACHE_MODE: write
+        with:
+          path: ${{ runner.temp }}/integration-branch-capability/synthetic.txt
+          key: ${{ inputs.cache_key }}
+      - name: Remove the owned synthetic source before positive restore
+        if: inputs.mode == 'write'
+        shell: pwsh
+        run: Remove-Item -LiteralPath (Join-Path $env:RUNNER_TEMP 'integration-branch-capability/synthetic.txt')
+      - name: Restore the same exact synthetic key and path
+        id: restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/integration-branch-capability/synthetic.txt
+          key: ${{ inputs.cache_key }}
+      - name: Independently observe repository cache scope and actual restore
+        if: always()
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESTORE_OUTCOME: ${{ steps.restore.outcome }}
+          SAVE_OUTCOME: ${{ steps.save.outcome }}
+          CACHE_HIT: ${{ steps.restore.outputs.cache-hit }}
+          MATCHED_KEY: ${{ steps.restore.outputs.cache-matched-key }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=Join-Path $env:RUNNER_TEMP 'integration-branch-capability'
+          [void][IO.Directory]::CreateDirectory($root)
+          $report=[ordered]@{schemaVersion=1;role='IntegrationBranchCacheCapability';repository=$env:GITHUB_REPOSITORY;
+            runId=$env:GITHUB_RUN_ID;attempt=$env:GITHUB_RUN_ATTEMPT;sourceCommit=$env:ACTUAL_COMMIT;
+            actualRef=$env:ACTUAL_REF;isolationRef=$env:ISOLATION_REF;key=$env:PROBE_KEY;mode=$env:PROBE_MODE;
+            saveOutcome=$env:SAVE_OUTCOME;restoreOutcome=$env:RESTORE_OUTCOME;cacheHit=$env:CACHE_HIT;matchedKey=$env:MATCHED_KEY;
+            entries=@();nativeExecutions=0;suppliesNativeVerdict=$false;confirmed=$false}
+          $reportPath=Join-Path $root 'capability.json'
+          [IO.File]::WriteAllText($reportPath,($report|ConvertTo-Json -Depth 6))
+          if($env:PROBE_KEY -cnotmatch '^integration-branch-[a-f0-9]{32}$'){throw 'Invalid key; do not query arbitrary cache data.'}
+          $raw=& gh api ('repos/'+$env:GITHUB_REPOSITORY+'/actions/caches?key='+$env:PROBE_KEY+'&per_page=100')
+          if($LASTEXITCODE){throw 'Cannot independently query cache scope.'}
+          $catalog=($raw -join "`n")|ConvertFrom-Json
+          $entries=@($catalog.actions_caches|Where-Object {$_.key -ceq $env:PROBE_KEY})
+          $report.entries=@($entries|Select-Object id,key,ref,version,size_in_bytes)
+          $path=Join-Path $root 'synthetic.txt'
+          $scopeOkay=$entries.Count -eq 1 -and $entries[0].ref -ceq $env:ISOLATION_REF
+          $contextOkay=$env:ACTUAL_COMMIT -ceq $env:EXPECTED_COMMIT -and $env:RESTORE_OUTCOME -ceq 'success'
+          $positive=$env:PROBE_MODE -ceq 'write' -and $env:ACTUAL_REF -ceq $env:ISOLATION_REF -and
+            $env:SAVE_OUTCOME -ceq 'success' -and
+            $env:CACHE_HIT -ceq 'true' -and $env:MATCHED_KEY -ceq $env:PROBE_KEY -and
+            (Test-Path -LiteralPath $path) -and
+            [IO.File]::ReadAllText($path) -ceq 'Synthetic branch-scoped cache capability; no product inputs.'
+          $negative=$env:PROBE_MODE -ceq 'read' -and $env:ACTUAL_REF -ceq 'refs/heads/main' -and
+            $env:CACHE_HIT -cne 'true' -and -not $env:MATCHED_KEY -and -not(Test-Path -LiteralPath $path)
+          $report.confirmed=$scopeOkay -and $contextOkay -and ($positive -or $negative)
+          [IO.File]::WriteAllText($reportPath,($report|ConvertTo-Json -Depth 6))
+          if(-not $report.confirmed){throw 'Branch cache isolation is unconfirmed; no candidate authority follows.'}
+      - name: Retain original scope observations
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: integration-branch-capability-${{ inputs.mode }}
+          path: ${{ runner.temp }}/integration-branch-capability/capability.json
+          if-no-files-found: error
+          retention-days: 30

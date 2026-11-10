@@ -87,3 +87,10 @@ Frozen merge-queue inputs can be inspected with `Tools/Get-MergeGroupInputs.ps1 
 Independent current-main/queue-ref APIs and fetched Git objects must agree before and after acquisition.
 This input-only command grants no native test verdict, PR membership, merge authority or result adoption;
 see [the candidate contract](Specs/Integration_Candidates.md).
+
+The manual integration-branch-capability workflow tests a synthetic cache-scope fallback:
+create one unique ci-integration-probe/<32 lowercase hex> branch at the reviewed main commit,
+dispatch mode=write there, then mode=read on the same frozen main commit. Use the exact
+isolation_ref, expected_commit and matching integration-branch-<suffix> cache_key in both.
+Authenticate both original reports and actual run/ref/attempt/controller identities before
+claiming the pair. No candidate code executes and no validation obligation is delegated.
