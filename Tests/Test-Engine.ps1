@@ -2207,6 +2207,24 @@ Invoke-Case 'Public SDK import binds the held authenticated archive and refuses 
     }
 }
 
+Invoke-Case 'Read-only cache syntax admits scoped capabilities and refuses write, dynamic and misplaced authority' {
+    $lf=[string][char]10
+    $valid=@('cache-mode: read','jobs:','  native:','    cache-mode: none','    steps:','      - run: |','          cache-mode: write') -join $lf
+    Assert-True (Test-CiWorkflowCacheModes $valid)
+    foreach($invalid in @(
+        'cache-mode: write','cache-mode: write-only','cache-mode: Read','cache-mode: ${{ inputs.mode }}',
+        'jobs: { native: { cache-mode: read } }',
+        (@('jobs:','  native:','    steps:','      cache-mode: read') -join $lf),
+        (@('permissions:','  child:','    cache-mode: read') -join $lf),
+        (@('cache-mode: read','cache-mode: none') -join $lf),
+        (@('jobs:','  native:','    cache-mode: read','    cache-mode: none') -join $lf)
+    )){Assert-Refused {Test-CiWorkflowCacheModes $invalid}}
+    $probe=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/integration-capabilities.yml'))
+    Assert-True (Test-CiWorkflowCacheModes $probe)
+    Assert-True ($probe -match 'nativeExecutions=0;suppliesNativeVerdict=\$false;requiresSaveLogReview=\$true')
+    Assert-True ($probe -notmatch '(?m)^\s+(contents|actions|statuses|checks): write')
+}
+
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count
 $summary = [ordered]@{ schemaVersion = 1; passed = $failed -eq 0; executed = $script:rows.Count; failed = $failed; cases = $script:rows.ToArray() }
 $resultPath = Join-Path $runRoot 'results.json'

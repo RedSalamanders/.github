@@ -252,6 +252,44 @@ function Test-CiRegressionReceipt {
 }
 
 
+function Test-CiWorkflowCacheModes {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Text)
+    # A deliberately narrow addition to the older pinned YAML linter: only
+    # literal read/none in block mappings are admitted. No write authority.
+    $lines=$Text -split [string][char]10
+    $scalarIndent=-1
+    $seen=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    for($index=0;$index -lt $lines.Count;$index++){
+        $line=$lines[$index].TrimEnd()
+        if(-not $line.Trim() -or $line.TrimStart().StartsWith('#')){continue}
+        $indent=$line.Length-$line.TrimStart().Length
+        if($scalarIndent -ge 0){if($indent -gt $scalarIndent){continue};$scalarIndent=-1}
+        if($line -match ':\s*[|>][-+]?\s*(?:#.*)?$'){$scalarIndent=$indent;continue}
+        if($line -notmatch '(?:^|[\s,{])[''"]?cache-mode[''"]?\s*:'){continue}
+        if($line -cnotmatch '^(?<space> *)cache-mode:\s*(?<value>read|none)\s*(?:#.*)?$'){throw 'Workflow cache-mode supports only literal read or none block keys.'}
+        $owner='workflow'
+        if($indent -ne 0){
+            if($indent -ne 4){throw 'Workflow cache-mode belongs only to the workflow or a job.'}
+            $job='';$jobs=$false
+            for($before=$index-1;$before -ge 0;$before--){
+                $parent=$lines[$before].TrimEnd()
+                if(-not $parent.Trim() -or $parent.TrimStart().StartsWith('#')){continue}
+                $width=$parent.Length-$parent.TrimStart().Length
+                if($width -eq 2 -and -not $job){
+                    if($parent -notmatch '^  (?<name>[A-Za-z_][A-Za-z0-9_-]*):\s*(?:#.*)?$'){throw 'Cache mode requires a block job mapping.'}
+                    $job=$Matches.name
+                }
+                if($width -eq 0){$jobs=$parent.Trim() -ceq 'jobs:';break}
+            }
+            if(-not $jobs -or -not $job){throw 'Workflow cache-mode is outside a job mapping.'}
+            $owner='job/'+$job
+        }
+        if(-not $seen.Add($owner)){throw 'Duplicate workflow cache-mode key.'}
+    }
+    return $true
+}
+
 function Test-CiWorkflowQueues {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Text)
@@ -285,4 +323,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues
+Export-ModuleMember -Function Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes

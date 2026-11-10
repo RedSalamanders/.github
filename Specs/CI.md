@@ -36,6 +36,13 @@ tree through independent API/Git checks, with a separate strict role for current
 These data-only roles do not enable native PR execution or replace
 any local/main obligation. Required candidate execution, enforcement and trusted adoption remain undeployed.
 
+The manual integration cache capability diagnostic remains compiler-free. Its unique
+synthetic cache-save attempt and retained server-mode/catalog/log evidence do not
+supply candidate execution, merge enforcement or delegated coverage. The workflow
+linter separately validates the supported literal read/none cache-mode subset before
+suppressing only the older linter's exact unknown-key diagnostics; write access is not
+introduced by that compatibility path. See the integration candidate contract.
+
 The explicit DxUi-main dependency SDK producer is a separate input-only role governed by
 [SDK_Cache.md](SDK_Cache.md#explicit-pinned-native-sdk-producer). It uses reviewed pinned source and
 tooling snapshots on native selected architectures, retains every SDK gate and has read-only tokens.

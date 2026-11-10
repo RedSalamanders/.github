@@ -8,6 +8,8 @@ Workflow syntax diagnostics; nonzero on an invalid workflow.
 .NOTES
 Requires Windows x64/PowerShell 7.4 and HTTPS for an uncached download. No compiler or native build.
 Rejects unsafe/reparse output paths and verifies both archive and executable digests.
+Validates literal read/none cache modes and concurrency queues independently before
+the pinned older linter's narrowly scoped compatibility exceptions.
 .EXAMPLE
 ./Tools/Test-Workflows.ps1 -Root ../RedMonitor
 #>
@@ -36,12 +38,18 @@ if(-not(Test-Path -LiteralPath $executable) -or (Get-FileHash -LiteralPath $exec
 }
 $files=@(Get-ChildItem -LiteralPath (Join-Path $Root '.github/workflows') -Filter '*.yml' -File|ForEach-Object FullName)
 if(-not $files.Count){throw 'No workflow files found.'}
-foreach($file in $files){$null=Test-CiWorkflowQueues ([IO.File]::ReadAllText($file))}
+foreach($file in $files){
+    $text=[IO.File]::ReadAllText($file)
+    $null=Test-CiWorkflowQueues $text
+    $null=Test-CiWorkflowCacheModes $text
+}
 # The preview label is a real hosted native ARM64 label not yet in actionlint's static catalog.
 $config=Join-Path $PSScriptRoot '../.github/actionlint.yaml'
 # v1.7.12 predates GitHub's queue:max syntax. Validate that field ourselves against
-# the official concurrency contract; suppress only the obsolete unknown-key diagnostic.
+# the official concurrency contract. Cache-mode read/none is separately validated
+# above; suppress only these exact obsolete unknown-key diagnostics.
 $null=Invoke-CiProcess -FilePath $executable -Arguments (@('-config-file',[IO.Path]::GetFullPath($config),
-    '-ignore','unexpected key "queue" for "concurrency" section')+$files) -WorkingDirectory $Root -TimeoutSeconds 60
+    '-ignore','unexpected key "queue" for "concurrency" section',
+    '-ignore','unexpected key "cache-mode" for "(workflow|job)" section')+$files) -WorkingDirectory $Root -TimeoutSeconds 60
 Write-Host "Validated syntax of $($files.Count) workflow definitions."
 

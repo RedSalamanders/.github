@@ -60,6 +60,25 @@ is distinct from per-PR feedback; required checks must also run on that event be
 
 ## Required continuation before changing obligations
 
+The manual shared `integration-capabilities.yml` is a compiler-free diagnostic for the
+server-issued read-only cache mode. It saves only a unique synthetic fixture, deliberately
+forges the local mode environment, checks the repository cache catalog independently,
+and retains the original save-step log/report. A reported read mode and missing entry
+alone do not distinguish permission denial from a service/network failure: inspect the
+raw save-step result before accepting the boundary. It creates no native or merge verdict.
+The pinned older workflow linter admits only literal block-mapping `cache-mode: read`
+or `none` at workflow/job scope through the shared validator; write, dynamic, inline,
+duplicate and misplaced forms refuse. Only its two exact obsolete unknown-key messages
+are suppressed; ordinary syntax checks remain active.
+
+GitHub documents [token-enforced cache modes](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching#controlling-cache-access-with-cache-mode).
+Candidate execution must verify this capability before any default-branch dispatch
+executes candidate code. Omitting cache-save steps alone does not establish isolation.
+Read-only execution tokens and a separately privileged trusted reporter remain required.
+GitHub also documents that [manual workflow-job checks do not satisfy PR-required checks](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks#checks-from-some-workflow-jobs-are-not-evaluated).
+The deployed reporter and branch/ruleset enforcement therefore need actual positive and
+stale-base/failed/missing/cancelled negative acceptance before relocating local coverage.
+
 This foundation does not admit native PR work. A future deployment must define one authoritative event
 path, reviewed coverage/version inputs, a bounded capacity policy, stale-base enforcement and authenticated
 workflow/result provenance. PR code must retain a read-only PR-scoped execution/cache trust domain; checking
