@@ -149,6 +149,24 @@ and run its existing required checks. A different local compiler is a distinct i
 
 ## Hosted main consumer preparation
 
+Application SDK wrappers import `Tools/MSBuild/Ci.SdkConsumer.targets` only for
+actual SDK-linking projects and set `CiSdkRoot`, `CiSdkProjectRoot` and
+`CiSdkLeasePath`. This canonical target requires a live owner before preparation
+and compilation, refuses mixed source/SDK roots, and checks the effective metadata
+of every translation unit: Release `/MD`, latest language mode, enabled STL
+annotations, default iterator layout, packing, wchar_t and calling convention.
+The actual SDK import root must match the verified reader payload; omitting the
+guard's root while retaining SDK imports also refuses. Application build/package
+entrypoints call `Open-CiApplicationSdkInput`, which binds the actual source/API/
+target lock and exact clean pinned controller before opening the shared reader.
+Opaque compiler options cannot override those ABI properties. SDK archive imports
+retain their independent exact compiler/architecture checks.
+
+The explicit `Tools/Test-SdkConsumerPolicy.ps1` executes the real targets using an
+already verified held reader, retaining compatible/incompatible MSBuild controls
+and a closed-witness negative control beneath the application `.build`. It does
+not compile a product, run in compiler-free PR checks, or grant runtime acceptance.
+
 `Ci.SdkPreparation.psm1` prepares an explicit descriptor only for admitted matching-native Windows hosted
 main ReleaseTestBuild/Production roles. Local, PR/compiler-free, other-profile and emulated execution refuse
 before network or filesystem side effects. The exact source/API must have an explicit run/attempt in

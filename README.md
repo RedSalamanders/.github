@@ -22,6 +22,10 @@ bytes. It retains original manifests and diagnostics. Consumer adoption and prod
 `Ci.SdkPreparation.psm1` supplies admitted main Release adapters with a lock-bound descriptor after canonical
 bootstrap and independent actual-key acquisition. Only explicit entries in `Policy/sdk-distribution.json` are
 eligible. Missing distribution or a verified compiler/environment mismatch retains source; corrupted data fails.
+
+SDK-linking project wrappers share `Tools/MSBuild/Ci.SdkConsumer.targets` for live-reader and per-file ABI
+checks. Explicit `Tools/Test-SdkConsumerPolicy.ps1` runs actual MSBuild admission controls with a held verified
+SDK, without product compilation or a native runtime verdict. See the [SDK contract](Specs/SDK_Cache.md).
 Local/manual qualification keeps the existing source recipe. Create-only expected-key and outcome records under .build/evidence/sdk-input-preparation accompany native artifacts. Hosted consumer acceptance is tracked separately.
 
 Organization-owned implementation plans are indexed in [Specs/Plans/WIP](Specs/Plans/WIP/README.md). Completed plans move to [Specs/Plans/Done](Specs/Plans/Done/README.md) under the [plan lifecycle rule](AGENTS.md#plan-lifecycle), after implementation, validation and normative documentation closeout.

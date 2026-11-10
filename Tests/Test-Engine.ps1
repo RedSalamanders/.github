@@ -1337,6 +1337,42 @@ Invoke-Case 'SDK compilation checks the actual live reader handle across process
     $stale=Invoke-CiProcess (Get-Process -Id $PID).Path $arguments $root -TimeoutSeconds 30 -AllowFailure
     Assert-True ($stale.exitCode -ne 0)
 }
+
+Invoke-Case 'Explicit SDK ABI controls refuse compiler-free invocation before creating fixtures' {
+    $fixture=New-Fixture 'sdk-abi-pr-refusal'
+    $command=Join-Path $engineRoot 'Tools/Test-SdkConsumerPolicy.ps1'
+    $args=@('-NoProfile','-NonInteractive','-File',$command,'-ProjectRoot',$fixture,'-SdkRoot',(Join-Path $fixture 'absent'),
+        '-LeasePath',(Join-Path $fixture 'absent.json'),'-Platform','x64','-MSBuildPath',(Join-Path $fixture 'absent.exe'))
+    $saved=[Environment]::GetEnvironmentVariable('CI_NATIVE_BUILDS_DISABLED','Process')
+    try{
+        $env:CI_NATIVE_BUILDS_DISABLED='true'
+        $actual=Invoke-CiProcess (Get-Process -Id $PID).Path $args $fixture -TimeoutSeconds 30 -AllowFailure
+        Assert-True ($actual.exitCode -ne 0 -and ($actual.stdout+$actual.stderr).Contains('require explicit native-tooling execution'))
+        Assert-True (-not(Test-Path (Join-Path $fixture '.build')))
+    }finally{[Environment]::SetEnvironmentVariable('CI_NATIVE_BUILDS_DISABLED',$saved,'Process')}
+}
+
+Invoke-Case 'Application SDK binding verifies the actual lock and clean pinned controller before invoking any producer tooling' {
+    $consumer=Get-Module Ci.SdkConsumer
+    $controller=New-Fixture 'sdk-application-controller'
+    $fixture=New-Fixture 'sdk-application-lock'
+    $project=Read-CiProject $fixture;$project.engine.ref=Resolve-CiCommit $controller HEAD
+    Write-FixtureFile $fixture '.ci/project.json' ($project|ConvertTo-Json -Depth 8)
+    $lock=@{repository='https://github.com/RedSalamanders/DxUi';commit=('a'*40);apiRevision=4;targets=@('DxUi')}
+    Write-FixtureFile $fixture 'Dependencies/DxUi.lock.json' ($lock|ConvertTo-Json)
+    $actual=& $consumer {param($r,$c) Read-CiApplicationSdkLock $r $c} $fixture $controller
+    Assert-Equal $lock.commit $actual.commit
+    foreach($name in @('repository','commit','apiRevision','targets')){
+        $bad=$lock.Clone();$bad[$name]=switch($name){repository{'https://example.invalid/DxUi'};commit{'main'};apiRevision{'4'};targets{@('DxUi','Other')}}
+        Write-FixtureFile $fixture 'Dependencies/DxUi.lock.json' ($bad|ConvertTo-Json)
+        Assert-Refused {& $consumer {param($r,$c) Read-CiApplicationSdkLock $r $c} $fixture $controller}
+    }
+    Write-FixtureFile $fixture 'Dependencies/DxUi.lock.json' ($lock|ConvertTo-Json)
+    Write-FixtureFile $controller 'src/main.cpp' 'changed controller'
+    Assert-Refused {& $consumer {param($r,$c) Read-CiApplicationSdkLock $r $c} $fixture $controller}
+    $null=Save-Fixture $controller 'Controller changed'
+    Assert-Refused {& $consumer {param($r,$c) Read-CiApplicationSdkLock $r $c} $fixture $controller}
+}
 Invoke-Case 'Local SDK descriptors are independent, strictly typed and cannot change the application lock or profile' {
     $consumer=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkConsumer.psm1') -PassThru
     $root=New-Fixture 'sdk-local-descriptor'
