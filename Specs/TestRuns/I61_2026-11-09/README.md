@@ -589,3 +589,35 @@ Z:/RedSalamander.Perf/unified-ci/engine-20261110T175507836Z-a0b90181fc3544ceb2b5
 and all eleven workflow syntax checks. A preceding 89/90 result is retained: the new
 uppercase-value control exposed a case-insensitive comparison, corrected to ordinal
 literal matching. No native tests were run by these controls.
+
+### Qualified SDK2 activation evidence
+
+All three corrected producer attempts passed both native architectures: f2 42866937316,
+4cdf 42866944166 and 21fa 42866951701, through caller blob
+08d6806d6ef3db8be937042d6f6a1d57a2e1c6df and controller
+0ab35be5d746b8a23cad066f64fcd0062678d06d. The original three failed campaigns remain
+failed; they are not admitted. SDK2_AuthenticatedInputs_2026-11-10.json records six
+actual authenticated imports using the public transport entrypoint, original
+server archive digests, native-job/attempt identity, complete extraction and original
+entry/reference/receipt bindings. Verification ran under the existing marked sandbox:
+Z:/RedSalamander.Perf/unified-ci/sdk2-live-inputs-20261110T184434028Z-297ef742bec24533a881ac8389b1f0cc/.
+The live verification executed no native consumer and used existing local authentication;
+individual workflow-token access and native client SDK hits remain required.
+
+Qualified transport/distribution activation selects exactly those attempts and pins.
+Legacy transport policy and readers are unchanged. Disabled-before-API/output behavior
+is still tested using copied actual modules in an isolated child and an owned disabled
+policy. Initial activation controls retained two failed fixture assertions: old expected
+distribution IDs and a missing explicit producer-module import in the isolated child.
+The reviewed IDs and child imports were corrected without relaxing refusal behavior.
+The resulting 94 engine cases and eleven workflow syntax checks pass.
+
+RedSalamander's clean SDK build exposed a runner handoff gap: post-tooling re-attestation
+selected Source. Its native runtime result therefore does not qualify SDK runtime.
+The run 20261110T175155Z-95452-681785a0972c47bf8d9b5d821c6aa3bf also retains a
+strict-mode fixture failure (missing sdkInput in an extracted Source capture). The
+fixture is corrected, and the original failed run remains failed. A new isolated fix
+preserves the independently reopened SDK descriptor before suspension and compares the
+restored recipe/key/manifest/descriptor hash before native execution. Its five helper
+and two actual runner-flow controls pass; complete SDK runtime qualification is pending.
+No foreground suite ran and none is authorized for the remainder of this session.

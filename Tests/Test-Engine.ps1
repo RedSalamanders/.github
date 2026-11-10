@@ -1805,9 +1805,10 @@ Invoke-Case 'SDK main preparation has explicit distribution and refuses local or
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkPreparation.psm1')
     $preparation=Get-Module Ci.SdkPreparation
     $known=& $preparation {Get-CiDistributedSdkRequest f2e328a0a26a18ca66bf4b2aea77bf010c9515e1 4}
-    Assert-Equal '42695804476' $known.runId
-    Assert-Equal '42775919520' (& $preparation {Get-CiDistributedSdkRequest 4cdf1ce52c7785446698e346b8aec058ed6a9283 4}).runId
-    Assert-Equal '42780998812' (& $preparation {Get-CiDistributedSdkRequest 21fae0dc66000b04504ba7862169533ac2943be8 5}).runId
+    Assert-Equal '42866937316' $known.runId
+    Assert-Equal QualifiedAbiV2 $known.contract
+    Assert-Equal '42866944166' (& $preparation {Get-CiDistributedSdkRequest 4cdf1ce52c7785446698e346b8aec058ed6a9283 4}).runId
+    Assert-Equal '42866951701' (& $preparation {Get-CiDistributedSdkRequest 21fae0dc66000b04504ba7862169533ac2943be8 5}).runId
     Assert-True ($null -eq (& $preparation {Get-CiDistributedSdkRequest 21fae0dc66000b04504ba7862169533ac2943be8 4}))
     $saved=[Environment]::GetEnvironmentVariable('CI_NATIVE_BUILDS_DISABLED','Process')
     try{
@@ -1954,13 +1955,33 @@ Invoke-Case 'Portable SDK ABI evaluation refuses compiler overrides and compiler
 }
 
 Invoke-Case 'Qualified SDK transport stays disabled before API calls and filesystem side effects' {
-    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkQualifiedTransport.psm1')
     $fixture=New-Fixture 'qualified-sdk-disabled'
-    $policy=Read-CiSdkProducerPolicy;$source=$policy.sources[0]
-    $message=''
-    try{Import-CiQualifiedHostedSdkArtifact -RepositoryRoot $fixture -StoreRoot (Join-Path $fixture '.build/store') -DownloadRoot (Join-Path $fixture '.build/downloads') `
-        -SourceCommit $source.commit -ApiRevision $source.apiRevision -Platform x64 -RunId 123 -Attempt 1|Out-Null}catch{$message=$_.Exception.Message}
-    Assert-Equal 'Qualified SDK transport is not enabled before its caller and engine are reviewed.' $message
+    # Keep the disabled-policy control after deployment enables the reviewed path.
+    # Run actual copied module bytes in a child; no parent module cache is replaced.
+    $controller=Join-Path $fixture 'controller'
+    [void][IO.Directory]::CreateDirectory((Join-Path $controller 'Tools'))
+    foreach($directory in @('Policy','Schemas')){Copy-Item -LiteralPath (Join-Path $engineRoot $directory) -Destination (Join-Path $controller $directory) -Recurse}
+    Copy-Item -LiteralPath (Join-Path $engineRoot 'Tools/Modules') -Destination (Join-Path $controller 'Tools/Modules') -Recurse
+    $policyPath=Join-Path $controller 'Policy/sdk-qualified-transport.json'
+    $policy=Get-Content $policyPath -Raw|ConvertFrom-Json
+    $policy.enabled=$false
+    [IO.File]::WriteAllText($policyPath,($policy|ConvertTo-Json))
+    $script=Join-Path $fixture 'disabled-child.ps1'
+    Write-FixtureFile $fixture 'disabled-child.ps1' @'
+param($Fixture,$Controller)
+$ErrorActionPreference='Stop'
+Import-Module (Join-Path $Controller 'Tools/Modules/Ci.SdkQualifiedTransport.psm1')
+Import-Module (Join-Path $Controller 'Tools/Modules/Ci.SdkProducer.psm1')
+$transport=Import-Module (Join-Path $Controller 'Tools/Modules/Ci.SdkTransport.psm1') -PassThru
+& $transport {function script:Invoke-CiApi {throw 'Unexpected API call before disabled-policy refusal'}}
+$producer=Read-CiSdkProducerPolicy;$source=$producer.sources[0]
+$message=''
+try{Import-CiQualifiedHostedSdkArtifact -RepositoryRoot $Fixture -StoreRoot (Join-Path $Fixture '.build/store') -DownloadRoot (Join-Path $Fixture '.build/downloads') -SourceCommit $source.commit -ApiRevision $source.apiRevision -Platform x64 -RunId 123 -Attempt 1|Out-Null}catch{$message=$_.Exception.Message}
+if($message -cne 'Qualified SDK transport is not enabled before its caller and engine are reviewed.'){throw "Unexpected disabled-policy result: $message"}
+if(Test-Path (Join-Path $Fixture '.build')){throw 'Disabled policy created SDK output.'}
+'@
+    $result=Invoke-CiProcess -FilePath (Get-Process -Id $PID).Path -Arguments @('-NoProfile','-NonInteractive','-File',$script,'-Fixture',$fixture,'-Controller',$controller) -WorkingDirectory $fixture -AllowFailure
+    Assert-Equal 0 $result.exitCode
     Assert-True (-not(Test-Path -LiteralPath (Join-Path $fixture '.build')))
 }
 
