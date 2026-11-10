@@ -367,3 +367,21 @@ and native runtime on both architectures. Root #211 remains under Entire review;
 native test failures and unallowed skipped baseline audits, all retained. Restored baseline audits pass 32/0/0;
 the native failures remain separate unresolved defects. Prism #13 adds granular rendering diagnostics and
 preserves primary failure causes; main 42781905176 is running, without resolving its earlier ARM64 timeout yet.
+Shared #32 (3d7e5a19ff3948c56577db7eb449cdb4fbc5294d) integrated all three unchanged pinned producer attempts and
+create-only preparation reports. Shared #33 (3f1b7f00db0747386dbc4a2561ed3f00cf4a37fe, deploy code
+008fb75d3a66138976b6beceb6df0d75dbb424cc) integrated shared application-lock binding and per-file ABI guards.
+Seventy-three engine controls and thirty actual MSBuild controls passed, including imported-root mismatch,
+a bad second translation unit, mixed source, opaque flags and a closed witness; hosted Windows/Linux and winget
+controls pass. Consumer native qualification remains distinct.
+
+Monitor main 42787238382 passed both native regression branches and the global gate; production remains running.
+The completed x64 job log proves an exact SDK miss (observed key 56b96d9838d5b7ef555f06cc45e57ce286cb3cc7e061d67af43f7b14a2276e84,
+requested key 219f1a62a7007abb928e7c3435953979363610ea54dd64e58bfafa814cb75e1c), followed by source fallback.
+This is native coverage, not automatic SDK-hit acceptance. The new transport report retains both complete identities
+and changed fields in the workspace artifact so the mismatch can be repaired without loosening compatibility.
+
+The local RedXe integration also correctly missed an SDK built for another compiler-host profile. Metadata-only
+comparison on the exact f2 source showed default Release x86 compiler-host tools versus the product's explicit x64
+compiler-host tools; PreferredToolArchitecture, VCToolArchitecture, WindowsSDKToolArchitecture and effective search
+paths changed. This is a real tool-input difference. A separate x64-host SDK is being built and qualified;
+existing entries and failed attempts remain preserved. The hosted mismatch still needs its own field-level diagnosis.

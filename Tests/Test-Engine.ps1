@@ -1658,6 +1658,19 @@ Invoke-Case 'Public SDK import binds the held authenticated archive and refuses 
             $expected=if($failure -ceq 'archive'){'SDK archive changed before extraction.'}else{'Extracted SDK manifest changed after authenticated acquisition.'}
             Assert-Equal $expected $message
         }
+        & $transport {$script:transportControl.corrupt=''}
+        $other=$identity|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$other.environmentIdentity='1'*64
+        $missStore=Join-Path $fixture '.build/miss-store'
+        $miss=Import-CiHostedSdkArtifact $fixture $missStore (Join-Path $fixture '.build/downloads') $other 123 1
+        Assert-True ($null -eq $miss)
+        Assert-True (-not(Test-Path $missStore))
+        $reports=@(Get-ChildItem (Join-Path $fixture '.build/evidence/sdk-recipe-misses') -File)
+        Assert-Equal 1 $reports.Count
+        $diagnostic=Get-Content $reports[0].FullName -Raw|ConvertFrom-Json
+        Assert-Equal 'environmentIdentity' ($diagnostic.differentFields -join ',')
+        Assert-Equal ('1'*64) $diagnostic.expected.environmentIdentity
+        Assert-Equal ('0'*64) $diagnostic.observed.environmentIdentity
+        Assert-True (-not $diagnostic.suppliesDependencyBytes)
     }finally{
         & $transport {param($saved) foreach($name in $saved.Keys){Set-Item ("Function:script:"+$name) -Value $saved[$name]};Remove-Variable transportControl -Scope Script} $originals
     }

@@ -192,7 +192,16 @@ function Import-CiHostedSdkArtifact {
     $after=Resolve-CiHostedSdkArtifact -RunId $RunId -Attempt $Attempt -SourceCommit $Identity.sourceCommit -Platform $Identity.platform
     if(($after|ConvertTo-Json -Compress) -cne ($envelope|ConvertTo-Json -Compress)){throw 'SDK artifact provenance changed during transport.'}
     if(-not(Test-CiSdkTransportRecipe -Expected $Identity -Actual $remote.identity)){
+        $fields=@('toolchainIdentity','compilerProfileIdentity','dependencyIdentity','environmentIdentity'|Where-Object {$Identity[$_] -cne $remote.identity[$_]})
+        $evidence=Assert-CiContainedPath $RepositoryRoot (Join-Path $RepositoryRoot '.build/evidence/sdk-recipe-misses')
+        [void][IO.Directory]::CreateDirectory($evidence)
+        $report=Join-Path $evidence ([guid]::NewGuid().ToString('N')+'.json')
+        $record=[ordered]@{schemaVersion=1;role='ExactSdkRecipeMiss';producerRun=$RunId;attempt=$Attempt;
+            expectedKey=$key;observedKey=$remoteKey;differentFields=$fields;expected=$Identity;observed=$remote.identity;suppliesDependencyBytes=$false}
+        $stream=[IO.File]::Open($report,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::Read)
+        try{$bytes=[Text.UTF8Encoding]::new($false).GetBytes(($record|ConvertTo-Json -Depth 6));$stream.Write($bytes);$stream.Flush($true)}finally{$stream.Dispose()}
         Write-Host "Verified SDK uses another compiler/dependency/environment recipe ($remoteKey); exact requested key $key is unavailable."
+        Write-Host "Different SDK input fields: $($fields -join ', '). Retained $report"
         return $null
     }
     Initialize-CiSdkStore -RepositoryRoot $RepositoryRoot -StoreRoot $StoreRoot
