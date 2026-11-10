@@ -1550,12 +1550,27 @@ Invoke-Case 'SDK main preparation has explicit distribution and refuses local or
     $preparation=Get-Module Ci.SdkPreparation
     $known=& $preparation {Get-CiDistributedSdkRequest f2e328a0a26a18ca66bf4b2aea77bf010c9515e1 4}
     Assert-Equal '42695804476' $known.runId
-    Assert-True ($null -eq (& $preparation {Get-CiDistributedSdkRequest 4cdf1ce52c7785446698e346b8aec058ed6a9283 4}))
+    Assert-Equal '42775919520' (& $preparation {Get-CiDistributedSdkRequest 4cdf1ce52c7785446698e346b8aec058ed6a9283 4}).runId
+    Assert-Equal '42780998812' (& $preparation {Get-CiDistributedSdkRequest 21fae0dc66000b04504ba7862169533ac2943be8 5}).runId
+    Assert-True ($null -eq (& $preparation {Get-CiDistributedSdkRequest 21fae0dc66000b04504ba7862169533ac2943be8 4}))
     $saved=[Environment]::GetEnvironmentVariable('CI_NATIVE_BUILDS_DISABLED','Process')
     try{
         $env:CI_NATIVE_BUILDS_DISABLED='true'
         Assert-Refused {Initialize-CiPinnedSdkInput -Context @{} -SourceCommit f2e328a0a26a18ca66bf4b2aea77bf010c9515e1 -ApiRevision 4}
     }finally{[Environment]::SetEnvironmentVariable('CI_NATIVE_BUILDS_DISABLED',$saved,'Process')}
+}
+
+Invoke-Case 'SDK preparation diagnostics retain separate exact requests and outcomes without replacing earlier evidence' {
+    $preparation=Get-Module Ci.SdkPreparation
+    $fixture=New-Fixture 'sdk-preparation-evidence'
+    $context=@{root=$fixture;phase='ReleaseTestBuild';platform='x64'}
+    & $preparation {param($c) Write-CiSdkPreparationEvidence $c @{status='Requested';expectedIdentity=@{toolchainIdentity=('a'*64)}}} $context
+    & $preparation {param($c) Write-CiSdkPreparationEvidence $c @{status='ExactInputMiss';elapsedMs=123}} $context
+    $records=@(Get-ChildItem (Join-Path $fixture '.build/evidence/sdk-input-preparation') -File|ForEach-Object {Get-Content $_.FullName -Raw|ConvertFrom-Json})
+    Assert-Equal 2 $records.Count
+    Assert-Equal ('a'*64) @($records|Where-Object {$_.record.status -ceq 'Requested'})[0].record.expectedIdentity.toolchainIdentity
+    Assert-Equal 123 @($records|Where-Object {$_.record.status -ceq 'ExactInputMiss'})[0].record.elapsedMs
+    foreach($record in $records){Assert-Equal 'ReleaseTestBuild' $record.phase;Assert-Equal 'x64' $record.platform}
 }
 
 Invoke-Case 'Public SDK import binds the held authenticated archive and refuses post-transfer or extracted-manifest substitution' {

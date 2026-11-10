@@ -33,6 +33,20 @@ function New-CiSdkPreparationCheckout {
     return $path
 }
 
+function Write-CiSdkPreparationEvidence {
+    param([Collections.IDictionary]$Context,[Collections.IDictionary]$Record)
+    $directory=Assert-CiContainedPath $Context.root (Join-Path $Context.root '.build/evidence/sdk-input-preparation')
+    [void][IO.Directory]::CreateDirectory($directory)
+    $path=Join-Path $directory ([guid]::NewGuid().ToString('N')+'.json')
+    $document=[ordered]@{schemaVersion=1;role='DependencySdkPreparation';phase=$Context.phase;platform=$Context.platform;record=$Record}
+    $stream=[IO.File]::Open($path,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::Read)
+    try{
+        $bytes=[Text.UTF8Encoding]::new($false).GetBytes(($document|ConvertTo-Json -Depth 8))
+        $stream.Write($bytes);$stream.Flush($true)
+    }finally{$stream.Dispose()}
+    Write-Host "SDK input preparation evidence: $path"
+}
+
 function Initialize-CiPinnedSdkInput {
     [CmdletBinding()]
     param([Parameter(Mandatory)][Collections.IDictionary]$Context,
@@ -56,7 +70,10 @@ function Initialize-CiPinnedSdkInput {
         throw 'SDK preparation cannot change the actual application dependency lock.'
     }
     $request=Get-CiDistributedSdkRequest $SourceCommit $ApiRevision
-    if($null -eq $request){Write-Host 'No distributed SDK at the exact application pin; retain the governed source recipe.';return $null}
+    if($null -eq $request){
+        Write-CiSdkPreparationEvidence $Context @{status='NotDistributed';sourceCommit=$SourceCommit;apiRevision=$ApiRevision}
+        Write-Host 'No distributed SDK at the exact application pin; retain the governed source recipe.';return $null
+    }
     $timer=[Diagnostics.Stopwatch]::StartNew()
     $parent=Assert-CiContainedPath $Context.root (Join-Path $Context.root '.build/sdk-preparation')
     $workspace=Assert-CiContainedPath $parent (Join-Path $parent ([guid]::NewGuid().ToString('N')))
@@ -81,17 +98,22 @@ function Initialize-CiPinnedSdkInput {
     [void](Invoke-CiProcess -FilePath pwsh -Arguments @('-NoProfile','-NonInteractive','-File',(Join-Path $source 'vcpkg-install.ps1'),'-Platform',$Context.platform) -WorkingDirectory $source -TimeoutSeconds 1800 -Stream)
     $inputs=Import-Module (Join-Path $tooling 'Tools/SdkCacheInputs.psm1') -PassThru
     $identity=& $inputs {param($r,$p) Get-DxUiSdkCacheInputIdentity -Root $r -Platform $p} $source $Context.platform
+    Write-CiSdkPreparationEvidence $Context @{status='Requested';workspace=$workspace;producerRun=$request.runId;attempt=$request.attempt;expectedIdentity=$identity}
     # Transport demands this actual recipe, not the remote artifact's self-declared compiler inputs.
     $store=Assert-CiContainedPath $Context.root (Join-Path $Context.root '.build/sdk-input-store')
     $entry=Import-CiHostedSdkArtifact -RepositoryRoot $Context.root -StoreRoot $store -DownloadRoot (Join-Path $workspace 'downloads') -Identity $identity -RunId $request.runId -Attempt $request.attempt
     [void](New-CiProjectContext -Root $Context.root -EngineRoot $Context.engineRoot -Phase $Context.phase -Platform $Context.platform -Descriptor $batchPath)
-    if($null -eq $entry){Write-Host 'No exact compatible SDK input; retain the governed source recipe.';return $null}
+    if($null -eq $entry){
+        Write-CiSdkPreparationEvidence $Context @{status='ExactInputMiss';workspace=$workspace;producerRun=$request.runId;attempt=$request.attempt;expectedIdentity=$identity;elapsedMs=$timer.ElapsedMilliseconds}
+        Write-Host 'No exact compatible SDK input; retain the governed source recipe.';return $null
+    }
     $descriptor=[ordered]@{schemaVersion=1;sourceCommit=$SourceCommit;apiRevision=$ApiRevision;platform=$Context.platform;
         sourceRoot=$source;toolingRoot=$tooling;storageEngineRoot=$storage;storeRoot=$store;manifestSha256=$entry.ManifestSha256}
     $json=$descriptor|ConvertTo-Json -Depth 3
     if(-not(Test-Json -Json $json -SchemaFile (Join-Path $PSScriptRoot '../../Schemas/sdk-consumer-local.schema.json'))){throw 'Prepared SDK descriptor does not match the shared reader contract.'}
     $path=Join-Path $workspace 'descriptor.json';[IO.File]::WriteAllText($path,$json,[Text.UTF8Encoding]::new($false))
     [IO.File]::WriteAllText((Join-Path $workspace 'preparation.json'),([ordered]@{role='PinnedSdkInputPrepared';key=$entry.Key;elapsedMs=$timer.ElapsedMilliseconds;producerRun=$request.runId;attempt=$request.attempt}|ConvertTo-Json),[Text.UTF8Encoding]::new($false))
+    Write-CiSdkPreparationEvidence $Context @{status='Prepared';workspace=$workspace;producerRun=$request.runId;attempt=$request.attempt;key=$entry.Key;manifestSha256=$entry.ManifestSha256;elapsedMs=$timer.ElapsedMilliseconds}
     return $path
 }
 
