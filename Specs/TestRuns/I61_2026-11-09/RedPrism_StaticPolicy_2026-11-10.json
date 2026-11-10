@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "repository": "RedSalamanders/RedPrism",
+  "ruleset": 26372036,
+  "requiredCheckContexts": [
+    "checks / ci-gate",
+    "security / codeql",
+    "security / dependency-review"
+  ],
+  "integrationId": 15368,
+  "unrelatedPolicyPreserved": true,
+  "nativeGateEnabled": false,
+  "verifiedAt": "2026-11-10T19:29:27.9259548Z",
+  "initialVerificationFailure": "JSON property order differed; field-wise readback confirmed unchanged expected values"
+}
