@@ -10,7 +10,9 @@ Unknown mergeability, malformed metadata, another repository/base and stale API 
 
 The controller must be committed and clean, including non-ignored untracked files. It reads current PR and
 main identities, fetches main/head/synthetic-merge into a unique `refs/ci/candidates/<PR>/<guid>/` namespace,
-and verifies each fetched commit against the independent API snapshot. GitHub's pull merge ref is the source
+and verifies each fetched commit against the independent API snapshot. The current REST PR payload has no
+merge commit field; acquisition reads `git/ref/pull/<number>/merge` independently before and after the fetch.
+GitHub's pull merge ref is the source
 of the synthetic integration. Its actual ordered parents must be exactly current main then PR head; its
 complete tree, meaningful native input digest, adapter/engine policy and Git-count version are frozen.
 Local working/index bytes cannot replace the committed integration. Input discovery uses the existing

@@ -11,12 +11,20 @@ function Get-CiCandidatePullMetadata {
         $PullRequest.draft -isnot [bool] -or $PullRequest.draft -or $PullRequest.merged -isnot [bool] -or $PullRequest.merged -or
         $PullRequest.mergeable -isnot [bool] -or -not $PullRequest.mergeable -or
         $PullRequest.base.ref -cne 'main' -or $PullRequest.base.repo.full_name -cne $Repository){throw 'Candidate requires one open, ready, mergeable main-targeting PR; unknown mergeability refuses.'}
-    foreach($sha in @($PullRequest.base.sha,$PullRequest.head.sha,$PullRequest.merge_commit_sha)){
-        if([string]$sha -cnotmatch '^[a-f0-9]{40}$'){throw 'Candidate requires exact base/head/synthetic-merge commits.'}
+    foreach($sha in @($PullRequest.base.sha,$PullRequest.head.sha)){
+        if([string]$sha -cnotmatch '^[a-f0-9]{40}$'){throw 'Candidate requires exact base/head commits.'}
     }
     if([string]$PullRequest.head.repo.full_name -cnotmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'){throw 'Candidate head repository is missing or malformed.'}
     return [ordered]@{number=[int]$PullRequest.number;headRepository=[string]$PullRequest.head.repo.full_name;
-        head=[string]$PullRequest.head.sha;base=[string]$PullRequest.base.sha;merge=[string]$PullRequest.merge_commit_sha}
+        head=[string]$PullRequest.head.sha;base=[string]$PullRequest.base.sha}
+}
+
+function Get-CiCandidateMergeRefCommit {
+    param([object]$Reference,[int]$PullRequest)
+    # REST 2026-03-10 omits merge_commit_sha from PR payloads. Read the actual ref independently.
+    if($Reference.ref -cne "refs/pull/$PullRequest/merge" -or $Reference.object.type -cne 'commit' -or
+        [string]$Reference.object.sha -cnotmatch '^[a-f0-9]{40}$'){throw 'Candidate merge ref API identity is missing or malformed.'}
+    return [string]$Reference.object.sha
 }
 
 function New-CiIntegrationCandidate {
@@ -27,7 +35,7 @@ function New-CiIntegrationCandidate {
         [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{40}$')][string]$ControllerEngineRef)
     if($Repository -cnotmatch '^RedSalamanders/(RedSalamander|DxUi|RedXe|RedPrism|RedTilde|RedMonitor)$'){throw 'Candidate repository is outside the reviewed projects.'}
     $pr=Get-CiCandidatePullMetadata $PullRequest $Repository
-    if($pr.base -cne $CurrentMainCommit -or $pr.merge -cne $MergeCommit){throw 'Candidate API/base/merge ref moved; reacquire the exact integration.'}
+    if($pr.base -cne $CurrentMainCommit){throw 'Candidate API/base moved; reacquire the exact integration.'}
     $base=Resolve-CiCommit $Root $CurrentMainCommit
     $head=Resolve-CiCommit $Root $pr.head
     $merge=Resolve-CiCommit $Root $MergeCommit
@@ -72,6 +80,7 @@ function Get-CiIntegrationCandidate {
     $before=Invoke-CiApi "repos/$repo/pulls/$PullRequest" -Method GET
     $main=Get-CiMainHead $repo
     $metadata=Get-CiCandidatePullMetadata $before $repo
+    $mergeBefore=Get-CiCandidateMergeRefCommit (Invoke-CiApi "repos/$repo/git/ref/pull/$PullRequest/merge" -Method GET) $PullRequest
     if($metadata.number -ne $PullRequest -or $metadata.base -cne $main){throw 'PR/base API snapshots disagree; no candidate was frozen.'}
     $prefix='refs/ci/candidates/'+$PullRequest+'/'+[guid]::NewGuid().ToString('N')
     $savedPrompt=[Environment]::GetEnvironmentVariable('GIT_TERMINAL_PROMPT','Process')
@@ -83,11 +92,12 @@ function Get-CiIntegrationCandidate {
     $fetchedMain=Resolve-CiCommit $Root ($prefix+'/main')
     $fetchedHead=Resolve-CiCommit $Root ($prefix+'/head')
     $fetchedMerge=Resolve-CiCommit $Root ($prefix+'/merge')
-    if($fetchedMain -cne $main -or $fetchedHead -cne $metadata.head -or $fetchedMerge -cne $metadata.merge){throw 'Candidate refs moved during acquisition; captured refs remain for diagnosis.'}
+    if($fetchedMain -cne $main -or $fetchedHead -cne $metadata.head -or $fetchedMerge -cne $mergeBefore){throw 'Candidate refs moved during acquisition; captured refs remain for diagnosis.'}
     $candidate=New-CiIntegrationCandidate -Root $Root -Repository $repo -PullRequest $before -CurrentMainCommit $main -MergeCommit $fetchedMerge -ControllerEngineRef $controller
     $after=Invoke-CiApi "repos/$repo/pulls/$PullRequest" -Method GET
     $mainAfter=Get-CiMainHead $repo
-    Assert-CiIntegrationCandidateCurrent -Root $Root -Candidate $candidate -PullRequest $after -CurrentMainCommit $mainAfter -MergeCommit $fetchedMerge -ControllerEngineRef $controller
+    $mergeAfter=Get-CiCandidateMergeRefCommit (Invoke-CiApi "repos/$repo/git/ref/pull/$PullRequest/merge" -Method GET) $PullRequest
+    Assert-CiIntegrationCandidateCurrent -Root $Root -Candidate $candidate -PullRequest $after -CurrentMainCommit $mainAfter -MergeCommit $mergeAfter -ControllerEngineRef $controller
     return $candidate
 }
 

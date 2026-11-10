@@ -1391,7 +1391,7 @@ function New-CandidateFixture([string]$Name,[switch]$Prose){
     $head=Save-Fixture $root 'Candidate head'
     $tree=(Invoke-CiGit $root @('rev-parse',($head+'^{tree}'))).stdout.Trim()
     $merge=(Invoke-CiGit $root @('commit-tree',$tree,'-p',$base,'-p',$head,'-m','Synthetic candidate fixture')).stdout.Trim()
-    $pr=@{number=43;state='open';draft=$false;merged=$false;mergeable=$true;merge_commit_sha=$merge;
+    $pr=@{number=43;state='open';draft=$false;merged=$false;mergeable=$true;
         head=@{sha=$head;repo=@{full_name='RedSalamanders/RedMonitor'}};base=@{sha=$base;ref='main';repo=@{full_name='RedSalamanders/RedMonitor'}}}
     return @{root=$root;base=$base;head=$head;merge=$merge;tree=$tree;pr=$pr}
 }
@@ -1414,20 +1414,19 @@ Invoke-Case 'Candidate freeze uses the complete immutable synthetic merge, exact
 }
 Invoke-Case 'Candidate snapshots refuse draft, closed, conflicting, unknown, moved and malformed PR metadata' {
     $f=New-CandidateFixture 'candidate-refusals'
-    foreach($field in @('draft','merged','state','mergeable','number','base-ref','base-repository','base-sha','head-sha','merge-sha','head-repository')){
+    foreach($field in @('draft','merged','state','mergeable','number','base-ref','base-repository','base-sha','head-sha','head-repository')){
         $pr=$f.pr|ConvertTo-Json -Depth 8|ConvertFrom-Json -AsHashtable
         switch($field){
             'draft'{$pr.draft=$true};'merged'{$pr.merged=$true};'state'{$pr.state='closed'};'mergeable'{$pr.mergeable=$null};'number'{$pr.number='43'}
             'base-ref'{$pr.base.ref='feature'};'base-repository'{$pr.base.repo.full_name='RedSalamanders/DxUi'};'base-sha'{$pr.base.sha='1'*40}
-            'head-sha'{$pr.head.sha='--output=unexpected'};'merge-sha'{$pr.merge_commit_sha='2'*40};'head-repository'{$pr.head.repo.full_name='../../outside'}
+            'head-sha'{$pr.head.sha='--output=unexpected'};'head-repository'{$pr.head.repo.full_name='../../outside'}
         }
         Assert-Refused {New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)}
     }
     Assert-Refused {New-CiIntegrationCandidate -Root $f.root -Repository 'outside/project' -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)}
     $reverse=(Invoke-CiGit $f.root @('commit-tree',$f.tree,'-p',$f.head,'-p',$f.base,'-m','Reversed synthetic parents')).stdout.Trim()
-    $pr=$f.pr|ConvertTo-Json -Depth 8|ConvertFrom-Json -AsHashtable;$pr.merge_commit_sha=$reverse
+    $pr=$f.pr|ConvertTo-Json -Depth 8|ConvertFrom-Json -AsHashtable
     Assert-Refused {New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $pr -CurrentMainCommit $f.base -MergeCommit $reverse -ControllerEngineRef ('f'*40)}
-    $pr.merge_commit_sha=$f.head
     Assert-Refused {New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $pr -CurrentMainCommit $f.base -MergeCommit $f.head -ControllerEngineRef ('f'*40)}
 }
 Invoke-Case 'Candidate recheck refuses source/base movement and complete descriptor tampering, including recomputed digests' {
@@ -1440,6 +1439,16 @@ Invoke-Case 'Candidate recheck refuses source/base movement and complete descrip
             'input'{$changed.input.buildNumber++};'nativeRequired'{$changed.nativeRequired=$false};default{$changed.passed=$true}}
         $changed.Remove('identity');$changed.identity=Get-CiSha256 ($changed|ConvertTo-Json -Depth 15 -Compress)
         Assert-Refused {Assert-CiIntegrationCandidateCurrent -Root $f.root -Candidate $changed -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)}
+    }
+}
+Invoke-Case 'Current REST candidate acquisition reads the exact merge ref independently of PR payloads' {
+    $module=Get-Module Ci.Candidate
+    $valid=@{ref='refs/pull/43/merge';object=@{type='commit';sha=('b'*40)}}
+    Assert-Equal ('b'*40) (& $module {param($r) Get-CiCandidateMergeRefCommit $r 43} $valid)
+    foreach($field in @('ref','type','sha')){
+        $bad=$valid|ConvertTo-Json -Depth 3|ConvertFrom-Json -AsHashtable
+        switch($field){'ref'{$bad.ref='refs/pull/44/merge'};'type'{$bad.object.type='tag'};'sha'{$bad.object.sha='--output=unexpected'}}
+        Assert-Refused {& $module {param($r) Get-CiCandidateMergeRefCommit $r 43} $bad}
     }
 }
 Invoke-Case 'Prose-only candidate inputs create no native obligation and supply no execution or qualification verdict' {
