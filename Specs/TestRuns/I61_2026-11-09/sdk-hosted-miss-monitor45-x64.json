@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "role": "ExactSdkRecipeMiss",
+  "producerRun": "42695804476",
+  "attempt": 1,
+  "expectedKey": "219f1a62a7007abb928e7c3435953979363610ea54dd64e58bfafa814cb75e1c",
+  "observedKey": "56b96d9838d5b7ef555f06cc45e57ce286cb3cc7e061d67af43f7b14a2276e84",
+  "differentFields": [
+    "toolchainIdentity",
+    "compilerProfileIdentity",
+    "dependencyIdentity"
+  ],
+  "expected": {
+    "schemaVersion": 1,
+    "role": "DependencySdkInputs",
+    "sourceRepository": "RedSalamanders/DxUi",
+    "sourceCommit": "f2e328a0a26a18ca66bf4b2aea77bf010c9515e1",
+    "sourceBytes": "fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773",
+    "apiRevision": 4,
+    "platform": "x64",
+    "configuration": "Release",
+    "runtimeFamily": "MD",
+    "annotationPolicy": "enabled",
+    "languageStandard": "stdcpplatest",
+    "optimizationPolicy": "GL-LTCG-full",
+    "toolchainIdentity": "dc8c30a600d6514ee15c410f96c500d771bcc21e809b75163c4c43b116a63669",
+    "compilerProfileIdentity": "0bfe55e517a0b44b330e9b83e1d67af95568d7ad25e61d4ace3d4c2a843111c4",
+    "dependencyIdentity": "18790e451d39a40769b9b469318bd3a2013a5d2135f54cf469a08cf5875d06c8",
+    "integrationPolicyIdentity": "42cdb62688af3a4bc08945b84ec5a1c3ed98dc6334d5bda5ee3e0b317ce118ec",
+    "environmentIdentity": "1c24f5fd6b9168e306b4e46b2633e31ce3becd48e02fc7cae7b700ba1f669dba"
+  },
+  "observed": {
+    "schemaVersion": 1,
+    "role": "DependencySdkInputs",
+    "sourceRepository": "RedSalamanders/DxUi",
+    "sourceCommit": "f2e328a0a26a18ca66bf4b2aea77bf010c9515e1",
+    "sourceBytes": "fdcc91006d4ac75d9fb2eaddc2709358aa1354cc5aa365f634eaa6c014d0d773",
+    "apiRevision": 4,
+    "platform": "x64",
+    "configuration": "Release",
+    "runtimeFamily": "MD",
+    "annotationPolicy": "enabled",
+    "languageStandard": "stdcpplatest",
+    "optimizationPolicy": "GL-LTCG-full",
+    "toolchainIdentity": "9d8b2d07c3871eae5df9bf3a8ba1b73317d09aac7539a346f79d635ef20747d9",
+    "compilerProfileIdentity": "f622b5c18e72a4505a5069100c261849a3d639ca3a0b7f3f4aea5f254526e192",
+    "dependencyIdentity": "442c71cf3ab575df6e8f6588d91638f71b07a7052a1616ba20a07bb36a077be7",
+    "integrationPolicyIdentity": "42cdb62688af3a4bc08945b84ec5a1c3ed98dc6334d5bda5ee3e0b317ce118ec",
+    "environmentIdentity": "1c24f5fd6b9168e306b4e46b2633e31ce3becd48e02fc7cae7b700ba1f669dba"
+  },
+  "suppliesDependencyBytes": false
+}

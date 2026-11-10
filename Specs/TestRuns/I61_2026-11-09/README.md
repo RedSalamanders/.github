@@ -385,3 +385,62 @@ comparison on the exact f2 source showed default Release x86 compiler-host tools
 compiler-host tools; PreferredToolArchitecture, VCToolArchitecture, WindowsSDKToolArchitecture and effective search
 paths changed. This is a real tool-input difference. A separate x64-host SDK is being built and qualified;
 existing entries and failed attempts remain preserved. The hosted mismatch still needs its own field-level diagnosis.
+
+## Latest continuation — 2026-11-10
+
+The notes above retain their original intermediate states. The following results
+supersede those pending statuses; none closes the organization plan.
+
+- Monitor [42787238382](https://github.com/RedSalamanders/RedMonitor/actions/runs/42787238382)
+  completed successfully on both native architectures, through production/package
+  and completion. Its actual SDK request missed and source fallback passed.
+- Shared [#34](https://github.com/RedSalamanders/.github/pull/34) merged as
+  `e7d15f72e34d5250d66646ed4da78f49d3d6cd5a`, deploy controller
+  `f50b9654c0a4853151552de25ea016a22da3119d`. All 73 engine controls and
+  hosted Windows/Linux/winget checks pass; hash-only miss reports preserve both
+  identities without admitting incompatible bytes.
+- Monitor [#45](https://github.com/RedSalamanders/RedMonitor/pull/45) merged as
+  `6a503730ea2cb8e23356ad9f44877242d3f12dac`. Local SDK consumer/package
+  and complete Source PrePush passed. Main
+  [42796940303](https://github.com/RedSalamanders/RedMonitor/actions/runs/42796940303)
+  passed both native regressions and the global gate; production is pending.
+  The completed x64 workspace contains the
+  [exact recipe miss](sdk-hosted-miss-monitor45-x64.json): source/API/ABI policy
+  and environment identities match; toolchain, compiler-profile and dependency
+  identities differ. The unchanged source fallback passed. Version names alone
+  do not explain or waive these differences; hosted SDK-hit acceptance stays open.
+- Prism [42781905176](https://github.com/RedSalamanders/RedPrism/actions/runs/42781905176)
+  passed both native regressions, production/package and completion for #13.
+  The earlier 90-minute ARM64 timeout remains retained and undiagnosed; diagnostic
+  instrumentation plus a later pass does not establish its repair or a speedup.
+- Root draft [#212](https://github.com/RedSalamanders/RedSalamander/pull/212)
+  follows [#211](https://github.com/RedSalamanders/RedSalamander/pull/211),
+  whose Entire approval is still pending. The follow-up adds shared Terminal
+  failure reporting, final-acceptance diagnostics and a deterministic bounded
+  image-reservation handshake. Broad local PrePush recorded 1,538 passing native
+  cases, zero failures and 30 declared skips; all 1,243 Pester assertions passed.
+  Its overall exit 2/NOT_EVALUATED correctly preserves four pending focus-taking
+  entries. CI/security pass. Original failed attempts and the intermittent MSDrive
+  crash evidence remain retained; the later pass does not claim that crash fixed.
+- RedXe [#80](https://github.com/RedSalamanders/RedXe/pull/80), source
+  `d0a7c670396e57a623a23fc999dec2298003d16d`, passed all required checks and
+  merged as `02cc2055d0b00a5a67ceaed5eb5ccc64223d566e`. Its
+  [qualification record](https://github.com/RedSalamanders/RedXe/blob/02cc2055d0b00a5a67ceaed5eb5ccc64223d566e/Measurements/TestingAcceleration_2026-11-10/README.md)
+  owns six zero-warning/error Source builds, all 15 x64 Release/Debug/ASan runtime
+  scopes with real ASan detection, exact SDK build/runtime/production/package,
+  complete tooling, 30 actual MSBuild controls and 60 adapter combinations.
+  The cold-SDK source lookup defect was reproduced before its repair. Native ARM64
+  runtime and hosted exact-hit acceptance remain pending.
+
+The new local x64-host f2 SDK passed all native producer gates at key
+`5868120cc91a06d158d7c4ccf617517e457546b0dcc92201099ad707a231fc98`,
+manifest `8bb5b8de037adf5e4ee522bd96cfa8db9ea82629c10edae5121c205162499ee1`.
+It is a separate immutable input, not a rewritten earlier entry. The local
+source/SDK build times use different warm/cold states and roles; no controlled
+speedup or organization-wide 3x/2x acceptance is claimed.
+
+Organization discovery still returns exactly the six product/library repositories
+plus `.github`, all active with main default branches. Inspected RedMonitor and
+RedXe branch rules require the compiler-free CI/CodeQL/dependency checks and have
+strict up-to-date status disabled. No required native candidate gate, local native
+delegation or cross-run main adoption is deployed. Existing obligations remain.
