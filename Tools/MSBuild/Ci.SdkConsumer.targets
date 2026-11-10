@@ -25,6 +25,11 @@
       <_CiSdkToolProperty Include="VCToolArchitecture"><Value>$(VCToolArchitecture)</Value></_CiSdkToolProperty>
       <_CiSdkToolProperty Include="WindowsSDKToolArchitecture"><Value>$(WindowsSDKToolArchitecture)</Value></_CiSdkToolProperty>
       <_CiSdkToolProperty Include="MSBuildBinPath"><Value>$(MSBuildBinPath)</Value></_CiSdkToolProperty>
+      <!-- Pipe is forbidden in Windows paths; avoid semicolon item splitting and
+           shell interpolation. The reader checks these against parent defaults. -->
+      <_CiSdkToolProperty Include="IncludePath"><Value>$([System.String]::Copy($(IncludePath)).Replace(';','|'))</Value></_CiSdkToolProperty>
+      <_CiSdkToolProperty Include="LibraryPath"><Value>$([System.String]::Copy($(LibraryPath)).Replace(';','|'))</Value></_CiSdkToolProperty>
+      <_CiSdkToolProperty Include="ReferencePath"><Value>$([System.String]::Copy($(ReferencePath)).Replace(';','|'))</Value></_CiSdkToolProperty>
       <_CiSdkToolProperty Include="CLToolPath"><Value>$(CLToolPath)</Value></_CiSdkToolProperty>
       <_CiSdkToolProperty Include="CLToolExe"><Value>$(CLToolExe)</Value></_CiSdkToolProperty>
       <_CiSdkToolProperty Include="CLToolArchitecture"><Value>$(CLToolArchitecture)</Value></_CiSdkToolProperty>

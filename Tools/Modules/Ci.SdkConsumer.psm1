@@ -70,7 +70,6 @@ function Assert-CiSdkConsumerLease {
     if($witness.schemaVersion -eq 2){
         if($witness.contract -cne 'QualifiedAbiV2' -or $SdkContract -cne 'QualifiedAbiV2'){throw 'Qualified SDK compilation requires its actual v2 contract.'}
         $abi=Import-Module (Join-Path $PSScriptRoot 'Ci.SdkAbi.psm1') -PassThru
-        & $abi {Assert-CiSdkAbiCompilerEnvironment}
         $propertyPath=Assert-CiContainedPath (Join-Path $ProjectRoot '.build') $ToolPropertyFile
         if(-not [IO.File]::Exists($propertyPath) -or (Get-Item -LiteralPath $propertyPath).Length -gt 16KB){throw 'Qualified SDK compilation requires bounded actual tool properties.'}
         $actual=@{}
@@ -81,6 +80,9 @@ function Assert-CiSdkConsumerLease {
         }
         $expected=@{};foreach($property in $witness.toolBinding.PSObject.Properties){$expected[$property.Name]=[string]$property.Value}
         Assert-CiSdkToolBinding $expected $actual
+        & $abi {param($e,$a,$p,$s) Assert-CiSdkAbiSearchPathBinding $e $a $p $s} $expected $actual $ProjectRoot $SdkRoot
+        $searchPaths=@{};foreach($name in @('IncludePath','LibraryPath','ReferencePath')){$searchPaths[$name]=([string]$actual[$name]).Replace('|',';')}
+        & $abi {param($p) Assert-CiSdkAbiCompilerEnvironment -MSBuildSearchPaths $p} $searchPaths
     }elseif($witness.schemaVersion -ne 1 -or $SdkContract){throw 'Unsupported SDK reader contract.'}
 }
 
@@ -209,7 +211,7 @@ function Open-CiQualifiedPinnedSdkInput {
         $payload=Import-Module (Join-Path $d.toolingRoot 'Tools/SdkInputStore.psm1') -PassThru
         & $payload {param($p,$i,$e) Assert-DxUiSdkInputPayload $p $i $e} $entry.Payload $binding.Identity $cache
         $toolBinding=[ordered]@{}
-        foreach($name in @('PlatformToolset','VCToolsInstallDir','VCToolsVersion','WindowsSdkDir','WindowsTargetPlatformVersion','PreferredToolArchitecture','VCTargetsPath','VCToolArchitecture','WindowsSDKToolArchitecture')){$toolBinding[$name]=[string]$state.Properties[$name]}
+        foreach($name in @('PlatformToolset','VCToolsInstallDir','VCToolsVersion','WindowsSdkDir','WindowsTargetPlatformVersion','PreferredToolArchitecture','VCTargetsPath','VCToolArchitecture','WindowsSDKToolArchitecture','IncludePath','LibraryPath','ReferencePath')){$toolBinding[$name]=[string]$state.Properties[$name]}
         $toolBinding.MSBuildBinPath=[IO.Path]::GetDirectoryName($MSBuildPath)
         foreach($name in @('CL','Link','Lib','FXC')){$toolBinding[$name]=[string]$state.SelectedTools[$name]}
         $witness=New-CiSdkConsumerWitness $ProjectRoot $entry.Payload $d.platform $toolBinding
