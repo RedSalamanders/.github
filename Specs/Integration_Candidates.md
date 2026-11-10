@@ -4,6 +4,32 @@ Status: input acquisition and the manual native shadow workflow are implemented.
 authenticated result verification, a required merge gate, delegation and main-result adoption remain open.
 Current compiler-free PR and native main obligations remain.
 
+## Independent producer metadata acquisition
+
+`Tools/Get-CandidateRunEnvelope.ps1` reacquires the current canonical candidate and
+requires the independently supplied candidate identity, original isolated nonce, run
+and attempt. It authenticates both the original attempt and the current run through
+separate GitHub GET requests. Both must retain the exact successful manual event,
+trusted-main commit, isolated branch, repository/head repository, caller and reviewed
+reusable engine. Caller bytes agree with the independently fetched Git object.
+
+The complete job catalog must contain the successful freeze plus both declared
+GitHub-hosted native architecture jobs. Their original build, regression/assertion
+probe and profile-retention steps must have succeeded. The complete artifact catalog
+must retain exactly one original attempt-qualified inputs, regression, profile and
+workspace-evidence artifact per declared role. Optional sandbox-evidence artifacts
+retain their own root. Expired, duplicate, foreign, truncated, stale or digest-less
+metadata refuses. Original server archive digests and sizes are retained.
+
+Expected input JSON is reconstructed from the independently acquired candidate and
+producer context. Reacquisition at the end refuses a changed candidate/main or a new
+producer attempt. The command performs no remote writes and executes no product
+code. `CandidateRunArtifactEnvelope` explicitly leaves artifact bytes and native
+results unverified and supplies no verdict. Downloaded input/receipt JSON, tested
+profile bytes and canonical evidence still need independent bounded archive/hash
+verification. Metadata authentication alone must never enable a required merge check,
+local delegation, qualification-state update, production or main adoption.
+
 `Tools/Get-IntegrationCandidate.ps1 -Root <project checkout> -PullRequest <number>` acquires one exact
 open, non-draft, mergeable main-targeting PR. It uses the existing repository-read `GH_TOKEN`, GET requests,
 and the checkout's exact reviewed GitHub origin. It imports no product code and runs no build or test.

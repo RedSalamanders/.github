@@ -2,6 +2,13 @@
 
 Policy version: 1. Implementation and hosted acceptance are tracked separately in the organization rollout record.
 
+Candidate producer metadata is acquired by `Tools/Get-CandidateRunEnvelope.ps1` under
+[the integration candidate contract](Integration_Candidates.md). It independently
+checks the current candidate, original/latest run attempt, trusted caller/engine,
+both hosted native jobs and original artifact catalog/digests. This metadata role
+leaves downloaded bytes and native evidence unverified. It must not write a required
+check, delegate local coverage, adopt a main result or authorize production.
+
 Organization-owned implementation work is indexed in [Plans/WIP](Plans/WIP/README.md); completed work is indexed in [Plans/Done](Plans/Done/README.md). The canonical [plan lifecycle rule](../AGENTS.md#plan-lifecycle) governs implementation/validation closeout and migration of durable requirements into this contract or the other owning specifications. WIP proposals do not change active CI policy.
 
 ## Source and input identity
