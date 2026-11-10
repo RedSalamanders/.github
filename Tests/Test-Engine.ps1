@@ -1033,8 +1033,9 @@ Invoke-Case 'SDK conformance retains qualification and rejects every hosted publ
     $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
     Test-CiProjectConfiguration $context
     Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/qualify.yml'))
-    Assert-Equal 6 @(Get-CiProjectWorkflowTemplates $project).Count
+    Assert-Equal 7 @(Get-CiProjectWorkflowTemplates $project).Count
     Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/sdk-inputs.yml'))
+    Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/integration-execution.yml'))
     Write-FixtureFile $root '.github/workflows/publish.yml' 'on: workflow_dispatch'
     Assert-Refused {Test-CiProjectConfiguration $context}
     Remove-Item -LiteralPath (Join-Path $root '.github/workflows/publish.yml')
@@ -1802,6 +1803,83 @@ function New-MergeGroupFixture([string]$Name,[switch]$Prose){
     $f.event=@{action='checks_requested';repository=@{full_name='RedSalamanders/RedMonitor'};
         merge_group=@{base_ref='refs/heads/main';base_sha=$f.base;head_ref='refs/heads/gh-readonly-queue/main/pr-43-fixture';head_sha=$f.merge}}
     return $f
+}
+Invoke-Case 'Manual candidate shadow execution keeps isolated read-only test roles and original attempt evidence' {
+    $workflow=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/integration-execution.yml'))
+    $caller=[IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/integration-execution.yml'))
+    Assert-True ($caller -match '(?m)^  workflow_dispatch:$')
+    Assert-True ($caller -notmatch '(?m)^  (pull_request|pull_request_target|push|merge_group|schedule):')
+    Assert-True ($caller -match 'cancel-in-progress: false')
+    Assert-True ($caller.Contains('native-shadow-${{ github.ref }}-${{ github.run_id }}'))
+    foreach($text in @($caller,$workflow)){
+        Assert-True ($text -notmatch '(?m)^\s+(contents|actions|statuses|checks|pull-requests): write')
+        Assert-True ($text -notmatch 'secrets:|actions/cache/save@|continue-on-error:')
+    }
+    Assert-True ($workflow -match 'platform: x64\r?\n\s+runner: windows-2025-vs2026')
+    Assert-True ($workflow -match 'platform: ARM64\r?\n\s+runner: windows-11-vs2026-arm')
+    Assert-True ($workflow.Contains('ref: ${{ github.sha }}'))
+    Assert-True ($workflow.Contains('ref: ${{ needs.freeze.outputs.commit }}'))
+    Assert-True ($workflow.Contains('if: needs.freeze.outputs.native_required == ''true'''))
+    Assert-True ($workflow.Contains('clear;files,${{ github.workspace }}/.build/ci/vcpkg-cache,read'))
+    Assert-True ($workflow -notmatch '-Phase (Production|Qualification)|Invoke-Admission|Complete-PrCheck|Write-CiState|Set-CiQualificationStatus')
+    foreach($artifact in @('candidate-inputs-${{ github.run_attempt }}','candidate-regression-${{ matrix.platform }}-${{ github.run_attempt }}','candidate-profile-${{ matrix.platform }}-${{ github.run_attempt }}',
+        'candidate-evidence-${{ matrix.platform }}-${{ github.run_attempt }}','candidate-workspace-evidence-${{ matrix.platform }}-${{ github.run_attempt }}')){
+        Assert-True ($workflow.Contains($artifact))
+    }
+    $build=[regex]::Matches($workflow,' -Phase (ReleaseTestBuild|ReleaseTest) ')
+    Assert-Equal 2 $build.Count
+    Assert-Equal 'ReleaseTestBuild' $build[0].Groups[1].Value
+    Assert-Equal 'ReleaseTest' $build[1].Groups[1].Value
+    foreach($extension in @('exe','dll','lib')){Assert-True ($workflow.Contains('.build/${{ matrix.platform }}/Release/**/*.'+$extension))}
+}
+Invoke-Case 'Actual shadow freeze script retains canonical batch data and refuses mismatched engine or failed acquisition before outputs' {
+    $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/integration-execution.yml'))
+    $match=[regex]::Match($text,'(?ms)^      - name: Reacquire exact candidate from the trusted isolated controller\r?\n.*?^        run: \|\r?\n(?<body>.*?)(?=^      - uses:)')
+    Assert-True $match.Success
+    $body=[scriptblock]::Create([regex]::Replace($match.Groups['body'].Value,'(?m)^          ',''))
+    $controller=New-Fixture 'shadow-freeze-controller'
+    Write-FixtureFile $controller 'Tools/Get-CandidateExecutionInputs.ps1' @'
+param([string]$Root,[int]$PullRequest,[string]$ExpectedIdentity,[string]$IsolationNonce)
+if($PullRequest -ne 43 -or $ExpectedIdentity -cne ('a'*64) -or $IsolationNonce -cne ('b'*32)){throw 'Freeze passed changed acquisition inputs.'}
+$Root=(Resolve-Path -LiteralPath $Root).Path
+[IO.File]::WriteAllText((Join-Path $Root 'gateway-called.txt'),'recording acquisition boundary; not a native result')
+if($env:I61_FREEZE_CONTROL -ceq 'gateway-refusal'){throw 'Recording canonical acquisition refusal.'}
+Get-Content (Join-Path $Root 'recording-inputs.json') -Raw
+'@
+    $null=Invoke-CiGit $controller @('add','Tools/Get-CandidateExecutionInputs.ps1')
+    $null=Invoke-CiGit $controller @('commit','-qm','Add recording canonical acquisition boundary')
+    $ref=Resolve-CiCommit $controller HEAD
+    $names=@('CI_ENGINE_REF','CI_PULL_REQUEST','CI_CANDIDATE_IDENTITY','CI_ISOLATION_NONCE','GITHUB_OUTPUT','I61_FREEZE_CONTROL')
+    $saved=@{};foreach($name in $names){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
+    try{
+        foreach($scenario in @('native','prose','bad-pin','gateway-refusal')){
+            $root=New-Fixture ('shadow-freeze-'+$scenario)
+            $null=Invoke-CiProcess -FilePath git -Arguments @('clone','--no-hardlinks','--',$controller,(Join-Path $root '.ci-engine')) -WorkingDirectory $root
+            $project=Read-CiProject $root;$project.engine.ref=$ref
+            Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 10)
+            $batch=[ordered]@{commit=('c'*40);runId='123';candidateExecution=@{recordingOnly=$true}}
+            $inputs=[ordered]@{candidate=@{identity=('a'*64);mergeCommit=('c'*40);nativeRequired=($scenario -cne 'prose')};batch=$batch}
+            Write-FixtureFile $root 'recording-inputs.json' ($inputs|ConvertTo-Json -Depth 10)
+            $env:CI_ENGINE_REF=if($scenario -ceq 'bad-pin'){'d'*40}else{$ref}
+            $env:CI_PULL_REQUEST='43';$env:CI_CANDIDATE_IDENTITY='a'*64;$env:CI_ISOLATION_NONCE='b'*32
+            $env:GITHUB_OUTPUT=Join-Path $root 'job-output.txt';$env:I61_FREEZE_CONTROL=$scenario
+            Push-Location $root
+            try{$passed=$true;try{& $body}catch{$passed=$false}}finally{Pop-Location}
+            Assert-Equal ($scenario -in @('native','prose')) $passed
+            Assert-Equal ($scenario -cne 'bad-pin') (Test-Path (Join-Path $root 'gateway-called.txt'))
+            Assert-Equal $passed (Test-Path (Join-Path $root '.build/ci/batch.json'))
+            Assert-Equal $passed (Test-Path $env:GITHUB_OUTPUT)
+            if($passed){
+                $actual=Get-Content (Join-Path $root '.build/ci/batch.json') -Raw|ConvertFrom-Json -AsHashtable
+                Assert-Equal ($batch|ConvertTo-Json -Depth 10 -Compress) ($actual|ConvertTo-Json -Depth 10 -Compress)
+                $actual=Get-Content (Join-Path $root '.build/ci/candidate-inputs.json') -Raw|ConvertFrom-Json -AsHashtable
+                Assert-Equal ($inputs|ConvertTo-Json -Depth 10 -Compress) ($actual|ConvertTo-Json -Depth 10 -Compress)
+                $output=Get-Content $env:GITHUB_OUTPUT -Raw
+                Assert-True ($output.Contains('commit='+('c'*40)))
+                Assert-True ($output.Contains('native_required='+($scenario -ceq 'native').ToString().ToLowerInvariant()))
+            }
+        }
+    }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}}
 }
 Invoke-Case 'Merge queue input freeze binds the complete integration tree, cumulative inputs and proposed version' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.MergeGroup.psm1')

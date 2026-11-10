@@ -1,7 +1,8 @@
 # Frozen integration candidate inputs
 
-Status: input acquisition implemented; native candidate execution, a required merge gate, delegation and
-main-result adoption are not enabled by this contract. Current compiler-free PR and native main policy remains.
+Status: input acquisition and the manual native shadow workflow are implemented. Project caller rollout,
+authenticated result verification, a required merge gate, delegation and main-result adoption remain open.
+Current compiler-free PR and native main obligations remain.
 
 `Tools/Get-IntegrationCandidate.ps1 -Root <project checkout> -PullRequest <number>` acquires one exact
 open, non-draft, mergeable main-targeting PR. It uses the existing repository-read `GH_TOKEN`, GET requests,
@@ -119,8 +120,8 @@ CandidateExecutionInputs carries the original canonical candidate plus native ba
 inputs bound to the actual producer run. It explicitly records nativeExecutions zero
 and suppliesNativeVerdict false. It writes no remote branch, output file, check or
 qualification state, imports no product code and executes no native work. The supplied
-JSON identity and this input acquisition do not authenticate a test result. The future
-native workflow, independent artifact/result verification, exact-head reporter, actual
+JSON identity and this input acquisition do not authenticate a test result. Manual
+native shadow execution, independent artifact/result verification, exact-head reporter, actual
 required-check/stale-base enforcement and main adoption remain separate requirements.
 
 Its native batch retains a `CandidateExecutionBinding`: the original canonical
@@ -140,3 +141,36 @@ and 42887031360. The authenticated pair is retained in TestRuns/I61_2026-11-09.
 This establishes that observed service-scope boundary only. Native execution must keep
 its read-only credentials and unique ref; its trusted reporter must never execute
 candidate content or restore candidate caches.
+
+## Manual native shadow workflow
+
+The generated `integration-execution.yml` caller accepts only manual dispatch inputs
+`pull_request`, canonical `identity` and unique `nonce`. An operator must first create
+`ci-native/pr<PR>/<identity>/<nonce>` at the exact trusted current main commit. This
+workflow does not create or move that ref. Dispatch through main or a branch pointing
+at candidate content refuses before native setup. Reacquisition independently verifies
+the main/PR/merge/ref/caller/controller identities under the input contract above.
+
+A read-only Linux job checks out the controller and retains original attempt-qualified
+candidate and batch JSON. Native x64 and ARM64 jobs then check out the frozen synthetic
+merge, use the reviewed exact engine and execute the existing ReleaseTestBuild and
+ReleaseTest adapters. Different profile, platform and role obligations remain distinct.
+Prose-only input acquisition starts no native job and grants no baseline success.
+Jobs retain read-only repository/Actions credentials, no publication credentials,
+isolated branch cache scope, no cache saves and a read-only vcpkg binary-cache source.
+Omitting save steps is not the isolation proof: the independently observed branch
+service boundary and exact controller context remain prerequisites.
+
+Successful jobs retain their original receipts and tested exe/dll/lib profile bytes;
+canonical sandbox evidence and workspace diagnostics retain separate roots, including
+on failure. Artifact names include the actual run attempt. No production/package,
+required-check writer, main qualification-state update, merge or adoption runs here.
+The source-adapter binding still independently rejects any isolated production role.
+The caller never cancels an active execution. Original evidence from superseded inputs
+remains diagnostic and must not authorize another candidate.
+
+This is shadow execution until independent workflow/job/artifact-byte authentication,
+exact-head reporting and actual required-check/stale-base enforcement are implemented
+and qualified. Existing local and main coverage remains active. An operator dispatch
+helper, project pin/caller rollout and actual hosted shadow acceptance remain open;
+successful script/structural controls do not establish those results.
