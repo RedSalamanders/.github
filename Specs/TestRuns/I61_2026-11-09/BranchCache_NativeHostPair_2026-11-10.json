@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "role": "AuthenticatedNativeHostBranchCachePair",
+  "repository": "RedSalamanders/.github",
+  "controllerCommit": "3c69c7454d4524dfbc1f24c9bad4bd5d2cf36fa4",
+  "workflowBlob": "7364fcd6ac7ca946d350490e27c0e27d002251da",
+  "isolationRef": "refs/heads/ci-integration-probe/19df51d56a5f4763837f025f9da768f8",
+  "cacheKeyPrefix": "integration-branch-19df51d56a5f4763837f025f9da768f8",
+  "writerRun": "42886607587",
+  "readerRun": "42887031360",
+  "attempt": 1,
+  "platforms": [
+    {
+      "platform": "linux",
+      "runner": "ubuntu-24.04",
+      "readerJobId": 130077962034,
+      "cacheId": 10315673892,
+      "cacheVersion": "764261e574927a397234130441c9fd7081d9efad17ce87165e0a110a48821340",
+      "writerReportSha256": "17a7b87b6809ddc6ff077670561bbda9d9b2160b7192952d0d78933d662cafec",
+      "readerReportSha256": "3b63a6e5b70499114a9de752eb567b4693974ec1a2d2d523e90bf835ecdf0ce0",
+      "positiveBranchRestore": true,
+      "independentMainRestoreMiss": true
+    },
+    {
+      "platform": "x64",
+      "runner": "windows-2025-vs2026",
+      "readerJobId": 130077961864,
+      "cacheId": 10315671325,
+      "cacheVersion": "c41fb6e5314420294df40480af3cb9efaf4aaba2e6774249d4b51783f7b6f85d",
+      "writerReportSha256": "03c67b4c9a8663b64ff20401e701bef9331eb52948a77332d3e6d197a02b2755",
+      "readerReportSha256": "1465e2d48612cef71ed84d471f5cabd5f1fbb5f24f9ace128c74dd4fcf6e6d1c",
+      "positiveBranchRestore": true,
+      "independentMainRestoreMiss": true
+    },
+    {
+      "platform": "ARM64",
+      "runner": "windows-11-vs2026-arm",
+      "readerJobId": 130077961526,
+      "cacheId": 10315672842,
+      "cacheVersion": "4f024382faeeb462cef92b0c08a445ce88b6a914d70708ab563d3ce64e5800d4",
+      "writerReportSha256": "f2f956d2f5e210b506fbc3ecb39584d1e0669cdb5c22c6ffe37621a621653896",
+      "readerReportSha256": "f48db4825169408ac023646eefc932a5a73248a392437855dcfb90bdc3bbd5ee",
+      "positiveBranchRestore": true,
+      "independentMainRestoreMiss": true
+    }
+  ],
+  "nativeExecutions": 0,
+  "suppliesNativeVerdict": false
+}

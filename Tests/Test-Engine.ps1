@@ -1501,8 +1501,12 @@ Invoke-Case 'Fast SDK bootstrap retains the exact ordinal raw map, missing-file 
     Assert-Refused {Get-CiSdkCheckoutContentIdentity $root}
 }
 
-function New-CandidateFixture([string]$Name,[switch]$Prose){
+function New-CandidateFixture([string]$Name,[switch]$Prose,[switch]$ShadowCaller){
     $root=New-Fixture $Name
+    if($ShadowCaller){
+        Write-FixtureFile $root '.github/workflows/integration-execution.yml' '# Owned controller fixture data; never executed.'
+        $null=Save-Fixture $root 'Owned shadow caller fixture'
+    }
     $base=(Invoke-CiGit $root @('rev-parse','HEAD')).stdout.Trim()
     $null=Invoke-CiGit $root @('checkout','-b','candidate-feature')
     if($Prose){Write-FixtureFile $root 'README.md' 'Candidate prose only.'}else{Write-FixtureFile $root 'src/main.cpp' 'int fixture() { return 42; }'}
@@ -1576,6 +1580,158 @@ Invoke-Case 'Prose-only candidate inputs create no native obligation and supply 
     Assert-Equal $candidate.baseNativeDigest $candidate.input.nativeDigest
     Assert-True ($candidate.input.buildNumber -gt (New-CiInputDescriptor $f.root -Ref $f.base).buildNumber)
     foreach($field in @('passed','qualified','outcome','executed','adopted')){Assert-True (-not $candidate.Contains($field))}
+}
+
+Invoke-Case 'Candidate shadow inputs bind the exact isolated controller and frozen native batch without verdict authority' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.CandidateExecution.psm1')
+    foreach($prose in @($false,$true)){
+        $f=New-CandidateFixture ('shadow-context-'+$prose) -Prose:$prose
+        $candidate=New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('a'*40)
+        $nonce='d'*32
+        $branch='refs/heads/ci-native/pr43/'+$candidate.identity+'/'+$nonce
+        $context=[ordered]@{repository='RedSalamanders/RedMonitor';event='workflow_dispatch';ref=$branch;commit=$f.base;
+            workflowRef=('RedSalamanders/RedMonitor/.github/workflows/integration-execution.yml@'+$branch);runId='678';runAttempt=2}
+        $before=$candidate|ConvertTo-Json -Depth 15 -Compress
+        $result=New-CiCandidateExecutionInputs -Candidate $candidate -Context $context -IsolationNonce $nonce -ControllerWorkflowBlob ('e'*40)
+        Assert-Equal 'CandidateExecutionInputs' $result.role
+        Assert-Equal $f.merge $result.batch.commit
+        Assert-Equal $candidate.input.version $result.batch.version
+        Assert-Equal $candidate.input.buildNumber $result.batch.buildNumber
+        Assert-Equal $candidate.input.nativeDigest $result.batch.nativeDigest
+        Assert-Equal '678' $result.batch.runId
+        Assert-Equal 2 $result.runAttempt
+        Assert-Equal $f.base $result.controllerCommit
+        Assert-Equal $branch $result.isolationRef
+        Assert-Equal (-not $prose) $result.candidate.nativeRequired
+        Assert-Equal 0 $result.nativeExecutions
+        Assert-True (-not $result.suppliesNativeVerdict)
+        Assert-Equal $before ($candidate|ConvertTo-Json -Depth 15 -Compress)
+        foreach($field in @('event','ref','commit','workflowRef','repository','runId','runAttempt','unknown')){
+            $changed=$context|ConvertTo-Json|ConvertFrom-Json -AsHashtable
+            switch($field){
+                'event'{$changed.event='pull_request_target'};'ref'{$changed.ref='refs/heads/main'}
+                'commit'{$changed.commit=$f.head};'workflowRef'{$changed.workflowRef+='-other'}
+                'repository'{$changed.repository='RedSalamanders/DxUi'};'runId'{$changed.runId='0'}
+                'runAttempt'{$changed.runAttempt='2'};'unknown'{$changed.passed=$true}
+            }
+            Assert-Refused {New-CiCandidateExecutionInputs -Candidate $candidate -Context $changed -IsolationNonce $nonce -ControllerWorkflowBlob ('e'*40)}
+        }
+        foreach($failure in @('fork','engine','obligation','version','identity')){
+            $changed=$candidate|ConvertTo-Json -Depth 15|ConvertFrom-Json -AsHashtable
+            switch($failure){
+                'fork'{$changed.headRepository='outside/project'};'engine'{$changed.controllerEngineRef='f'*40}
+                'obligation'{$changed.nativeRequired=-not $changed.nativeRequired};'version'{$changed.input.version='0.1.65535'}
+                'identity'{$changed.identity='0'*64}
+            }
+            if($failure -cne 'identity'){
+                $changed.Remove('identity')
+                $changed.identity=Get-CiSha256 ($changed|ConvertTo-Json -Depth 15 -Compress)
+            }
+            $changedContext=$context|ConvertTo-Json|ConvertFrom-Json -AsHashtable
+            $changedContext.ref='refs/heads/ci-native/pr43/'+$changed.identity+'/'+$nonce
+            $changedContext.workflowRef='RedSalamanders/RedMonitor/.github/workflows/integration-execution.yml@'+$changedContext.ref
+            Assert-Refused {New-CiCandidateExecutionInputs -Candidate $changed -Context $changedContext -IsolationNonce $nonce -ControllerWorkflowBlob ('e'*40)}
+        }
+    }
+}
+
+Invoke-Case 'Public shadow acquisition refuses invalid hosted context before API requests or output mutation' {
+    $module=Get-Module Ci.CandidateExecution
+    $f=New-CandidateFixture 'shadow-public-refusals'
+    $null=Invoke-CiGit $f.root @('checkout','--detach',$f.base)
+    $expected='d'*64;$nonce='e'*32
+    $branch='refs/heads/ci-native/pr43/'+$expected+'/'+$nonce
+    $environment=@{GITHUB_ACTIONS='true';RUNNER_ENVIRONMENT='github-hosted';GITHUB_REPOSITORY='RedSalamanders/RedMonitor';
+        GITHUB_EVENT_NAME='workflow_dispatch';GITHUB_REF=$branch;GITHUB_SHA=$f.base;
+        GITHUB_WORKFLOW_REF=('RedSalamanders/RedMonitor/.github/workflows/integration-execution.yml@'+$branch);
+        GITHUB_RUN_ID='678';GITHUB_RUN_ATTEMPT='1'}
+    $saved=@{};foreach($name in $environment.Keys){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
+    $original=& $module {(Get-Command Get-CiMainHead).ScriptBlock}
+    & $module {$script:shadowApiCalls=0;function script:Get-CiMainHead {$script:shadowApiCalls++;throw 'Recording API boundary; no remote request'}}
+    try{
+        foreach($field in @('GITHUB_ACTIONS','RUNNER_ENVIRONMENT','GITHUB_REPOSITORY','GITHUB_EVENT_NAME','GITHUB_REF','GITHUB_SHA','GITHUB_WORKFLOW_REF','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT','valid-context')){
+            foreach($name in $environment.Keys){[Environment]::SetEnvironmentVariable($name,$environment[$name],'Process')}
+            if($field -cne 'valid-context'){[Environment]::SetEnvironmentVariable($field,'invalid','Process')}
+            & $module {$script:shadowApiCalls=0}
+            Assert-Refused {Get-CiCandidateExecutionInputs -Root $f.root -PullRequest 43 -ExpectedIdentity $expected -IsolationNonce $nonce}
+            Assert-Equal $(if($field -ceq 'valid-context'){1}else{0}) (& $module {$script:shadowApiCalls})
+            Assert-True (-not(Test-Path -LiteralPath (Join-Path $f.root '.build')))
+            Assert-Equal $f.base (Resolve-CiCommit $f.root HEAD)
+            Assert-Equal '' (Invoke-CiGit $f.root @('status','--porcelain','--untracked-files=all')).stdout.Trim()
+        }
+    }finally{
+        foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}
+        & $module {param($saved)Set-Item function:script:Get-CiMainHead $saved;Remove-Variable shadowApiCalls -Scope Script} $original
+    }
+}
+
+Invoke-Case 'Actual shadow gateway rechecks independent controller refs, workflow blob and complete candidate after acquisition' {
+    $module=Get-Module Ci.CandidateExecution
+    $f=New-CandidateFixture 'shadow-gateway-roundtrip' -ShadowCaller
+    $null=Invoke-CiGit $f.root @('checkout','--detach',$f.base)
+    $candidate=New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('a'*40)
+    $nonce='e'*32;$branch='refs/heads/ci-native/pr43/'+$candidate.identity+'/'+$nonce
+    $blob=(Invoke-CiGit $f.root @('rev-parse',($f.base+':.github/workflows/integration-execution.yml'))).stdout.Trim()
+    $environment=@{GITHUB_ACTIONS='true';RUNNER_ENVIRONMENT='github-hosted';GITHUB_REPOSITORY='RedSalamanders/RedMonitor';
+        GITHUB_EVENT_NAME='workflow_dispatch';GITHUB_REF=$branch;GITHUB_SHA=$f.base;
+        GITHUB_WORKFLOW_REF=('RedSalamanders/RedMonitor/.github/workflows/integration-execution.yml@'+$branch);
+        GITHUB_RUN_ID='678';GITHUB_RUN_ATTEMPT='1'}
+    $saved=@{};foreach($name in $environment.Keys){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
+    $originals=& $module { $saved=@{};foreach($name in @('Get-CiMainHead','Get-CiIntegrationCandidate','Invoke-CiApi')){$saved[$name]=(Get-Command $name).ScriptBlock};return $saved }
+    & $module {
+        function script:Get-CiMainHead {
+            $script:shadowControl.mainReads++
+            if($script:shadowControl.failure -ceq 'main-moved' -and $script:shadowControl.mainReads -eq 2){return ('f'*40)}
+            return $script:shadowControl.base
+        }
+        function script:Get-CiIntegrationCandidate {
+            $script:shadowControl.acquisitions++
+            $result=$script:shadowControl.candidate|ConvertTo-Json -Depth 15|ConvertFrom-Json -AsHashtable
+            if($script:shadowControl.failure -ceq 'engine-pin'){$result.input.engine.ref='f'*40}
+            if($script:shadowControl.failure -ceq 'candidate-moved' -and $script:shadowControl.acquisitions -eq 2){$result.headCommit='f'*40}
+            return $result
+        }
+        function script:Invoke-CiApi {
+            param($Route,$Method)
+            if($Method -cne 'GET'){throw 'Unexpected remote write in shadow input acquisition'}
+            $c=$script:shadowControl
+            if($Route -ceq ('repos/RedSalamanders/RedMonitor/git/ref/'+$c.branch.Substring(5))){
+                $c.refReads++
+                $sha=if(($c.failure -ceq 'ref-before' -and $c.refReads -eq 1) -or ($c.failure -ceq 'ref-after' -and $c.refReads -eq 2)){'f'*40}else{$c.base}
+                return @{ref=$c.branch;object=@{type='commit';sha=$sha}}
+            }
+            if($Route -ceq ('repos/RedSalamanders/RedMonitor/contents/.github/workflows/integration-execution.yml?ref='+$c.base)){
+                $c.workflowReads++
+                return @{path='.github/workflows/integration-execution.yml';sha=$(if($c.failure -ceq 'workflow-blob'){'f'*40}else{$c.blob})}
+            }
+            throw 'Unexpected remote route in shadow input acquisition'
+        }
+    }
+    try{
+        foreach($name in $environment.Keys){[Environment]::SetEnvironmentVariable($name,$environment[$name],'Process')}
+        foreach($failure in @('none','engine-pin','candidate-moved','main-moved','ref-before','ref-after','workflow-blob','untracked-controller')){
+            & $module {param($f,$c,$b,$blob,$failure)$script:shadowControl=@{base=$f.base;candidate=$c;branch=$b;blob=$blob;failure=$failure;mainReads=0;acquisitions=0;refReads=0;workflowReads=0}} $f $candidate $branch $blob $failure
+            $untracked=Join-Path $f.root 'never-execute.ps1'
+            if($failure -ceq 'untracked-controller'){[IO.File]::WriteAllText($untracked,'throw "Candidate code must never execute during acquisition"')}
+            try{
+                if($failure -ceq 'none'){
+                    $result=Get-CiCandidateExecutionInputs -Root $f.root -PullRequest 43 -ExpectedIdentity $candidate.identity -IsolationNonce $nonce
+                    Assert-Equal $blob $result.controllerWorkflowBlob
+                    Assert-Equal $f.merge $result.batch.commit
+                    Assert-Equal 0 $result.nativeExecutions
+                    Assert-True (-not $result.suppliesNativeVerdict)
+                    $counts=& $module {$script:shadowControl}
+                    Assert-Equal 2 $counts.mainReads;Assert-Equal 2 $counts.acquisitions
+                    Assert-Equal 2 $counts.refReads;Assert-Equal 1 $counts.workflowReads
+                }else{Assert-Refused {Get-CiCandidateExecutionInputs -Root $f.root -PullRequest 43 -ExpectedIdentity $candidate.identity -IsolationNonce $nonce}}
+                Assert-True (-not(Test-Path -LiteralPath (Join-Path $f.root '.build')))
+                Assert-Equal $f.base (Resolve-CiCommit $f.root HEAD)
+            }finally{if($failure -ceq 'untracked-controller'){Remove-Item -LiteralPath $untracked}}
+        }
+    }finally{
+        foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}
+        & $module {param($saved)foreach($name in $saved.Keys){Set-Item ('function:script:'+$name) $saved[$name]};Remove-Variable shadowControl -Scope Script} $originals
+    }
 }
 
 function New-MergeGroupFixture([string]$Name,[switch]$Prose){

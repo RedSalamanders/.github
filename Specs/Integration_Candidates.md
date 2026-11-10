@@ -103,3 +103,29 @@ Until those gates are implemented and accepted, preserve every applicable local,
 Source/version/engine/profile/dependency/coverage/byte changes invalidate their affected proofs. Never rewrite
 an original candidate receipt to pretend it ran on a later landed commit. Hosting capability gaps keep the
 existing obligations active. The organization WIP plan owns unfinished implementation and acceptance.
+
+## Isolated manual execution input reacquisition
+
+Get-CandidateExecutionInputs.ps1 is an input-only seam for the future trusted manual
+integration-execution caller. It requires the exact hosted workflow_dispatch context,
+same repository, actual run/attempt and ci-native/pr<PR>/<candidate identity>/<nonce>
+branch at the frozen trusted main commit. A clean default-branch controller reacquires
+the complete candidate using the canonical public acquisition twice, independently
+checks its isolated ref before/after, verifies the caller blob through both API and
+Git objects and refuses advanced main or changed candidate data. Fork/foreign heads,
+candidate engine changes and a mismatched native batch/version are inadmissible.
+
+CandidateExecutionInputs carries the original canonical candidate plus native batch
+inputs bound to the actual producer run. It explicitly records nativeExecutions zero
+and suppliesNativeVerdict false. It writes no remote branch, output file, check or
+qualification state, imports no product code and executes no native work. The supplied
+JSON identity and this input acquisition do not authenticate a test result. The future
+native workflow, independent artifact/result verification, exact-head reporter, actual
+required-check/stale-base enforcement and main adoption remain separate requirements.
+
+The isolated-branch cache prerequisite passed its original positive branch restore
+and independent main miss on Linux, Windows x64 and Windows ARM64, attempts 42886607587
+and 42887031360. The authenticated pair is retained in TestRuns/I61_2026-11-09.
+This establishes that observed service-scope boundary only. Native execution must keep
+its read-only credentials and unique ref; its trusted reporter must never execute
+candidate content or restore candidate caches.
