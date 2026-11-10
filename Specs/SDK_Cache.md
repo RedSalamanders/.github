@@ -215,8 +215,8 @@ record so a successful source fallback cannot be mistaken for SDK-hit acceptance
 
 `Ci.SdkAbi.psm1` supplies a separate v2 byte-reference format. It does not alter
 the v1 recipe, authenticate an SDK origin, admit a consumer, or cache a product
-verdict. Automatic distribution and application readers still use the v1 contract
-above until their separate versioned continuation is implemented and accepted.
+verdict by itself. Reviewed automatic distribution now selects the versioned qualified
+ABI continuation below; the original v1 identity and explicit legacy reader remain available.
 
 The portable reference names explicit tool/header/library roles and relative
 paths, not installation or checkout locations. Every file's actual SHA-256 and
@@ -264,9 +264,14 @@ attempt until its distinct caller/engine and archive contract are accepted.
 
 ## Qualified SDK archive transport
 
-`Ci.SdkQualifiedTransport.psm1` uses a separate v2 policy. It remains disabled
-until `Policy/sdk-qualified-transport.json` names the exact reviewed producer
-caller blob and engine; disabled requests refuse before API calls or output.
+`Ci.SdkQualifiedTransport.psm1` uses a separate v2 policy. The enabled reviewed
+policy names producer caller blob `08d6806d6ef3db8be937042d6f6a1d57a2e1c6df`
+and engine `0ab35be5d746b8a23cad066f64fcd0062678d06d`. The three unchanged pins
+use successful native x64/ARM64 campaigns 42866937316, 42866944166 and 42866951701.
+All six actual archives pass server digest, extraction, original entry/reference/receipt
+binding verification. Product SDK use and runtime acceptance remain separate.
+A disabled policy still refuses before API calls or output; its regression control
+uses the actual modules in an isolated child with an owned disabled policy fixture.
 The existing v1 transport policy and successful historical attempts are retained.
 V2 uses the same strict main/manual/native-job/run/attempt/artifact checks, with
 an explicit `HostedQualifiedSdkEnvelope` role.
@@ -305,8 +310,9 @@ fields. Source/tooling/storage checkouts still pass the canonical raw bootstrap.
 An explicit qualified distribution uses authenticated v2 transport before writing
 that descriptor. It does not restore the producer's vcpkg inventory or recompute
 the producer's entire v1 build recipe in the consumer. Legacy distribution and
-reader behavior retain their existing path. No current distribution entry changes
-merely because the schema can represent the new contract.
+reader behavior retain their existing path. Distribution entries select
+`QualifiedAbiV2` explicitly only after review of successful producers and their
+authenticated bytes; schema support alone never activates another source or attempt.
 
 `Open-CiApplicationSdkInput` accepts the application's actual `MSBuildPath` for
 v2. It reauthenticates the exact producer envelope, derives the original binding

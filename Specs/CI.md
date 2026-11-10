@@ -50,6 +50,13 @@ It cannot update main qualification state, qualify a product, run from PR/schedu
 Selected architecture retries do not imply omitted architecture coverage. Existing candidate/main gates
 and local obligations remain unchanged.
 
+Qualified SDK distribution is enabled only for the three reviewed unchanged source/API
+pins and successful producer attempts recorded in the SDK policy. The exact caller and
+controller plus all six source/architecture archives are authenticated independently.
+Application clients still open the input under actual MSBuild/ABI checks and retain
+native regression and production/package gates. An enabled dependency route does not
+create a product acceptance result or waive Source fallback on compatibility mismatch.
+
 The cheap main coordinator waits for five continuous quiet minutes. Superseded coordinators may be cancelled. A separate repository/main concurrency lane uses GitHub's bounded queue with cancellation disabled. Stale queued candidates exit admission before any expensive setup; an active native pipeline is never cancelled by newer pushes. Admission rechecks the current head and the trusted main dispatch identity.
 
 Persistent state lives on the project's `ci-state` branch, outside product source. Atomic fast-forward ref updates retain the admitted input identity, commit, engine/policy, run and actual outcome. Concurrent sibling updates fail rather than overwrite. Identical admitted inputs retain their original success, running state or failure; documentation cannot trigger an automatic retry or hide a failure. A retry is explicit. Missing state is conservative and never fabricates qualification.
