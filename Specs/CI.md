@@ -171,3 +171,9 @@ diagnostics. It cannot run production, update qualification state, write a merge
 save shared caches or cancel another execution. Project rollout and authenticated
 hosted shadow acceptance remain open. See Integration_Candidates.md for the full
 controller/cache boundary and the further gates required before delegation/adoption.
+
+Operator shadow admission validates a clean exact main checkout, exact reviewed clean
+engine, generated callers and independent Git/API workflow bytes, then reacquires the
+candidate/main before branch creation and again before dispatch. It records completed
+remote stages in append-only request journals. Preview and prose-only cases write no
+remote branch/dispatch; an API dispatch acknowledgment is never a native verdict.
