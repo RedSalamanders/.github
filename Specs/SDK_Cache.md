@@ -163,6 +163,12 @@ the shared byte store. Retain workspace, timings, downloaded evidence and failed
 Revalidate the canonical frozen application context before and after preparation; source, version or engine
 movement during transfer cannot qualify the originally admitted input.
 
+Retain create-only JSON records beneath `.build/evidence/sdk-input-preparation` for
+the independent expected input key before transfer and its prepared/exact-miss
+outcome, or the absence of a distributed pin. These records travel with the normal
+native evidence artifact; earlier records are never replaced. They supply diagnostic
+identities and timings only, without a product acceptance verdict.
+
 A verified artifact with another compiler, compiler-profile, dependency or environment hash is an exact
 cache miss; retain source fallback and accept no bytes. A different source/API/architecture/ABI/integration
 policy, malformed manifest, corrupt archive or unknown producer fails rather than being relabelled as a

@@ -347,4 +347,23 @@ RedMonitor main [42773597824](https://github.com/RedSalamanders/RedMonitor/actio
 at 3eabe20239fc8382f3b5143694657b36cc20cb32 completed successfully: x64/ARM64 regression, the global test gate,
 both production/package branches and completion. This normal campaign uses the source recipe; it does not yet
 establish hosted SDK consumer adoption. Root-pin SDK producer
-[42775919520](https://github.com/RedSalamanders/DxUi/actions/runs/42775919520) passed x64; ARM64 remains pending.
+[42775919520](https://github.com/RedSalamanders/DxUi/actions/runs/42775919520) passed both native architectures.
+
+## 2026-11-10 distribution and consumer continuation
+
+The unchanged Tilde API-5 pin 21fae0dc66000b04504ba7862169533ac2943be8 also passed both native producer jobs in
+[42780998812](https://github.com/RedSalamanders/DxUi/actions/runs/42780998812). Distribution selects these explicit
+successful attempts alongside the original f2 run; it does not upgrade any consumer pin.
+
+DxUi main [42773652579](https://github.com/RedSalamanders/DxUi/actions/runs/42773652579) passed regression,
+global gate, production and completion for both native architectures with the hosted parallel-2 pilot enabled.
+This is coverage acceptance, not a controlled hosted speed comparison.
+
+RedMonitor #44 merged 896c408013676b8b946054707c5acd0cc35e226f after sixty actual adapter branch controls,
+twenty-five actual MSBuild ABI-admission controls, a rebuilt exact current-profile SDK application/runtime/package
+pilot and complete Source PrePush (six zero-warning/error builds, x64 runtime, real ASan detection, fourteen
+installation controls). Its new main campaign 42787238382 must independently accept automatic SDK preparation
+and native runtime on both architectures. Root #211 remains under Entire review; its broad local PrePush found
+native test failures and unallowed skipped baseline audits, all retained. Restored baseline audits pass 32/0/0;
+the native failures remain separate unresolved defects. Prism #13 adds granular rendering diagnostics and
+preserves primary failure causes; main 42781905176 is running, without resolving its earlier ARM64 timeout yet.
