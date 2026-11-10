@@ -85,6 +85,8 @@ runs it on Windows and Ubuntu and retains the results with engine evidence.
 
 Internal functions have explicit effects: `Get-CiSdkCacheKey` validates/reads schemas; `Initialize-CiSdkStore`
 creates marked owned directories; `Publish-CiSdkCacheEntry` copies and publishes an immutable version;
+`Import-CiSdkCacheEntry` verifies an independently held input identity and manifest hash and publishes the
+original raw manifest through the same guarded writer, preserving its cross-platform output identity;
 `Open-CiSdkCacheEntry` verifies and holds a lease (including a lock file on a miss); `Close-CiSdkCacheEntry`
 verifies/relinquishes it; `Move-CiSdkCacheEntryToQuarantine` preserves one version through a guarded atomic move.
 Callers must close every acquired entry in finally and keep the lease through all compilation/link use.
@@ -111,6 +113,33 @@ PID existence or a surviving witness alone is insufficient. Closed, stale and ot
 Witnesses stay as diagnostic data after handles close; they grant no reuse authority. This prevents accidental
 direct/stale compilation; it is not a security boundary against a user controlling the local build process.
 
-This local seam does not authenticate an arbitrary hosted artifact. Hosted producer workflow/run/attempt
-and transport admission, application adapter adoption, native architecture qualification, local dirty-source
-candidates and overall speedup acceptance remain separate implementation work.
+This local seam does not authenticate an arbitrary hosted artifact. Use the following separate transport
+contract before opening imported bytes. Application adapter adoption, native architecture qualification,
+local dirty-source candidates and overall speedup acceptance remain separate obligations.
+
+## Authenticated hosted SDK transport
+
+`Tools/Import-HostedSdk.ps1` accepts a complete independently evaluated SDK identity below the consumer's
+`.build`, an explicit producer run and attempt. It changes no dependency pin. `Ci.SdkTransport.psm1` reads
+current GitHub REST metadata using an existing repository-read credential. The reviewed caller blob and
+reusable engine are pinned in `Policy/sdk-transport.json`; a changed workflow requires an explicit policy review.
+Only a successful main `workflow_dispatch` of the exact DxUi SDK workflow is eligible. The selected native
+architecture job must pass with its reviewed runner label and attempt. Truncated metadata, duplicate/missing
+artifacts, another source/head/repository, unknown/expired digests and failed/pending/cancelled work refuse.
+
+The selected artifact name binds source, architecture and attempt. The authenticated server SHA-256 and
+byte count freeze the entire archive. The API credential is sent only to api.github.com; the signed storage
+redirect is fetched using a separate client without authentication headers. Download size/time and expanded
+entry count/bytes are bounded. All archive paths are validated before the first extraction; traversal,
+Windows device/stream names, links/reparse entries and case collisions refuse. Existing files are never overwritten.
+
+After transfer, read the producer metadata again and require identical provenance. Exactly one SDK entry
+must match its full independent input key and original raw manifest hash. Generic storage verifies the
+complete identity and payload inventory, then publishes atomically using the existing writer/read-lease
+contract. Retain the authenticated envelope, original archive, extraction, import record and failed staging
+under unique owned `.build/sdk-downloads` paths. No cleanup or implicit retry of a newer attempt occurs.
+
+Transport supplies dependency bytes only. It does not prove application ABI compatibility, a product test,
+native consumer runtime, release qualification or publication. The application must independently bootstrap
+its source/tooling policy, derive its actual compiler/dependency/profile key, acquire and close a reader,
+and run its existing required checks. A different local compiler is a distinct input, even when the source pin matches.

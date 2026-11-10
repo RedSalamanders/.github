@@ -124,6 +124,34 @@ function Publish-CiSdkCacheEntry {
     $files=@(Get-CiSdkPayloadFiles $PayloadRoot)
     $manifest=[ordered]@{schemaVersion=1;role='DependencySdkInputs';key=$key;identity=(ConvertTo-CiSdkIdentity $Identity);files=$files}
     $manifestJson=$manifest|ConvertTo-Json -Depth 10
+    return Publish-CiSdkEntryData -StoreRoot $root -Identity $Identity -PayloadRoot $PayloadRoot -Files $files -ManifestJson $manifestJson
+}
+
+function Import-CiSdkCacheEntry {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$StoreRoot,[Parameter(Mandatory)][Collections.IDictionary]$Identity,
+        [Parameter(Mandatory)][string]$EntryRoot,
+        [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{64}$')][string]$ManifestSha256)
+    # Authenticate the envelope independently before calling. This primitive grants only byte integrity.
+    $path=Assert-CiContainedPath $EntryRoot (Join-Path $EntryRoot 'entry.json')
+    if(-not(Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Item $path).Length -gt 8MB){throw 'Missing or oversized imported SDK manifest.'}
+    $bytes=[IO.File]::ReadAllBytes($path)
+    if([Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant() -cne $ManifestSha256){throw 'Imported SDK manifest differs from the independent envelope.'}
+    $json=[Text.UTF8Encoding]::new($false,$true).GetString($bytes)
+    if(-not(Test-Json -Json $json -SchemaFile (Join-Path $PSScriptRoot '../../Schemas/sdk-cache-entry.schema.json'))){throw 'Invalid imported SDK manifest.'}
+    $manifest=$json|ConvertFrom-Json -AsHashtable
+    $key=Get-CiSdkCacheKey $Identity
+    if($manifest.key -cne $key -or (Get-CiSdkCacheKey $manifest.identity) -cne $key){throw 'Imported SDK inputs differ from the independently evaluated recipe.'}
+    $payload=Assert-CiContainedPath $EntryRoot (Join-Path $EntryRoot 'payload')
+    $files=@(Get-CiSdkPayloadFiles $payload)
+    if(($files|ConvertTo-Json -Depth 5 -Compress) -cne ($manifest.files|ConvertTo-Json -Depth 5 -Compress)){throw 'Imported SDK payload inventory or bytes changed.'}
+    return Publish-CiSdkEntryData -StoreRoot $StoreRoot -Identity $Identity -PayloadRoot $payload -Files $files -ManifestJson $json
+}
+
+function Publish-CiSdkEntryData {
+    param([string]$StoreRoot,[Collections.IDictionary]$Identity,[string]$PayloadRoot,[object[]]$Files,[string]$ManifestJson)
+    $root=Read-CiSdkStore $StoreRoot
+    $key=Get-CiSdkCacheKey $Identity
     $manifestSha=Get-CiSha256 $manifestJson
     $lease=Enter-CiSdkEntryLock $root $key -Writer
     try{
@@ -190,4 +218,4 @@ function Move-CiSdkCacheEntryToQuarantine {
     }finally{$lease.Dispose()}
 }
 
-Export-ModuleMember -Function Get-CiSdkCacheKey,Initialize-CiSdkStore,Publish-CiSdkCacheEntry,Open-CiSdkCacheEntry,Close-CiSdkCacheEntry,Move-CiSdkCacheEntryToQuarantine
+Export-ModuleMember -Function Get-CiSdkCacheKey,Initialize-CiSdkStore,Publish-CiSdkCacheEntry,Import-CiSdkCacheEntry,Open-CiSdkCacheEntry,Close-CiSdkCacheEntry,Move-CiSdkCacheEntryToQuarantine
