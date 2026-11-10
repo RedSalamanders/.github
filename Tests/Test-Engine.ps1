@@ -862,13 +862,14 @@ Invoke-Case 'Production SDK receipts expose distinct real artifact and receipt o
     Write-FixtureFile $root '.gitignore' '.build/'
     $null=Save-Fixture $root 'SDK fixture'
     $context=@{root=$root;project=$project;platform='x64';batch=(New-CiInputDescriptor $root)}
+    $context.batch.runId='654'
     $archive=Join-Path $root '.build/sdk/fixture.zip'
     [void][IO.Directory]::CreateDirectory((Split-Path $archive))
     $zip=[IO.Compression.ZipFile]::Open($archive,[IO.Compression.ZipArchiveMode]::Create)
     try{$null=$zip.CreateEntry('include/Fixture.h')}finally{$zip.Dispose()}
-    $oldOutput=$env:GITHUB_OUTPUT;$oldRun=$env:GITHUB_RUN_ID
+    $oldOutput=$env:GITHUB_OUTPUT;$oldRun=$env:GITHUB_RUN_ID;$oldAttempt=$env:GITHUB_RUN_ATTEMPT
     try{
-        $env:GITHUB_OUTPUT=Join-Path $root '.build/production-outputs.txt';$env:GITHUB_RUN_ID='654'
+        $env:GITHUB_OUTPUT=Join-Path $root '.build/production-outputs.txt';$env:GITHUB_RUN_ID='654';$env:GITHUB_RUN_ATTEMPT='2'
         Write-CiProductionReceipt -Context $context -Archives @($archive) -TestModeDisabled $true -SmokePassed $true
         $lines=@(Get-Content -LiteralPath $env:GITHUB_OUTPUT)
         Assert-Equal 2 $lines.Count
@@ -877,10 +878,13 @@ Invoke-Case 'Production SDK receipts expose distinct real artifact and receipt o
         Assert-True (Test-Path -LiteralPath $values.receipt_path -PathType Leaf)
         Assert-True (Test-Path -LiteralPath $values.archive_directory -PathType Container)
         $receipt=Get-Content -LiteralPath $values.receipt_path -Raw|ConvertFrom-Json
+        Assert-Equal 1 $receipt.executionBindingVersion
+        Assert-Equal 2 $receipt.runAttempt
+        Assert-Equal $context.batch.engine.ref $receipt.engine.ref
         Assert-Equal 1 @($receipt.archives).Count
         Assert-Equal (Get-FileHash -LiteralPath $archive).Hash.ToLowerInvariant() $receipt.archives[0].sha256
         Assert-True (Test-Path -LiteralPath (Join-Path $values.archive_directory $receipt.archives[0].file))
-    }finally{$env:GITHUB_OUTPUT=$oldOutput;$env:GITHUB_RUN_ID=$oldRun}
+    }finally{$env:GITHUB_OUTPUT=$oldOutput;$env:GITHUB_RUN_ID=$oldRun;$env:GITHUB_RUN_ATTEMPT=$oldAttempt}
 }
 
 Invoke-Case 'Prepare command exports distinct version and directory without release mutation' {
@@ -2206,6 +2210,8 @@ Invoke-Case 'Public SDK import binds the held authenticated archive and refuses 
         & $transport {param($saved) foreach($name in $saved.Keys){Set-Item ("Function:script:"+$name) -Value $saved[$name]};Remove-Variable transportControl -Scope Script} $originals
     }
 }
+
+. (Join-Path $PSScriptRoot 'ExecutionBinding.Cases.ps1')
 
 Invoke-Case 'Read-only cache syntax admits scoped capabilities and refuses write, dynamic and misplaced authority' {
     $lf=[string][char]10

@@ -61,6 +61,16 @@ It does not yet replace any consumer source build or supply a native/test/produc
 
 Admission freezes source, dependency inputs, engine policy, product version and build number. Native x64 and ARM64 Release test builds execute the project's declared normal regression suites against their exact built binaries. Required compiler-dependent tooling is a batch prerequisite. Empty discovery, disabled assertions, stale binaries, timeout, cancellation and unexpected skips fail the gate. Named negative controls must prove active Release failure detection.
 
+New native regression and production receipts additionally retain execution binding
+version 1, the frozen engine/product version/build number and the actual producer
+run attempt. Publication refuses missing/mismatched frozen producer inputs before
+writing a receipt. The strict regression binding reader checks these independently
+supplied inputs, complete execution/probe counts, profile artifact references and
+original canonical evidence references. Historical receipts retain the legacy reader;
+they cannot satisfy the stronger execution binding by adding a self-declared digest.
+This metadata contract authenticates no workflow or transported bytes by itself and
+does not enable candidate integration, delegation or main adoption.
+
 Both architecture branches and required prerequisites must pass before either production Release job starts. Production outputs have clean test-disabled identity. Test snapshots remain immutable. Dependency cache reuse requires compatible compiler, SDK, CRT, architecture and dependency inputs; test object reuse cannot contaminate production.
 
 DxUi may hand off its Release static library and matching compiler PDB from successful regression to
