@@ -15,6 +15,18 @@ function Assert-CiQualifiedSdkAbiReference {
     if($Reference.platform -cne $Reference.toolchainReference.compiler.platform){throw 'Qualified SDK reference has another toolchain architecture.'}
 }
 
+function Assert-CiQualifiedSdkReceipt {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][Collections.IDictionary]$Receipt,[Parameter(Mandatory)][string]$SourceCommit,
+        [Parameter(Mandatory)][int]$ApiRevision,[Parameter(Mandatory)][string]$Platform,[Parameter(Mandatory)][string]$Version)
+    if($Receipt.schemaVersion -ne 1 -or $Receipt.kind -cne 'sdk' -or $Receipt.version -cne $Version -or $Receipt.source -cne $SourceCommit -or
+        $Receipt.apiRevision -ne $ApiRevision -or $Receipt.platform -cne $Platform -or $Receipt.configuration -cne 'Release' -or
+        $Receipt.runtime -cne 'MD' -or $Receipt.testsIncluded -isnot [bool] -or $Receipt.testsIncluded){throw 'Qualified SDK reference needs exact pinned Release production SDK qualification.'}
+    foreach($gate in @('smokePassed','producerPdbIsolationPassed','missingPackagedPdbControlPassed','licenseClosurePassed','firstPartyWarningControlPassed','headerClosurePassed')){
+        if($Receipt[$gate] -isnot [bool] -or -not $Receipt[$gate]){throw "Native SDK qualification gate did not pass: $gate."}
+    }
+}
+
 function Write-CiQualifiedSdkAbiReference {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$SourceRoot,[Parameter(Mandatory)][string]$ToolingRoot,
@@ -46,12 +58,7 @@ function Write-CiQualifiedSdkAbiReference {
     try{
         $reader=[IO.StreamReader]::new($receiptStream,[Text.UTF8Encoding]::new($false,$true),$false,4096,$true)
         try{$receipt=$reader.ReadToEnd()|ConvertFrom-Json -AsHashtable}finally{$reader.Dispose()}
-        if($receipt.schemaVersion -ne 1 -or $receipt.kind -cne 'sdk' -or $receipt.version -cne $Version -or $receipt.source -cne $sourceCommit -or
-            $receipt.apiRevision -ne $source.apiRevision -or $receipt.platform -cne $Platform -or $receipt.configuration -cne 'Release' -or
-            $receipt.runtime -cne 'MD' -or $receipt.testsIncluded -isnot [bool] -or $receipt.testsIncluded){throw 'Qualified SDK reference needs exact pinned Release production SDK qualification.'}
-        foreach($gate in @('smokePassed','producerPdbIsolationPassed','missingPackagedPdbControlPassed','licenseClosurePassed','firstPartyWarningControlPassed','headerClosurePassed')){
-            if($receipt[$gate] -isnot [bool] -or -not $receipt[$gate]){throw "Native SDK qualification gate did not pass: $gate."}
-        }
+        Assert-CiQualifiedSdkReceipt $receipt $sourceCommit $source.apiRevision $Platform $Version
         # Preserve the full v1 producer recipe. This producer-only recheck binds the
         # portable reference to the inputs actually used by the already qualified SDK.
         $inputs=Import-Module (Join-Path $ToolingRoot 'Tools/SdkCacheInputs.psm1') -PassThru
@@ -98,4 +105,4 @@ function Write-CiQualifiedSdkAbiReference {
     return $output
 }
 
-Export-ModuleMember -Function Write-CiQualifiedSdkAbiReference,Assert-CiQualifiedSdkAbiReference
+Export-ModuleMember -Function Write-CiQualifiedSdkAbiReference,Assert-CiQualifiedSdkAbiReference,Assert-CiQualifiedSdkReceipt
