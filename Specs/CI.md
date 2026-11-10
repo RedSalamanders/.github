@@ -155,3 +155,11 @@ security / dependency-review from GitHub Actions (integration 15368). The RedPri
 rollout repairs its missing required-status rule while preserving existing review,
 merge-method, bypass, strict-update and create semantics. This static policy supplies
 no native verdict and does not enable candidate delegation or cross-run adoption.
+
+Isolated candidate batches retain their original canonical candidate and complete
+live controller/run/attempt binding. Native contexts rederive every batch field and
+admit only Release test-build/test roles. Pinned SDK preparation supports the bound
+isolated test-build role without forging main or authorizing production. This data
+binding is a prerequisite described in [Integration candidates](Integration_Candidates.md);
+native workflow deployment, authenticated results, required gate enforcement and main
+adoption remain unfinished and do not reduce existing local or main coverage.

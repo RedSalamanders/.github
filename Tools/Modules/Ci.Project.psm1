@@ -2,6 +2,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Ci.Policy.psm1') -ErrorAction Stop
 Import-Module (Join-Path $PSScriptRoot 'Ci.Execution.psm1') -ErrorAction Stop
+Import-Module (Join-Path $PSScriptRoot 'Ci.CandidateExecution.psm1') -ErrorAction Stop
 
 function New-CiProjectContext {
     [CmdletBinding()]
@@ -28,6 +29,10 @@ function New-CiProjectContext {
     if ($native) {
         if (-not $Descriptor) { throw 'Native phases require the frozen admission descriptor.' }
         $batch = Get-Content -LiteralPath $Descriptor -Raw | ConvertFrom-Json -AsHashtable
+        if($batch.Contains('candidateExecution') -or $env:GITHUB_REF -clike 'refs/heads/ci-native/*'){
+            if($Phase -cnotin @('ReleaseTestBuild','ReleaseTest')){throw 'Isolated candidate batches cannot enter production or another native role.'}
+            [void](Assert-CiCandidateExecutionBatch -Descriptor $batch)
+        }
         $actual = New-CiInputDescriptor $Root
         if ($batch.repository -cne $project.repository -or $batch.commit -cne $actual.commit -or
             $batch.nativeDigest -cne $actual.nativeDigest -or $batch.engine.ref -cne $project.engine.ref -or

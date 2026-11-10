@@ -1,4 +1,4 @@
-# Hosted main preparation only; local/source fallback and native acceptance remain with the application.
+# Hosted main or bound isolated test-build dependency inputs; acceptance remains with the application.
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 Import-Module (Join-Path $PSScriptRoot 'Ci.Policy.psm1')
@@ -72,10 +72,18 @@ function Initialize-CiPinnedSdkInput {
     param([Parameter(Mandatory)][Collections.IDictionary]$Context,
         [Parameter(Mandatory)][ValidatePattern('^[a-f0-9]{40}$')][string]$SourceCommit,
         [Parameter(Mandatory)][ValidateRange(1,65535)][int]$ApiRevision)
+    # A verified isolated candidate may read the same immutable dependency inputs.
+    # It never receives a main cache scope or a production role.
+    $main=$env:GITHUB_REF -ceq 'refs/heads/main'
+    $candidate=$false
+    if($Context.phase -ceq 'ReleaseTestBuild' -and $env:GITHUB_REF -clike 'refs/heads/ci-native/*'){
+        Import-Module (Join-Path $PSScriptRoot 'Ci.CandidateExecution.psm1')
+        $candidate=Assert-CiCandidateExecutionBatch -Descriptor $Context.batch
+    }
     # Do not give PR code a main/cache writer context, or emulate hosted admission locally.
     if($env:CI_NATIVE_BUILDS_DISABLED -eq 'true' -or -not $IsWindows -or $env:GITHUB_ACTIONS -cne 'true' -or
-        $env:RUNNER_ENVIRONMENT -cne 'github-hosted' -or $env:GITHUB_REF -cne 'refs/heads/main' -or
-        $Context.phase -cnotin @('ReleaseTestBuild','Production')){throw 'Automatic SDK preparation is limited to admitted hosted main Release build roles.'}
+        $env:RUNNER_ENVIRONMENT -cne 'github-hosted' -or (-not $main -and -not $candidate) -or
+        $Context.phase -cnotin @('ReleaseTestBuild','Production')){throw 'Automatic SDK preparation requires admitted hosted main Release builds or a bound isolated candidate test build.'}
     $native=if($Context.platform -ceq 'x64'){'X64'}elseif($Context.platform -ceq 'ARM64'){'Arm64'}else{throw 'Invalid native SDK platform.'}
     if([Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString() -cne $native -or
         [Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString() -cne $native){throw 'SDK preparation requires the matching native host.'}

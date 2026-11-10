@@ -678,3 +678,23 @@ controller objects, workflow blob reads, input binding and rechecks execute. Mov
 main/candidate/isolated refs, another workflow blob/engine and untracked controller
 inputs refuse. Complete engine validation passes all 99 cases. An actual native
 candidate workflow and authenticated result/reporting path are still unimplemented.
+
+### Candidate native batch prerequisites and first live SDK2 consumers
+
+The next binding controls pass all 100 engine cases plus syntax validation of 12
+workflows. They roundtrip the actual batch, mutate ten original fields, change the
+live attempt, execute the actual native-context role guard and execute SDK preparation's
+authorization prefix. Test-build/test remain admissible only with the complete live
+binding; isolated production/qualification and missing bindings refuse. Initial AST
+fixture failures lost the original module directory or variable scope; retained failed
+runs were corrected in the fixture without weakening production guards. This does not
+deploy native execution, a required check, delegated coverage or adoption.
+
+`SDK2_LiveConsumers_2026-11-10.json` records independently verified live main campaigns:
+RedMonitor 42883975390 and RedTilde 42883990951, both attempt 1. Every native regression
+and production job selected the exact qualified SDK2 key for its architecture. Original
+run/event/ref/source/engine/job identities, regression results and failure probes,
+downloaded canonical native evidence, production receipts and actual ZIP hashes were
+checked. Both campaigns passed every job. These are live hosted consumer results,
+separate from earlier controlled local origin substitutions. They do not establish
+the organization's controlled 3x/2x targets or change local obligations.

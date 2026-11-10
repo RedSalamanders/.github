@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "role": "LiveSdk2ConsumerAcceptanceEvidence",
+  "verifiedUtc": "2026-11-10T21:07:36.0650964Z",
+  "scope": "Authenticated live main native regressions and production packaging, both architectures, exact SDK2 selection and downloaded receipt/evidence/ZIP hashes",
+  "controlledAccelerationTargetsProved": false,
+  "candidateGateEnabled": false,
+  "localDelegationEnabled": false,
+  "campaigns": [
+    {
+      "producerRun": "42866937316",
+      "repository": "RedSalamanders/RedMonitor",
+      "sourceCommit": "77239c80471f7f07ba4801c6081bc08b7d9ae47d",
+      "runId": "42883975390",
+      "platforms": [
+        {
+          "executed": 6,
+          "manifestSha256": "09cbd229c96ab93461187b5c9523c4265492286239ff5725ed1d249d7bc80fe7",
+          "logs": [
+            {
+              "file": "regression-x64-completed.log",
+              "sha256": "371553f84f36e3d3af7ef9e423db378b1ad52e4aeb46cf3d07b6306f785bb31e",
+              "role": "regression"
+            },
+            {
+              "file": "production-x64-completed.log",
+              "sha256": "4782e064898f61915a20783f108a8150828bfaa0361d367a9f4e1d370bd265c9",
+              "role": "production"
+            }
+          ],
+          "preparationElapsedMs": 43410,
+          "regressionReceiptSha256": "b0bfc8fb9f88cb45d22111364fe5fa44bc1679955d400cb76ff8f965c257da2e",
+          "failed": 0,
+          "inputKey": "22c10221c095069bbe06c79d18bcefcb5cbc1eff4c4f81b11739084f6f726688",
+          "productionArchives": [
+            {
+              "file": "RedMonitor-x64-Release.zip",
+              "size": 4041609,
+              "sha256": "a20982ad5ee431e54b46a28baa3e0c9193e94a62ea06b65345ac751ff505a187"
+            }
+          ],
+          "productionReceiptSha256": "d95234b126650b1d1aaba55e36a05151565418defc90546a0808228818e5bfb0",
+          "platform": "x64",
+          "canonicalNativeEvidence": [
+            {
+              "sha256": "e715d5e2004539fd29e45413fef474f6266e1d4901f957131d0aed36da689334",
+              "file": "test-runs/20261110T193158180Z-b9821d273c5b41018d67bbd8e89ea25f/receipt.json"
+            }
+          ],
+          "registered": 6,
+          "unexpectedSkipped": 0
+        },
+        {
+          "executed": 6,
+          "manifestSha256": "650b26db0af5e2798733100f07e9ff68a04bef08cf5471cbf3e2cabcfe7e8ae4",
+          "logs": [
+            {
+              "file": "regression-ARM64-completed.log",
+              "sha256": "f9f4918dda3ca4e377a75bb4b3d0c814d2d3232cb3772119e3240b75f60d36c2",
+              "role": "regression"
+            },
+            {
+              "file": "production-ARM64-completed.log",
+              "sha256": "c5b9f73a11c63798eef0edaf75f6f95a745ff76d24031c7af4e79d4e9f51cda2",
+              "role": "production"
+            }
+          ],
+          "preparationElapsedMs": 81009,
+          "regressionReceiptSha256": "e0f0ed70978becdf41d37bbe962cf77de8272cccc76f8090860f5c4ab371513a",
+          "failed": 0,
+          "inputKey": "3d029294bc8a4fbdcabc2d78f81815c647d3d769dd030164d5da2b57304a74b9",
+          "productionArchives": [
+            {
+              "file": "RedMonitor-ARM64-Release.zip",
+              "size": 4486411,
+              "sha256": "bd346e1c601ed85517d376034fbcb3861d44901471bb5b9067c36c5fb530b17c"
+            }
+          ],
+          "productionReceiptSha256": "6b9cc549560e08b15dafa3adfd47c696a6a246c841668da3b6289c509359a119",
+          "platform": "ARM64",
+          "canonicalNativeEvidence": [
+            {
+              "sha256": "b892e7722df7dc4ee6e6fd359a95f40bc578e15c8798990895c3a472dc8dae05",
+              "file": "test-runs/20261110T193601545Z-8b5f87a54ce947f981e3b09add9e7501/receipt.json"
+            }
+          ],
+          "registered": 6,
+          "unexpectedSkipped": 0
+        }
+      ],
+      "attempt": 1,
+      "engineRef": "cd9f01d1711d1abce1856ca4052f49e93eaef3ac",
+      "producerAttempt": 1,
+      "originalJobs": [
+        {
+          "id": 130067357392,
+          "name": "qualify / admission",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014639",
+          "labels": [
+            "ubuntu-24.04"
+          ]
+        },
+        {
+          "id": 130067593556,
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014642",
+          "labels": [
+            "windows-11-vs2026-arm"
+          ]
+        },
+        {
+          "id": 130067593706,
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014641",
+          "labels": [
+            "windows-2025-vs2026"
+          ]
+        },
+        {
+          "id": 130077890509,
+          "name": "qualify / test-gate",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014668",
+          "labels": [
+            "ubuntu-24.04"
+          ]
+        },
+        {
+          "id": 130077982808,
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014672",
+          "labels": [
+            "windows-2025-vs2026"
+          ]
+        },
+        {
+          "id": 130077982867,
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014673",
+          "labels": [
+            "windows-11-vs2026-arm"
+          ]
+        },
+        {
+          "id": 130087483250,
+          "name": "qualify / complete",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014688",
+          "labels": [
+            "ubuntu-24.04"
+          ]
+        }
+      ]
+    },
+    {
+      "producerRun": "42866951701",
+      "repository": "RedSalamanders/RedTilde",
+      "sourceCommit": "98852533ffc09b76c13fbc20884ac1e2a742ee88",
+      "runId": "42883990951",
+      "platforms": [
+        {
+          "executed": 155,
+          "manifestSha256": "5914a4c0cc6f9691848165f5280102db16d8df151d2964be3020c8e66a771299",
+          "logs": [
+            {
+              "file": "regression-x64-completed.log",
+              "sha256": "81a8938b77fde04eaee02e19c2ca2f3dbd91f5878ed8aad6f35030d00a4c17aa",
+              "role": "regression"
+            },
+            {
+              "file": "production-x64-completed.log",
+              "sha256": "aa24374fad4e9471d9d8590ba47006515d3de13103f87afd3c458af8a8a8b9a3",
+              "role": "production"
+            }
+          ],
+          "preparationElapsedMs": 40862,
+          "regressionReceiptSha256": "401efecccec3345321e387dfd6a497675a1cdb80692ebec68ea4cf9f18b406b8",
+          "failed": 0,
+          "inputKey": "9fe17c6be8728ef5b4759e65592968a1fa853c1ef2c413f86a8ebe68d653ab39",
+          "productionArchives": [
+            {
+              "file": "RedTilde-0.1.429-x64-20261110-195009-279.zip",
+              "size": 3505356,
+              "sha256": "2d0b277ac518e38e1dfb32a0e99c447d1707f27dc21157a036f9c8b5ebf205ff"
+            }
+          ],
+          "productionReceiptSha256": "35c68410aa624607f7d9473df9f69a1bda3a1999c308c3ccd80ea7868ab8f073",
+          "platform": "x64",
+          "canonicalNativeEvidence": [
+            {
+              "sha256": "0c49f503a55c5f6ed0ac572caa0ae5d4fc95ef8dea9e4e427f9c1ee20aefa43a",
+              "file": "evidence/test-runs/20261110T193451747Z-8056-b22379466740425486722b05a4ba8beb/payload/receipt.json"
+            }
+          ],
+          "registered": 155,
+          "unexpectedSkipped": 0
+        },
+        {
+          "executed": 155,
+          "manifestSha256": "0e423ba37c3ed27abd8f930572c5f18fa0537508383064d55c07e34113f49219",
+          "logs": [
+            {
+              "file": "regression-ARM64-completed.log",
+              "sha256": "59d7804b246b20403d63892f11ce8db07578d7e630c855ce3b951e25330ad568",
+              "role": "regression"
+            },
+            {
+              "file": "production-ARM64-completed.log",
+              "sha256": "99136461baa8d68f1033303e8081814da6954df9c50761040fc3ec4647116ff7",
+              "role": "production"
+            }
+          ],
+          "preparationElapsedMs": 84456,
+          "regressionReceiptSha256": "d9852c26e21c92f15aa01f5bcd48b6b970bb4e54f8168e18ee1955dee5f6905b",
+          "failed": 0,
+          "inputKey": "bac4808c2225a84cf3ef51d9bf27dd34e8fa7e9347c8853a8182aafd9e0f21a6",
+          "productionArchives": [
+            {
+              "file": "RedTilde-0.1.429-ARM64-20261110-115629-385.zip",
+              "size": 3970064,
+              "sha256": "d0432017885ed816b01176e3bd5f035d39b60c12ebf03c57be0df4b90f06c94a"
+            }
+          ],
+          "productionReceiptSha256": "61a77b7b3474aef47e74c1b692e3dfe920dc41690a5f31ff12e3df9304327602",
+          "platform": "ARM64",
+          "canonicalNativeEvidence": [
+            {
+              "sha256": "aefe541b29545de1f0f1e7cfa28099a415f9d9dd48616e9290d76fce7d7aceb8",
+              "file": "evidence/test-runs/20261110T193646444Z-3460-35e41bd793194fc4948201fec69c5a63/payload/receipt.json"
+            }
+          ],
+          "registered": 155,
+          "unexpectedSkipped": 0
+        }
+      ],
+      "attempt": 1,
+      "engineRef": "cd9f01d1711d1abce1856ca4052f49e93eaef3ac",
+      "producerAttempt": 1,
+      "originalJobs": [
+        {
+          "id": 130067397414,
+          "name": "qualify / admission",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014640",
+          "labels": [
+            "ubuntu-24.04"
+          ]
+        },
+        {
+          "id": 130067688901,
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014644",
+          "labels": [
+            "windows-11-vs2026-arm"
+          ]
+        },
+        {
+          "id": 130067688910,
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014643",
+          "labels": [
+            "windows-2025-vs2026"
+          ]
+        },
+        {
+          "id": 130079116424,
+          "name": "qualify / test-gate",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014677",
+          "labels": [
+            "ubuntu-24.04"
+          ]
+        },
+        {
+          "id": 130079218967,
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014678",
+          "labels": [
+            "windows-2025-vs2026"
+          ]
+        },
+        {
+          "id": 130079220795,
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014679",
+          "labels": [
+            "windows-11-vs2026-arm"
+          ]
+        },
+        {
+          "id": 130089758826,
+          "name": "qualify / complete",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014695",
+          "labels": [
+            "ubuntu-24.04"
+          ]
+        }
+      ]
+    }
+  ]
+}
