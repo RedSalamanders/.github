@@ -284,3 +284,46 @@ It does not establish consumer compatibility, a native application result, local
 delegation or main adoption. V2 application readers and their actual tool/header/
 per-file ABI checks must be implemented and accepted before any v2 input can
 replace an existing consumer obligation.
+
+## Qualified SDK application reader
+
+The separate `HostedQualifiedDependencyInput` descriptor names the retained
+original archive, exact entry/reference/receipt paths, producer run/attempt and
+unchanged application source/API. It remains independently retained below the
+application `.build`, outside the byte store. The strict schema admits no result
+fields. Source/tooling/storage checkouts still pass the canonical raw bootstrap.
+
+An explicit qualified distribution uses authenticated v2 transport before writing
+that descriptor. It does not restore the producer's vcpkg inventory or recompute
+the producer's entire v1 build recipe in the consumer. Legacy distribution and
+reader behavior retain their existing path. No current distribution entry changes
+merely because the schema can represent the new contract.
+
+`Open-CiApplicationSdkInput` accepts the application's actual `MSBuildPath` for
+v2. It reauthenticates the exact producer envelope, derives the original binding
+from held archive bytes and compares the actual complete portable tool/header/
+library reference with the producer's reference. A precise mismatch supplies no
+SDK bytes and retains source fallback. Invalid origin, descriptor, byte binding
+or unsupported overrides refuse. A hit holds the generic original SDK entry
+lease and validates the canonical SDK payload before creating its live witness.
+The evidence role is `PinnedQualifiedReleaseSdkV2`, distinct from a local v1
+recipe execution; it preserves the producer's original identity, key and manifest.
+
+The v2 witness binds the actual selected local MSBuild, VC/SDK roots, compiler
+version/host and CL/link/lib/shader tools. The real MSBuild guard writes bounded
+plain tool properties beneath the profile's `.build` intermediate directory;
+the separate verifier checks those actual values against the held reader. It
+rejects contract downgrade, unknown/stale/closed owners, missing metadata, another
+tool/root or unsupported compiler environment. The immutable SDK include tree
+precedes other include directories in each SDK-consuming translation unit. All
+existing per-file ABI checks remain; v2 also rejects managed, custom exception/
+character-layout and opaque backend ABI overrides.
+
+Close reauthenticates producer/archive provenance, rechecks tool/header/library,
+canonical source/tooling/storage and payload bytes, then releases the witness.
+The independent descriptor and current controller bytes must remain unchanged.
+A failed close releases ownership and cannot publish accepted build provenance.
+Applications must explicitly pass the v2 contract returned by the verified reader
+and reopen the same known recipe for packaging. Runtime, native architecture,
+ETW, package, symbol and other product gates remain independent. Controlled-origin
+reader or guard fixtures do not establish live hosted-origin or product acceptance.

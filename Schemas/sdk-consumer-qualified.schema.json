@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "role", "sourceCommit", "apiRevision", "platform", "sourceRoot", "toolingRoot", "storageEngineRoot", "storeRoot", "manifestSha256", "producerRun", "attempt", "archivePath", "entryPath", "referencePath", "receiptPath"],
+  "properties": {
+    "schemaVersion": {"const": 2}, "role": {"const": "HostedQualifiedDependencyInput"},
+    "sourceCommit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "apiRevision": {"type": "integer", "minimum": 1, "maximum": 65535},
+    "platform": {"enum": ["x64", "ARM64"]},
+    "sourceRoot": {"type": "string", "minLength": 1}, "toolingRoot": {"type": "string", "minLength": 1},
+    "storageEngineRoot": {"type": "string", "minLength": 1}, "storeRoot": {"type": "string", "minLength": 1},
+    "manifestSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "producerRun": {"type": "string", "pattern": "^[1-9][0-9]{0,19}$"},
+    "attempt": {"type": "integer", "minimum": 1, "maximum": 100000},
+    "archivePath": {"type": "string", "minLength": 1}, "entryPath": {"type": "string", "minLength": 1},
+    "referencePath": {"type": "string", "minLength": 1}, "receiptPath": {"type": "string", "minLength": 1}
+  }
+}

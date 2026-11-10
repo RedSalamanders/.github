@@ -75,7 +75,7 @@ function Assert-CiSdkAbiCompilerEnvironment {
 function Get-CiSdkAbiReference {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$ToolingRoot,[Parameter(Mandatory)][string]$MSBuildPath,[Parameter(Mandatory)][string]$ProjectPath,
-        [Parameter(Mandatory)][ValidateSet('x64','ARM64')][string]$Platform)
+        [Parameter(Mandatory)][ValidateSet('x64','ARM64')][string]$Platform,[switch]$PassThruBinding)
     if(-not $IsWindows){throw 'The real SDK ABI reference requires the selected Windows native toolchain.'}
     Assert-CiSdkAbiCompilerEnvironment
     if([IO.Path]::GetFileName($MSBuildPath) -ine 'MSBuild.exe'){throw 'The SDK ABI reference requires the actual selected MSBuild executable.'}
@@ -117,7 +117,9 @@ function Get-CiSdkAbiReference {
         vcToolsVersion=[string]$properties.VCToolsVersion;windowsSdkVersion=$sdkVersion;preferredToolArchitecture=$hostTool;
         vcToolArchitecture=[string]$properties.VCToolArchitecture;windowsSdkToolArchitecture=[string]$properties.WindowsSDKToolArchitecture}
     $files=Get-CiPortableSdkFileReference -Roots $roots
-    return New-CiSdkAbiReference -Compiler $compiler -FileReference $files
+    $reference=New-CiSdkAbiReference -Compiler $compiler -FileReference $files
+    if($PassThruBinding){return [pscustomobject]@{Reference=$reference;Properties=$properties;SelectedTools=$selected;Roots=$roots}}
+    return $reference
 }
 
 function New-CiSdkAbiReference {
