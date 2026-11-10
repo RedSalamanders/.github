@@ -319,6 +319,17 @@ precedes other include directories in each SDK-consuming translation unit. All
 existing per-file ABI checks remain; v2 also rejects managed, custom exception/
 character-layout and opaque backend ABI overrides.
 
+The parent reader still refuses ambient `CL`, `_CL_`, `INCLUDE`, `LIB` and
+`LIBPATH` overrides before evaluation. Its live witness also binds the pinned
+project's evaluated default `IncludePath`, `LibraryPath` and `ReferencePath`.
+Each actual consumer project must match those search properties. VC targets may
+initialize the child check's `INCLUDE`, `LIB` and `LIBPATH` only to those same
+ordered absolute paths; different paths or compiler-option overrides refuse.
+The bounded property file represents semicolons as pipes, never shell arguments.
+Percent, pipe and line-break characters in default search paths are unsupported
+and fail closed. These checks do not change the portable SDK byte reference or
+admit an application test result.
+
 Close reauthenticates producer/archive provenance, rechecks tool/header/library,
 canonical source/tooling/storage and payload bytes, then releases the witness.
 The independent descriptor and current controller bytes must remain unchanged.

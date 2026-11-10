@@ -66,9 +66,26 @@ function Get-CiPortableSdkFileReference {
 }
 
 function Assert-CiSdkAbiCompilerEnvironment {
+    param([Collections.IDictionary]$MSBuildSearchPaths=$null)
     if($env:CI_NATIVE_BUILDS_DISABLED -eq 'true'){throw 'Real SDK ABI toolchain evaluation is forbidden in compiler-free PR checks.'}
     foreach($name in @('CL','_CL_','INCLUDE','LIB','LIBPATH')){
-        if([Environment]::GetEnvironmentVariable($name)){throw "Portable SDK ABI reference does not support the $name compiler environment override."}
+        $value=[Environment]::GetEnvironmentVariable($name)
+        if(-not $value){continue}
+        $property=@{INCLUDE='IncludePath';LIB='LibraryPath';LIBPATH='ReferencePath'}[$name]
+        if($null -eq $MSBuildSearchPaths -or -not $property -or -not $MSBuildSearchPaths.Contains($property)){
+            throw "Portable SDK ABI reference does not support the $name compiler environment override."
+        }
+        # VC targets initialize child-process search paths. They are admitted only
+        # against the parent reader's evaluated defaults, never by their presence.
+        $paths=@($value,[string]$MSBuildSearchPaths[$property])
+        $normalized=@(foreach($list in $paths){
+            $entries=@(foreach($entry in $list.Split(';',[StringSplitOptions]::RemoveEmptyEntries)){
+                if(-not [IO.Path]::IsPathFullyQualified($entry)){throw 'Qualified SDK compiler search paths must be absolute.'}
+                [IO.Path]::GetFullPath($entry).TrimEnd('\','/').ToLowerInvariant()
+            })
+            $entries -join ';'
+        })
+        if($normalized[0] -cne $normalized[1]){throw "Qualified SDK actual compiler search environment differs: $name."}
     }
 }
 
@@ -87,7 +104,8 @@ function Get-CiSdkAbiReference {
     $required=@('PlatformToolset','VCToolsInstallDir','VCToolsVersion','WindowsSdkDir','WindowsTargetPlatformVersion',
         'PreferredToolArchitecture','VCTargetsPath','VCToolArchitecture','WindowsSDKToolArchitecture')
     $names=$required+@('CLToolExe','CLToolPath','CLToolArchitecture','LinkToolExe','LinkToolPath','LinkToolArchitecture',
-        'LibToolExe','LibToolPath','LibToolArchitecture','FxCompileToolArchitecture','FXCToolPath','MultiProcFXC','FxCompileToolExe')
+        'LibToolExe','LibToolPath','LibToolArchitecture','FxCompileToolArchitecture','FXCToolPath','MultiProcFXC','FxCompileToolExe',
+        'IncludePath','LibraryPath','ReferencePath')
     $arguments=@($ProjectPath,'/nologo','/p:Configuration=Release',"/p:Platform=$Platform",('-getProperty:'+($names -join ',')))
     if($PreferredToolArchitecture){$arguments+=@('/p:PreferredToolArchitecture='+$PreferredToolArchitecture)}
     $evaluation=Invoke-CiProcess -FilePath $MSBuildPath -Arguments $arguments `

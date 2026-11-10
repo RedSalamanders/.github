@@ -1827,8 +1827,10 @@ Invoke-Case 'Qualified SDK witnesses bind actual compiler roots and reject downg
     $expected=[ordered]@{PlatformToolset='v145';VCToolsVersion='14.52.37025';WindowsTargetPlatformVersion='10.0.26100.0';
         PreferredToolArchitecture='x64';VCToolArchitecture='Native64Bit';WindowsSDKToolArchitecture='Native64Bit';
         VCToolsInstallDir=(Join-Path $build 'msvc');WindowsSdkDir=(Join-Path $build 'windows');VCTargetsPath=(Join-Path $build 'targets');MSBuildBinPath=(Join-Path $build 'msbuild');
+        IncludePath=((Join-Path $build "msvc/include's")+';'+(Join-Path $build 'windows/include')+';');LibraryPath=((Join-Path $build 'msvc/lib')+';');ReferencePath=((Join-Path $build 'msvc/references')+';');
         CL=(Join-Path $build 'msvc/bin/cl.exe');Link=(Join-Path $build 'msvc/bin/link.exe');Lib=(Join-Path $build 'msvc/bin/lib.exe');FXC=(Join-Path $build 'windows/bin/fxc.exe')}
     $actual=@{};foreach($name in @('PlatformToolset','VCToolsInstallDir','VCToolsVersion','WindowsSdkDir','WindowsTargetPlatformVersion','PreferredToolArchitecture','VCTargetsPath','VCToolArchitecture','WindowsSDKToolArchitecture','MSBuildBinPath')){$actual[$name]=$expected[$name]}
+    foreach($name in @('IncludePath','LibraryPath','ReferencePath')){$actual[$name]=$expected[$name].Replace(';','|')}
     foreach($name in @('CLToolPath','CLToolExe','CLToolArchitecture','LinkToolPath','LinkToolExe','LinkToolArchitecture','LibToolPath','LibToolExe','LibToolArchitecture','FXCToolPath','FxCompileToolExe','FxCompileToolArchitecture','MultiProcFXC')){$actual[$name]=''}
     $propertyPath=Join-Path $build 'actual-tools.txt'
     $payload=Join-Path $build 'sdk'
@@ -1838,12 +1840,15 @@ Invoke-Case 'Qualified SDK witnesses bind actual compiler roots and reject downg
     try{
         [IO.File]::WriteAllLines($propertyPath,[string[]]@($actual.Keys|Sort-Object|ForEach-Object {$_+'='+$actual[$_]}),[Text.UTF8Encoding]::new($false))
         Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath
+        $environmentPaths=@{INCLUDE='IncludePath';LIB='LibraryPath';LIBPATH='ReferencePath'}
+        foreach($name in $environmentPaths.Keys){[Environment]::SetEnvironmentVariable($name,$expected[$environmentPaths[$name]],'Process')}
+        Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath
         $command=Join-Path $engineRoot 'Tools/Test-SdkConsumerLease.ps1'
         $arguments=@('-NoProfile','-NonInteractive','-File',$command,'-ProjectRoot',$fixture,'-LeasePath',$witness.Path,'-SdkRoot',$payload,'-Platform','x64','-Configuration','Release','-SdkContract','QualifiedAbiV2','-ToolPropertyFile',$propertyPath)
         $child=Invoke-CiProcess (Get-Process -Id $PID).Path $arguments $engineRoot -AllowFailure
         Assert-True ($child.exitCode -eq 0) $child.stderr
         Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release}
-        foreach($field in @('VCToolsVersion','VCToolsInstallDir','WindowsTargetPlatformVersion','WindowsSdkDir','VCTargetsPath','MSBuildBinPath','CLToolPath','CLToolExe','LinkToolExe','LibToolPath','FXCToolPath','FxCompileToolArchitecture')){
+        foreach($field in @('VCToolsVersion','VCToolsInstallDir','WindowsTargetPlatformVersion','WindowsSdkDir','VCTargetsPath','MSBuildBinPath','CLToolPath','CLToolExe','LinkToolExe','LibToolPath','FXCToolPath','FxCompileToolArchitecture','IncludePath','LibraryPath','ReferencePath')){
             $changed=$actual|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$changed[$field]='controlled-incompatible-value'
             [IO.File]::WriteAllLines($propertyPath,[string[]]@($changed.Keys|Sort-Object|ForEach-Object {$_+'='+$changed[$_]}))
             Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath}
@@ -1852,6 +1857,11 @@ Invoke-Case 'Qualified SDK witnesses bind actual compiler roots and reject downg
         [IO.File]::WriteAllLines($propertyPath,[string[]]@($changed.Keys|Sort-Object|ForEach-Object {$_+'='+$changed[$_]}))
         Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath}
         [IO.File]::WriteAllLines($propertyPath,[string[]]@($actual.Keys|Sort-Object|ForEach-Object {$_+'='+$actual[$_]}))
+        foreach($name in $environmentPaths.Keys){
+            [Environment]::SetEnvironmentVariable($name,(Join-Path $build 'unqualified-search-override'),'Process')
+            Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath}
+            [Environment]::SetEnvironmentVariable($name,$expected[$environmentPaths[$name]],'Process')
+        }
         $env:CL='/controlled-backend-override'
         Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath}
     }finally{
