@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "role": "LocalForegroundProfileQualification",
+  "repository": "RedSalamanders/DxUi",
+  "sourceCommit": "8fb488e94cff64f6da3a5fe5b561ac315f195f62",
+  "authorization": "Computer available for all interactive tests in this session",
+  "scope": "Four real foreground suites per profile; canonical warnings, leases and verified restoration",
+  "arm64RuntimeQualified": false,
+  "completeRepositoryQualification": false,
+  "profiles": [
+    {
+      "suites": [
+        "Menu",
+        "NativeTextInput",
+        "MenuResources",
+        "MenuResourceScaling"
+      ],
+      "configuration": "Debug",
+      "buildLogSha256": "f1888b32e51551890d782e23c6f0162fdd4425d291d1773a47e29e2c40a4235b",
+      "passed": 4,
+      "nativeLogSha256": "1215542c24783e20b5b648dbc319cd434ba06f0fd3553f5bc86085ee86eeae11",
+      "desktopRestoration": "Foreground/focus unchanged and pointer restored",
+      "capabilitySkipped": 0,
+      "platform": "x64"
+    },
+    {
+      "suites": [
+        "Menu",
+        "NativeTextInput",
+        "MenuResources",
+        "MenuResourceScaling"
+      ],
+      "configuration": "Release",
+      "buildLogSha256": "0e07cfa246341fb9467e501015d92937beb4cad1da72e1995ae1ad50381e099e",
+      "passed": 4,
+      "nativeLogSha256": "33915d3fd638f08ec155ec14177792a509a0cc93898127f7bcc3f3ba9d6c0bff",
+      "desktopRestoration": "Foreground/focus unchanged and pointer restored",
+      "capabilitySkipped": 0,
+      "platform": "x64"
+    },
+    {
+      "suites": [
+        "Menu",
+        "NativeTextInput",
+        "MenuResources",
+        "MenuResourceScaling"
+      ],
+      "configuration": "ASan Debug",
+      "buildLogSha256": "3dacb9d89fdf9e74b01d6271c183b61c9229ea7750020887989e84f65db5b739",
+      "passed": 4,
+      "nativeLogSha256": "69647603576a0db6110bdc68ae28ec814d5f329144e997c768ba883c0f428d39",
+      "desktopRestoration": "Foreground/focus unchanged and pointer restored",
+      "capabilitySkipped": 0,
+      "platform": "x64"
+    }
+  ]
+}

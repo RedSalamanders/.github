@@ -755,3 +755,15 @@ packages and all seven jobs passed. All four roles selected the exact qualified 
 inputs from producer 42866937316. Downloaded original receipt, canonical native
 evidence and production ZIP hashes agree. This is live native/package acceptance;
 the controlled 3x/2x acceleration targets remain unproved.
+
+Final byte-verifier qualification: all **110 engine behavior cases** pass, including
+the corrected public negative boundary controls; all **13 workflow definitions** pass
+syntax checks. Original result: engine-20261110T231231306Z-0b182e7ed3a4484c8506c1234443562a/results.json.
+This proves the executed synthetic controls, not actual hosted shadow acceptance.
+
+[DxUi foreground qualification](DxUi_ForegroundProfiles_2026-11-11.json) records
+all four real foreground suites passing on x64 Debug, Release and ASan Debug at
+source 8fb488e94cff64f6da3a5fe5b561ac315f195f62. Every suite recorded zero capability
+skips; all three canonical prerequisite builds had zero warnings/errors, and all
+leases verified foreground/focus preservation and pointer restoration. This closes
+these local foreground profiles only, not native ARM64 or whole-repository qualification.
