@@ -484,3 +484,40 @@ qualified-sdk-abi prefixes); create-only producer references remain beneath the
 verified producer tooling's `.build/qualified-sdk/`. Earlier failed enum-path
 probes remain preserved. Full helper source and the schema own the implemented
 contract in [SDK_Cache.md](../../SDK_Cache.md); no JSON file authenticates itself.
+
+## 2026-11-10 continuation checkpoint
+
+- Shared PR 41 merged as 7730c6f0d61b2ba104a90e129a66cf5c1b025c35; deploy source
+  45dd64d3d0b44e9660bd811ba142bf6131312716. All 83 engine cases passed (zero failures),
+  results at `Z:/RedSalamander.Perf/unified-ci/engine-20261110T140254683Z-69e6001ed12f43e4bb99cbfd29dec063/results.json`.
+  All Windows/Linux/winget hosted checks passed. Actual workflow-branch controls exercise both native
+  MSBuild hosts; actual producer query controls require explicit x64/arm64 metadata selection.
+- The first QualifiedAbiV2 campaigns 42824735706 (f2), 42824740904 (4cdf) and 42824746357 (21fa)
+  passed x64 SDK gates. ARM64 native SDK gates completed but final portable reference acquisition failed
+  its compiler-host guard. The old workflow used legacy MSBuild and source props could override its host
+  environment. No qualified archive from these failed attempts is admitted. Failed logs are preserved
+  under `Z:/src/RedSalamanders.CI/.build/sdk2-*-pin-arm64-failure-*.log`. Repeat through the reviewed
+  new caller before enabling transport or replacing legacy distribution entries.
+- Monitor PR 46 merged as e5f679985b6c9f6a5c2427c54406a281cd586b5c. Main run 42822249370 passed
+  both native Release regression and both production/package roles. Source fallback is not a hosted SDK hit.
+- Xe PR 81 merged as a8de0288fe0e7378d18e7dfeae331887fd244507. Main run 42827831994 remained pending
+  at this checkpoint. Source/local SDK evidence remains separately curated in each application's Measurements.
+- Prism controlled-origin SDK run `20261110T135727081Z-93608-363a81abfd6a460d95a7e9ee4a1d1e79`
+  completed its full native runtime payload successfully after smoke keyboard isolation. Subsequent production
+  packaging caught an incorrect SDK notice directory. The corrected separate production/package run at
+  `sdk-v2-reader-controls/a350c1df65bf47d78d6b3793c2830e8a` passed, using the actual `licenses` payload.
+  These are distinct source snapshots, not one combined current-head or live hosted-origin qualification.
+- Tilde's longer worktree exposed native capture fixture path limits. The extended-argv experiment caused
+  additional fixture failures and was reverted. Failures remain in the original and short isolated worktrees.
+  Compact capture names preserve every GUID bit and all assertions; Source qualification is in progress.
+- DxUi's cold concurrent x64/ARM64 restores passed with the proposed restore leases. Complete tooling and
+  all validators passed. Raw fixture: `.build/i61-concurrent-restore/dbc939b461e54751942c58e91544d378` in
+  the owned DxUi worktree; focused real file-sharing controls cover initialization, failure release, identical
+  platform contention and disjoint roots/platforms. Scoped native acceptance and integration remain pending.
+- Root PR 211 still has no Entire reviewer approval; PR 212 remains dependent/draft and the four foreground
+  obligations require an agreed time. No approval was inferred and no GitHub Actions run was cancelled.
+
+All controlled-origin SDK work uses real SDK/native bytes with a private origin resolver fixture. It establishes
+neither live GitHub producer authentication nor a product test verdict from a dependency cache. Required native
+candidate integration, local delegation, main adoption, local candidates and controlled 3x/2x acceptance remain
+open. See revision 12 of the [WIP plan](../../Plans/WIP/TestingAndIntegrationAcceleration_2026-11-09.md).
