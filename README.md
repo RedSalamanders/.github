@@ -72,3 +72,8 @@ The winget idempotency implementation derives from the MIT-licensed RedSalamande
 The compiler-free organization dependency report is produced by .github/workflows/dependency-status.yml (weekly/manual) and Tools/Get-DependencyStatus.ps1. It inventories the six exact main trees, custom source locks, vcpkg pins and the latest engine tag without adoption or compilation. Unreadable/private repositories fail complete-coverage status while retaining readable results; the JSON report states remaining native/vendored vulnerability coverage limits. Run Tests/Test-DependencyStatus.ps1 for the seven independent API fixtures.
 
 Optional winget.smokeTests declare bounded product-specific installed-alias commands in the reviewed adapter; the shared engine always exercises every alias with --help. Native installed registration, alias target/version and exact cleanup are required before submission. The installer does not rely on upstream source correlation for an unpublished package.
+
+Frozen merge-queue inputs can be inspected with `Tools/Get-MergeGroupInputs.ps1 -Root <project> -EventPath <event.json>`.
+Independent current-main/queue-ref APIs and fetched Git objects must agree before and after acquisition.
+This input-only command grants no native test verdict, PR membership, merge authority or result adoption;
+see [the candidate contract](Specs/Integration_Candidates.md).

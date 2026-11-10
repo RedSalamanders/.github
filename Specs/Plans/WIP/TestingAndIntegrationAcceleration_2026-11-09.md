@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 No remaining slice is waived and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 12, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 13, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -590,3 +590,24 @@ S2/S4/S5/S6B and S9/S10 remain partial or open. S7's required trusted native can
 and S8's cross-run main adoption are not deployed. Keep existing local and main obligations. The controlled
 3x/2x organization targets remain unproved. The [execution evidence](../../TestRuns/I61_2026-11-09/README.md)
 retains snapshots, failures, provenance boundaries and rollout details.
+
+Revision 13 continuation:
+
+- Shared PR 43 fixes the qualified SDK matrix's explicit job name to match its authenticated
+  verifier. Transport remains disabled pending new successful campaigns through the corrected caller.
+- Xe main 42827831994 and DxUi main 42825563314 passed both native regression and production
+  architectures. These are Source/same-run library results, not live qualified cross-repository SDK hits.
+- Tilde PR 102 merged as a025648236a9ed9db1c96141f735b52ec0a6a3d2. Six Source builds, three full
+  ordinary x64 native profiles, hidden captures/crash/real ASan probes, production and extraction passed.
+  Actual local API-5 SDK Release runtime, production/extraction and invalid-recipe controls also passed.
+  Local producer 6111103 is not a GitHub run. Main 42847307500 and live hosted SDK adoption remain pending.
+- Merge-queue input acquisition now has a separate strict data-only role, with 89 engine cases passing.
+  Real fetched-object controls reject API/main/ref/controller races. No required native gate, branch-policy
+  change, local delegation or main-result adoption is enabled by this input-only foundation.
+- The user excludes foreground/interactive testing for this session. Those local obligations remain
+  pending; no foreground test started. Root 211 still awaits actual Entire reviewer approval, and 212 is
+  dependent/draft. Continue independent implementation and hosted qualification without cancelling Actions.
+- DxUi's scoped runner currently publishes tooling reuse only after the later native batch succeeds.
+  A native failure therefore repeats already successful tooling. S4/S5 must retain independently verified
+  completed obligations before a later independent failure, preserving input barriers, failed outcomes and
+  coverage accounting. Do not promote focused retries into the failed batch's original success.
