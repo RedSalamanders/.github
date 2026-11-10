@@ -698,3 +698,21 @@ downloaded canonical native evidence, production receipts and actual ZIP hashes 
 checked. Both campaigns passed every job. These are live hosted consumer results,
 separate from earlier controlled local origin substitutions. They do not establish
 the organization's controlled 3x/2x targets or change local obligations.
+
+### Manual native shadow workflow controls
+
+The committed caller/workflow passes all 102 engine cases and syntax validation of
+13 workflows. Controls retain exact manual-only/read-only roles, literal native hosts,
+original attempt-qualified inputs/profile/receipt/evidence artifacts and absence of
+production, cache saves or check/state writers. The actual freeze script executes
+against a real Git controller with a recording canonical-acquisition boundary. Native
+and prose snapshots retain identical original data; another engine or refused
+acquisition creates no output. The underlying canonical acquisition/API race controls
+remain separate and continue passing.
+
+The initial uncommitted-template test correctly found only committed templates; new
+callers were committed before conformance qualification. The first recording fixture
+used a relative marker path. Its two exact markers were preserved beneath the governed
+sandbox, removed from their accidental locations, and the fixture now resolves its
+owned root first. Failed runs remain retained. No hosted native shadow, project rollout,
+required merge gate, local delegation or main adoption is established by these controls.
