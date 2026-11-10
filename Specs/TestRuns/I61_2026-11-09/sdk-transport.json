@@ -1,0 +1,9 @@
+{
+  "role":"DependencyTransportEvidence",
+  "date":"2026-11-10",
+  "engineControls":{"executed":67,"failed":0,"root":"Z:/RedSalamander.Perf/unified-ci/engine-20261110T073630807Z-d7b04e13192e4eee87b3a477565a95c8"},
+  "storeControls":{"passed":13,"failed":0,"root":"Z:/RedSalamander.Perf/unified-ci/sdk-store-20261110T072947387Z-4429bc1bd22f4250841532d5abbbbd19"},
+  "producer":{"repository":"RedSalamanders/DxUi","runId":"42695804476","attempt":1,"commit":"56f498d39c705aced252dae4885c546ede0c85ff","engine":"2afac5fa8ce23a0b7fc5e1a69c29429975907a2d"},
+  "input":{"source":"f2e328a0a26a18ca66bf4b2aea77bf010c9515e1","platform":"x64","artifactId":"13710151981","archiveBytes":59283575,"archiveSha256":"a60f2ec55494f1867eb4478d90ba81c3baaeae622c83bd44ac41411e04f2ce96","key":"56b96d9838d5b7ef555f06cc45e57ce286cb3cc7e061d67af43f7b14a2276e84","manifestSha256":"b51b163dc87146dc3d9ed6db0fa81cac25f8882559df3f2f186bf0c76f2f0ec5"},
+  "acceptance":"Metadata resolution, authenticated archive transfer, safe extraction, generic atomic import and the public import command passed. Expected identity was held from an earlier independently authenticated producer envelope before the second acquisition. This is byte transport acceptance only; it supplies no local compiler compatibility or product/native consumer test verdict."
+}

@@ -1,0 +1,11 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object","additionalProperties":false,
+  "required":["schemaVersion","repository","workflowPath","workflowBlob","engineRef"],
+  "properties":{
+    "schemaVersion":{"const":1},"repository":{"const":"RedSalamanders/DxUi"},
+    "workflowPath":{"const":".github/workflows/sdk-inputs.yml"},
+    "workflowBlob":{"type":"string","pattern":"^[a-f0-9]{40}$"},
+    "engineRef":{"type":"string","pattern":"^[a-f0-9]{40}$"}
+  }
+}

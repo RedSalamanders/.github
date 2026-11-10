@@ -173,6 +173,24 @@ Case 'mutation during a reader lease is detected on close and releases the lease
     try{Refuses {Close-CiSdkCacheEntry $entry}}finally{[IO.File]::WriteAllBytes($file,$bytes)}
     $restored=Open-CiSdkCacheEntry $store $identity $published.ManifestSha256;Close-CiSdkCacheEntry $restored
 }
+Case 'import preserves the exact original manifest and independent identity across stores' {
+    $importStore=Join-Path $root '.build/imported-sdk-cache'
+    Initialize-CiSdkStore $root $importStore
+    $original=[IO.File]::ReadAllBytes((Join-Path $published.Path 'entry.json'))
+    $imported=Import-CiSdkCacheEntry -StoreRoot $importStore -Identity $identity -EntryRoot $published.Path -ManifestSha256 $published.ManifestSha256
+    Check ($imported.ManifestSha256 -ceq $published.ManifestSha256) 'Import rewrote the original output identity.'
+    Check ([Convert]::ToBase64String([IO.File]::ReadAllBytes((Join-Path $imported.Path 'entry.json'))) -ceq [Convert]::ToBase64String($original)) 'Manifest bytes changed during import.'
+    $leased=Open-CiSdkCacheEntry $importStore $identity $published.ManifestSha256
+    Close-CiSdkCacheEntry $leased
+    Refuses {Import-CiSdkCacheEntry $importStore $identity $published.Path ('0'*64)}
+    $changed=$identity|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$changed.apiRevision=5
+    Refuses {Import-CiSdkCacheEntry $importStore $changed $published.Path $published.ManifestSha256}
+    $file=Join-Path $published.Payload 'lib/DxUi.lib';$bytes=[IO.File]::ReadAllBytes($file)
+    try{
+        [IO.File]::WriteAllText($file,'corrupt imported input')
+        Refuses {Import-CiSdkCacheEntry $importStore $identity $published.Path $published.ManifestSha256}
+    }finally{[IO.File]::WriteAllBytes($file,$bytes)}
+}
 Case 'quarantine retains original bytes and a missing entry is a cache miss' {
     $retained=Move-CiSdkCacheEntryToQuarantine $store $identity $published.ManifestSha256
     Check (Test-Path -LiteralPath (Join-Path $retained 'payload/lib/DxUi.lib')) 'Quarantine lost the original payload.'

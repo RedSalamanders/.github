@@ -1460,6 +1460,75 @@ Invoke-Case 'Prose-only candidate inputs create no native obligation and supply 
     foreach($field in @('passed','qualified','outcome','executed','adopted')){Assert-True (-not $candidate.Contains($field))}
 }
 
+Invoke-Case 'Hosted SDK envelopes bind the reviewed workflow, engine, selected native job and server archive digest' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkTransport.psm1')
+    $transport=Get-Module Ci.SdkTransport
+    $transportPolicy=Get-Content (Join-Path $engineRoot 'Policy/sdk-transport.json') -Raw|ConvertFrom-Json
+    $source='f2e328a0a26a18ca66bf4b2aea77bf010c9515e1'
+    $run=@{id=123;run_attempt=2;status='completed';conclusion='success';event='workflow_dispatch';head_branch='main';path=$transportPolicy.workflowPath;
+        repository=@{full_name='RedSalamanders/DxUi';id=456};head_sha=('a'*40);
+        referenced_workflows=@(@{sha=$transportPolicy.engineRef;path=('RedSalamanders/.github/.github/workflows/sdk-inputs.yml@'+$transportPolicy.engineRef)})}
+    $jobs=@{total_count=1;jobs=@(@{name='inputs / sdk (x64, windows-2025-vs2026)';status='completed';conclusion='success';run_id=123;run_attempt=2;runner_group_name='GitHub Actions';labels=@('windows-2025-vs2026')})}
+    $artifact=@{id=789;name="dependency-sdk-$source-x64-2";expired=$false;digest=('sha256:'+('b'*64));size_in_bytes=1024;
+        workflow_run=@{id=123;head_sha=('a'*40);head_branch='main';repository_id=456;head_repository_id=456}}
+    $artifacts=@{total_count=1;artifacts=@($artifact)}
+    $workflow=@{sha=$transportPolicy.workflowBlob;path=$transportPolicy.workflowPath}
+    $snapshot=@{run=$run;jobs=$jobs;artifacts=$artifacts;workflow=$workflow}
+    $accepted=& $transport {param($s,$pin) Test-CiHostedSdkEnvelope $s.run $s.jobs $s.artifacts $s.workflow $pin x64 123 2} $snapshot $source
+    Assert-Equal 'HostedDependencySdkEnvelope' $accepted.role
+    Assert-Equal ('b'*64) $accepted.archiveSha256
+    Assert-True (-not $accepted.Contains('passed'))
+    foreach($failure in @('running','failed','cancelled','event','branch','repository','attempt','caller','engine','reference','missing-job','native-failed','native-attempt','native-label','native-host','truncated-jobs','truncated-artifacts','duplicate','expired','digest','foreign-artifact','source','size')){
+        $bad=$snapshot|ConvertTo-Json -Depth 9|ConvertFrom-Json -AsHashtable
+        switch($failure){
+            'running'{$bad.run.status='in_progress'};'failed'{$bad.run.conclusion='failure'};'cancelled'{$bad.run.conclusion='cancelled'}
+            'event'{$bad.run.event='pull_request'};'branch'{$bad.run.head_branch='feature'};'repository'{$bad.run.repository.full_name='outside/DxUi'}
+            'attempt'{$bad.run.run_attempt=3};'caller'{$bad.workflow.sha='0'*40};'engine'{$bad.run.referenced_workflows[0].sha='0'*40}
+            'reference'{$bad.run.referenced_workflows[0].path='outside/untrusted.yml@main'};'missing-job'{$bad.jobs.jobs=@();$bad.jobs.total_count=0}
+            'native-failed'{$bad.jobs.jobs[0].conclusion='failure'};'native-attempt'{$bad.jobs.jobs[0].run_attempt=1}
+            'native-label'{$bad.jobs.jobs[0].labels=@('windows-latest')};'native-host'{$bad.jobs.jobs[0].runner_group_name='foreign'}
+            'truncated-jobs'{$bad.jobs.total_count=101};'truncated-artifacts'{$bad.artifacts.total_count=101}
+            'duplicate'{$bad.artifacts.artifacts+=@($bad.artifacts.artifacts[0]);$bad.artifacts.total_count=2}
+            'expired'{$bad.artifacts.artifacts[0].expired=$true};'digest'{$bad.artifacts.artifacts[0].digest='sha256:not-a-digest'}
+            'foreign-artifact'{$bad.artifacts.artifacts[0].workflow_run.head_repository_id=457}
+            'source'{$bad.artifacts.artifacts[0].name='dependency-sdk-other-x64-2'};'size'{$bad.artifacts.artifacts[0].size_in_bytes=1GB+1}
+        }
+        Assert-Refused {& $transport {param($s,$pin) Test-CiHostedSdkEnvelope $s.run $s.jobs $s.artifacts $s.workflow $pin x64 123 2} $bad $source}
+    }
+}
+Invoke-Case 'SDK archive validation refuses traversal, links and case collisions before any extraction' {
+    $transport=Get-Module Ci.SdkTransport
+    $validRoot=Join-Path $runRoot 'archive-valid';[void][IO.Directory]::CreateDirectory($validRoot)
+    $validZip=Join-Path $validRoot 'valid.zip';$zip=[IO.Compression.ZipFile]::Open($validZip,[IO.Compression.ZipArchiveMode]::Create)
+    try{
+        $entry=$zip.CreateEntry('include/fixture.h');$writer=[IO.StreamWriter]::new($entry.Open())
+        try{$writer.Write('verified fixture bytes')}finally{$writer.Dispose()}
+    }finally{$zip.Dispose()}
+    $destination=Join-Path $validRoot 'out'
+    & $transport {param($z,$d) Expand-CiSdkArchive $z $d} $validZip $destination
+    Assert-Equal 'verified fixture bytes' ([IO.File]::ReadAllText((Join-Path $destination 'include/fixture.h')))
+    Assert-Refused {& $transport {param($z,$d) Expand-CiSdkArchive $z $d} $validZip $destination}
+    $envelope=@{archiveBytes=(Get-Item $validZip).Length;archiveSha256=(Get-FileHash $validZip).Hash.ToLowerInvariant()}
+    & $transport {param($e,$p) Assert-CiSdkArchiveBytes $e $p} $envelope $validZip
+    $bytes=[IO.File]::ReadAllBytes($validZip);$bytes[0]=$bytes[0] -bxor 1;[IO.File]::WriteAllBytes($validZip,$bytes)
+    Assert-Refused {& $transport {param($e,$p) Assert-CiSdkArchiveBytes $e $p} $envelope $validZip}
+    foreach($badName in @('../escape','/absolute','a\\file','CON.h','A.h')){
+        $directory=Join-Path $runRoot ('archive-'+[guid]::NewGuid().ToString('N'));[void][IO.Directory]::CreateDirectory($directory)
+        $zipPath=Join-Path $directory 'bad.zip';$zip=[IO.Compression.ZipFile]::Open($zipPath,[IO.Compression.ZipArchiveMode]::Create)
+        try{
+            [void]$zip.CreateEntry('a.h')
+            [void]$zip.CreateEntry($badName)
+        }finally{$zip.Dispose()}
+        $destination=Join-Path $directory 'extracted'
+        Assert-Refused {& $transport {param($z,$d) Expand-CiSdkArchive $z $d} $zipPath $destination}
+        Assert-True (-not(Test-Path -LiteralPath $destination))
+    }
+    $directory=Join-Path $runRoot ('archive-link-'+[guid]::NewGuid().ToString('N'));[void][IO.Directory]::CreateDirectory($directory)
+    $zipPath=Join-Path $directory 'link.zip';$zip=[IO.Compression.ZipFile]::Open($zipPath,[IO.Compression.ZipArchiveMode]::Create)
+    try{$entry=$zip.CreateEntry('link.h');$entry.ExternalAttributes=([int]0xA000 -shl 16)}finally{$zip.Dispose()}
+    Assert-Refused {& $transport {param($z,$d) Expand-CiSdkArchive $z $d} $zipPath (Join-Path $directory 'out')}
+}
+
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count
 $summary = [ordered]@{ schemaVersion = 1; passed = $failed -eq 0; executed = $script:rows.Count; failed = $failed; cases = $script:rows.ToArray() }
 $resultPath = Join-Path $runRoot 'results.json'

@@ -327,3 +327,10 @@ The public command then acquired [RedSalamander #211](https://github.com/RedSala
 from independent current REST PR, main and merge-ref snapshots, with the [complete frozen input descriptor](candidate-211-inputs.json).
 It uses the actual current REST merge-ref API; the initial missing-field refusal is not relabelled as success.
 This positive probe runs no product code and supplies no native qualification verdict.
+
+[SDK transfer evidence](sdk-transport.json) records the successful real x64 producer download and atomic import,
+including its server archive digest, original raw manifest digest and complete input key. The public command
+also passed. Sixty-seven engine controls and thirteen storage controls passed, including native job/attempt,
+workflow/engine, missing/duplicate/expired metadata, corruption, unsafe archives and cross-store raw manifest
+preservation. Synthetic fixtures establish refusal/integrity behavior; consumer adoption and native runtime
+remain separate. The local compiler recipe has another key, so this hosted import does not prove a local hit.
