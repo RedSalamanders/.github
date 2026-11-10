@@ -31,6 +31,10 @@ Native child commands always capture stdout/stderr, including on windowless Wind
 
 ## Admission and persistent state
 
+The [integration candidate input contract](Integration_Candidates.md) freezes the exact PR/head/base/merge
+tree through independent API/Git checks. Its data-only role does not enable native PR execution or replace
+any local/main obligation. Required candidate execution, enforcement and trusted adoption remain undeployed.
+
 The explicit DxUi-main dependency SDK producer is a separate input-only role governed by
 [SDK_Cache.md](SDK_Cache.md#explicit-pinned-native-sdk-producer). It uses reviewed pinned source and
 tooling snapshots on native selected architectures, retains every SDK gate and has read-only tokens.

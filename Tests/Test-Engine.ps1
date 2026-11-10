@@ -1383,6 +1383,83 @@ Invoke-Case 'Fast SDK bootstrap retains the exact ordinal raw map, missing-file 
     Assert-Refused {Get-CiSdkCheckoutContentIdentity $root}
 }
 
+function New-CandidateFixture([string]$Name,[switch]$Prose){
+    $root=New-Fixture $Name
+    $base=(Invoke-CiGit $root @('rev-parse','HEAD')).stdout.Trim()
+    $null=Invoke-CiGit $root @('checkout','-b','candidate-feature')
+    if($Prose){Write-FixtureFile $root 'README.md' 'Candidate prose only.'}else{Write-FixtureFile $root 'src/main.cpp' 'int fixture() { return 42; }'}
+    $head=Save-Fixture $root 'Candidate head'
+    $tree=(Invoke-CiGit $root @('rev-parse',($head+'^{tree}'))).stdout.Trim()
+    $merge=(Invoke-CiGit $root @('commit-tree',$tree,'-p',$base,'-p',$head,'-m','Synthetic candidate fixture')).stdout.Trim()
+    $pr=@{number=43;state='open';draft=$false;merged=$false;mergeable=$true;
+        head=@{sha=$head;repo=@{full_name='RedSalamanders/RedMonitor'}};base=@{sha=$base;ref='main';repo=@{full_name='RedSalamanders/RedMonitor'}}}
+    return @{root=$root;base=$base;head=$head;merge=$merge;tree=$tree;pr=$pr}
+}
+Invoke-Case 'Candidate freeze uses the complete immutable synthetic merge, exact parents, native inputs and version' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Candidate.psm1')
+    $f=New-CandidateFixture 'candidate-native'
+    $candidate=New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)
+    Assert-Equal $f.tree $candidate.mergeTree
+    Assert-Equal $f.head $candidate.headCommit
+    Assert-Equal $f.base $candidate.baseCommit
+    Assert-Equal $f.merge $candidate.input.commit
+    Assert-True ($candidate.nativeRequired -and $candidate.input.nativeDigest -cne $candidate.baseNativeDigest)
+    Assert-Equal (New-CiInputDescriptor $f.root -Ref $f.merge).version $candidate.input.version
+    Assert-CiIntegrationCandidateCurrent -Root $f.root -Candidate $candidate -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)
+    # Uncommitted workspace data cannot substitute for a committed integration or execute as controller code.
+    Write-FixtureFile $f.root '.ci/project.json' 'Unreadable working policy must not enter a committed source snapshot.'
+    Write-FixtureFile $f.root 'src/never-run.ps1' 'throw "Untrusted source was executed"'
+    $again=New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)
+    Assert-Equal $candidate.identity $again.identity
+}
+Invoke-Case 'Candidate snapshots refuse draft, closed, conflicting, unknown, moved and malformed PR metadata' {
+    $f=New-CandidateFixture 'candidate-refusals'
+    foreach($field in @('draft','merged','state','mergeable','number','base-ref','base-repository','base-sha','head-sha','head-repository')){
+        $pr=$f.pr|ConvertTo-Json -Depth 8|ConvertFrom-Json -AsHashtable
+        switch($field){
+            'draft'{$pr.draft=$true};'merged'{$pr.merged=$true};'state'{$pr.state='closed'};'mergeable'{$pr.mergeable=$null};'number'{$pr.number='43'}
+            'base-ref'{$pr.base.ref='feature'};'base-repository'{$pr.base.repo.full_name='RedSalamanders/DxUi'};'base-sha'{$pr.base.sha='1'*40}
+            'head-sha'{$pr.head.sha='--output=unexpected'};'head-repository'{$pr.head.repo.full_name='../../outside'}
+        }
+        Assert-Refused {New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)}
+    }
+    Assert-Refused {New-CiIntegrationCandidate -Root $f.root -Repository 'outside/project' -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)}
+    $reverse=(Invoke-CiGit $f.root @('commit-tree',$f.tree,'-p',$f.head,'-p',$f.base,'-m','Reversed synthetic parents')).stdout.Trim()
+    $pr=$f.pr|ConvertTo-Json -Depth 8|ConvertFrom-Json -AsHashtable
+    Assert-Refused {New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $pr -CurrentMainCommit $f.base -MergeCommit $reverse -ControllerEngineRef ('f'*40)}
+    Assert-Refused {New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $pr -CurrentMainCommit $f.base -MergeCommit $f.head -ControllerEngineRef ('f'*40)}
+}
+Invoke-Case 'Candidate recheck refuses source/base movement and complete descriptor tampering, including recomputed digests' {
+    $f=New-CandidateFixture 'candidate-drift'
+    $candidate=New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)
+    Assert-Refused {Assert-CiIntegrationCandidateCurrent -Root $f.root -Candidate $candidate -PullRequest $f.pr -CurrentMainCommit $f.head -MergeCommit $f.merge -ControllerEngineRef ('f'*40)}
+    foreach($field in @('pullRequest','mergeTree','headCommit','controllerEngineRef','input','nativeRequired','passed')){
+        $changed=$candidate|ConvertTo-Json -Depth 15|ConvertFrom-Json -AsHashtable
+        switch($field){'pullRequest'{$changed.pullRequest=44};'mergeTree'{$changed.mergeTree='1'*40};'headCommit'{$changed.headCommit='2'*40};'controllerEngineRef'{$changed.controllerEngineRef='3'*40};
+            'input'{$changed.input.buildNumber++};'nativeRequired'{$changed.nativeRequired=$false};default{$changed.passed=$true}}
+        $changed.Remove('identity');$changed.identity=Get-CiSha256 ($changed|ConvertTo-Json -Depth 15 -Compress)
+        Assert-Refused {Assert-CiIntegrationCandidateCurrent -Root $f.root -Candidate $changed -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)}
+    }
+}
+Invoke-Case 'Current REST candidate acquisition reads the exact merge ref independently of PR payloads' {
+    $module=Get-Module Ci.Candidate
+    $valid=@{ref='refs/pull/43/merge';object=@{type='commit';sha=('b'*40)}}
+    Assert-Equal ('b'*40) (& $module {param($r) Get-CiCandidateMergeRefCommit $r 43} $valid)
+    foreach($field in @('ref','type','sha')){
+        $bad=$valid|ConvertTo-Json -Depth 3|ConvertFrom-Json -AsHashtable
+        switch($field){'ref'{$bad.ref='refs/pull/44/merge'};'type'{$bad.object.type='tag'};'sha'{$bad.object.sha='--output=unexpected'}}
+        Assert-Refused {& $module {param($r) Get-CiCandidateMergeRefCommit $r 43} $bad}
+    }
+}
+Invoke-Case 'Prose-only candidate inputs create no native obligation and supply no execution or qualification verdict' {
+    $f=New-CandidateFixture 'candidate-prose' -Prose
+    $candidate=New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('f'*40)
+    Assert-True (-not $candidate.nativeRequired)
+    Assert-Equal $candidate.baseNativeDigest $candidate.input.nativeDigest
+    Assert-True ($candidate.input.buildNumber -gt (New-CiInputDescriptor $f.root -Ref $f.base).buildNumber)
+    foreach($field in @('passed','qualified','outcome','executed','adopted')){Assert-True (-not $candidate.Contains($field))}
+}
+
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count
 $summary = [ordered]@{ schemaVersion = 1; passed = $failed -eq 0; executed = $script:rows.Count; failed = $failed; cases = $script:rows.ToArray() }
 $resultPath = Join-Path $runRoot 'results.json'
