@@ -15,6 +15,9 @@ The optional `integration-execution.yml` caller runs a frozen candidate as a man
 native shadow campaign under its own trusted-main isolated branch. It supplies no
 required merge check, local delegation or main adoption. Operator admission, project
 rollout and hosted acceptance remain open; see [the candidate contract](Specs/Integration_Candidates.md).
+After rollout, `Tools/Start-CandidateShadow.ps1 -Root <clean current main> -PullRequest <PR>
+-ExpectedIdentity <independently frozen identity> -WhatIf` previews operator admission.
+Its append-only request journal and dispatch acknowledgment supply no execution verdict.
 Manual diagnostic qualification accepts `platform=x64`, `platform=ARM64` or the compatibility default `platform=All`.
 The chosen architecture is recorded by its native evidence; single-architecture diagnostics do not advance Release publication.
 Normal and manual native jobs reuse repository-scoped vcpkg package archives, including compatible fallback caches after engine/tooling changes. The pinned package manager still checks package ABI identity; product builds and test evidence remain independently required.

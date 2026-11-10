@@ -171,6 +171,24 @@ remains diagnostic and must not authorize another candidate.
 
 This is shadow execution until independent workflow/job/artifact-byte authentication,
 exact-head reporting and actual required-check/stale-base enforcement are implemented
-and qualified. Existing local and main coverage remains active. An operator dispatch
-helper, project pin/caller rollout and actual hosted shadow acceptance remain open;
+and qualified. Existing local and main coverage remains active. Project pin/caller
+rollout and actual hosted shadow acceptance remain open;
 successful script/structural controls do not establish those results.
+
+`Tools/Start-CandidateShadow.ps1` provides operator admission for a clean exact current
+main checkout and its exact clean reviewed engine. Supply an independently acquired
+candidate identity. Conformance and independent Git/API caller bytes are checked before
+any remote write. The command reacquires the complete candidate and main before creating
+one unique isolated branch at main, then reacquires candidate/main/ref again before
+requesting dispatch. It never updates an existing branch, executes product code, creates
+a check, updates qualification state, merges or cancels a run. Prose-only input returns
+`NoNativeRequired` without a remote write and without granting baseline success.
+
+The append-only `.build/ci/candidate-requests/<nonce>/` journal separately records frozen
+inputs, confirmed ref creation and confirmed dispatch requests. A failed request retains
+its original journal/ref; there is no destructive rollback or retry over an old request.
+`DispatchRequested` means only that GitHub accepted a request, not that a run began or
+passed. Authenticate the actual original run/attempt/jobs/artifacts separately. `-WhatIf`
+performs normal read/fetch reacquisition (retaining diagnostic local Git refs) but creates
+no journal, remote ref or dispatch. Operator credentials remain in the trusted command;
+the candidate workflow still receives only its own read-only token.

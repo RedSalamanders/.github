@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 No remaining slice is waived and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 17, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 18, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -17,7 +17,7 @@ Make ordinary edit/test cycles substantially faster and avoid repeating equivale
 
 The design principle is **one authoritative execution for each distinct validation obligation and artifact identity**. Reuse an accepted result when all of its relevant inputs and trust requirements still match. Execute only the changed or previously uncovered obligations. Different configurations, architectures, production roles and environmental scenarios are different obligations.
 
-This document is the canonical organization-owned implementation record in `RedSalamanders/.github/Specs/Plans/WIP/`. I61 retains its original tracking identifier; RedSalamander no longer owns a separate copy. The user authorized implementation until completion across all organization projects on 2026-11-09. Execute the ordered slices, retain acceptance evidence, and update owning specifications in the same changes. The progress record below distinguishes working implementation from deployed acceptance. Publication, account/billing changes, new drive-root workspaces, foreground input, and unrelated work remain outside this authorization.
+This document is the canonical organization-owned implementation record in `RedSalamanders/.github/Specs/Plans/WIP/`. I61 retains its original tracking identifier; RedSalamander no longer owns a separate copy. The user authorized implementation until completion across all organization projects on 2026-11-09. Execute the ordered slices, retain acceptance evidence, and update owning specifications in the same changes. The progress record below distinguishes working implementation from deployed acceptance. Publication, account/billing changes, new drive-root workspaces and unrelated work remain outside this authorization. On 2026-11-10 the user explicitly made this computer available for all interactive tests, superseding the earlier session exclusion. Retain harness warnings, owned-window desktop leases, cross-project serialization and verified restoration.
 
 Current authority remains:
 
@@ -734,3 +734,35 @@ Revision 17 continuation:
   Interactive suites are excluded for this session at the user's request; they
   remain outstanding. Keep all unfinished slices and controlled 3x/2x acceptance
   open, and keep this plan in WIP.
+
+Revision 18 continuation:
+
+- Shared #52 merged complete candidate native-batch binding. Shared #53 merged
+  the optional read-only manual native shadow workflow and generated caller.
+  Both literal native architectures retain original attempt-qualified inputs,
+  receipts, tested profile bytes and separate sandbox/workspace diagnostics.
+  No production/check/state writer or shared cache save is present.
+- Trusted operator admission is implemented with exact main/controller/caller
+  validation, canonical candidate reacquisition before each remote stage and
+  append-only frozen/ref-created/dispatch-requested journals. All 103 engine
+  controls and 13 workflow syntax checks pass. Actual project caller rollout,
+  hosted shadow campaigns, authenticated result/reporting, required native-gate
+  enforcement, local delegation and main adoption remain open.
+- RedSalamander's clean local qualified-SDK production build passed with zero
+  warnings/errors and passed separate portable extraction/startup/plugin smoke.
+  It uses local producer 6111105; this is not live GitHub SDK-origin acceptance.
+  Its current fresh Full SDK run, including foreground entries, is in progress.
+- The user superseded the interactive-test exclusion and authorized this computer
+  for all interactive tests. DxUi's Debug Menu, NativeTextInput, MenuResources and
+  MenuResourceScaling passed with zero capability skips and verified desktop
+  restoration. Release/ASan foreground qualification continues, serialized against
+  RedSalamander's desktop ownership. Earlier excluded-run records remain historical.
+- RedXe draft #83 fixes SDK-aware AV measurement. Source/SDK native and six-by-five
+  measurement runs, complete tooling and SDK production/package extraction passed.
+  Final PrePush nevertheless failed Desk Clock's unchanged private-memory bar:
+  4,718,592 bytes against 4,194,304. Preserve that original failure, keep the draft
+  held, investigate attribution and do not replace it with a passing retry.
+- DxUi main 42893120320 passed both native regressions and the global test gate;
+  production branches are still running. RedPrism 42885249187 remains in native
+  qualification. Overall 3x/2x targets and remaining S2/S4/S5/S6B/S7/S8/S9/S10
+  acceptance remain open. This plan stays WIP.

@@ -1881,6 +1881,108 @@ Get-Content (Join-Path $Root 'recording-inputs.json') -Raw
         }
     }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}}
 }
+Invoke-Case 'Trusted shadow admission creates only an exact main ref and dispatch, preserving preview and race journals' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.CandidateAdmission.psm1')
+    $admission=Get-Module Ci.CandidateAdmission
+    $originalCommands=& $admission {@{GetMain=(Get-Command Get-CiMainHead).ScriptBlock;GetCandidate=(Get-Command Get-CiIntegrationCandidate).ScriptBlock;Api=(Get-Command Invoke-CiApi).ScriptBlock}}
+    $controller=Resolve-CiCommit $engineRoot HEAD
+    foreach($scenario in @('native','preview','prose','wrong-identity','caller-blob','pre-create-main','pre-dispatch-candidate','pre-dispatch-ref','dispatch-refusal')){
+        $root=New-Fixture ('shadow-admission-'+$scenario)
+        $project=Read-CiProject $root;$project.engine.ref=$controller
+        Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 10)
+        Write-FixtureFile $root 'Tools/Invoke-ProjectCi.ps1' "throw 'Admission must not execute product code.'"
+        foreach($template in Get-CiProjectWorkflowTemplates $project){
+            Write-FixtureFile $root ('.github/workflows/'+$template.Name) ([IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$controller).Replace('@OPERATIONS@','Prepare, Release, Winget'))
+        }
+        Save-Fixture $root 'Trusted main callers'
+        $base=Resolve-CiCommit $root HEAD
+        $null=Invoke-CiGit $root @('checkout','-b','proposal')
+        if($scenario -ceq 'prose'){Write-FixtureFile $root 'README.md' 'Prose proposal.'}else{Write-FixtureFile $root 'src/main.cpp' 'int fixture() { return 2; }'}
+        Save-Fixture $root 'Proposal'
+        $head=Resolve-CiCommit $root HEAD
+        $null=Invoke-CiGit $root @('checkout','main')
+        $null=Invoke-CiGit $root @('merge','--no-ff','--no-edit','proposal')
+        $merge=Resolve-CiCommit $root HEAD
+        $null=Invoke-CiGit $root @('checkout','--detach',$base)
+        $pr=@{number=43;state='open';draft=$false;merged=$false;mergeable=$true;
+            base=@{ref='main';sha=$base;repo=@{full_name=$project.repository}};head=@{sha=$head;repo=@{full_name=$project.repository}}}
+        $candidate=New-CiIntegrationCandidate -Root $root -Repository $project.repository -PullRequest $pr -CurrentMainCommit $base -MergeCommit $merge -ControllerEngineRef $controller
+        $blob=(Invoke-CiGit $root @('rev-parse',($base+':.github/workflows/integration-execution.yml'))).stdout.Trim()
+        & $admission {
+            param($Candidate,$Main,$Blob,$Scenario)
+            $script:dispatchControl=@{candidate=$Candidate;main=$Main;blob=$Blob;scenario=$Scenario;acquisitions=0;creates=0;dispatches=0;created=$null}
+            function script:Get-CiMainHead {
+                param($Repository)
+                if($script:dispatchControl.scenario -ceq 'pre-create-main' -and $script:dispatchControl.acquisitions -ge 2){return ('e'*40)}
+                $script:dispatchControl.main
+            }
+            function script:Get-CiIntegrationCandidate {
+                param($Root,$PullRequest)
+                $script:dispatchControl.acquisitions++
+                if($script:dispatchControl.scenario -ceq 'pre-dispatch-candidate' -and $script:dispatchControl.acquisitions -ge 3){
+                    $changed=$script:dispatchControl.candidate|ConvertTo-Json -Depth 15|ConvertFrom-Json -AsHashtable
+                    $changed.identity='f'*64
+                    return $changed
+                }
+                $script:dispatchControl.candidate
+            }
+            function script:Invoke-CiApi {
+                param($Route,$Method='GET',$Body)
+                if($Method -ceq 'GET' -and $Route.Contains('/contents/.github/workflows/integration-execution.yml?ref=')){
+                    return @{path='.github/workflows/integration-execution.yml';sha=$(if($script:dispatchControl.scenario -ceq 'caller-blob'){'d'*40}else{$script:dispatchControl.blob})}
+                }
+                if($Method -ceq 'POST' -and $Route.EndsWith('/git/refs')){
+                    $script:dispatchControl.creates++
+                    if($Body.ref -cnotmatch '^refs/heads/ci-native/pr43/[a-f0-9]{64}/[a-f0-9]{32}$' -or $Body.sha -cne $script:dispatchControl.main){throw 'Admission attempted a foreign ref or candidate checkout.'}
+                    $script:dispatchControl.created=@{ref=$Body.ref;object=@{type='commit';sha=$Body.sha}}
+                    return $script:dispatchControl.created
+                }
+                if($Method -ceq 'GET' -and $Route.Contains('/git/ref/heads/ci-native/')){
+                    if($script:dispatchControl.scenario -ceq 'pre-dispatch-ref'){return @{ref=$script:dispatchControl.created.ref;object=@{type='commit';sha=('d'*40)}}}
+                    return $script:dispatchControl.created
+                }
+                if($Method -ceq 'POST' -and $Route.EndsWith('/actions/workflows/integration-execution.yml/dispatches')){
+                    $script:dispatchControl.dispatches++
+                    $expected=$script:dispatchControl.created.ref.Substring(11)
+                    if($Body.ref -cne $expected -or $Body.inputs.pull_request -cne '43' -or
+                        $Body.inputs.identity -cne $script:dispatchControl.candidate.identity -or
+                        -not $expected.EndsWith('/'+$Body.inputs.nonce)){throw 'Dispatch lost original candidate or isolation inputs.'}
+                    if($script:dispatchControl.scenario -ceq 'dispatch-refusal'){throw 'Recording dispatch service refusal.'}
+                    return $null
+                }
+                throw 'Unexpected remote operation in recording admission boundary.'
+            }
+        } $candidate $base $blob $scenario
+        try{
+            $expected=if($scenario -ceq 'wrong-identity'){'0'*64}else{$candidate.identity}
+            $result=$null;$failed=$false
+            try{$result=Start-CiCandidateShadow -Root $root -PullRequest 43 -ExpectedIdentity $expected -WhatIf:($scenario -ceq 'preview')}catch{$failed=$true}
+            Assert-Equal ($scenario -notin @('native','preview','prose')) $failed
+            $observed=& $admission {$script:dispatchControl}
+            $writes=$scenario -in @('native','pre-dispatch-candidate','pre-dispatch-ref','dispatch-refusal')
+            Assert-Equal ([int]$writes) $observed.creates
+            Assert-Equal ([int]($scenario -in @('native','dispatch-refusal'))) $observed.dispatches
+            $journals=Join-Path $root '.build/ci/candidate-requests'
+            $stages=@(if(Test-Path $journals){Get-ChildItem -LiteralPath $journals -Recurse -File|Select-Object -ExpandProperty Name})
+            Assert-Equal ($scenario -in @('native','pre-create-main','pre-dispatch-candidate','pre-dispatch-ref','dispatch-refusal')) ($stages -contains '01-frozen.json')
+            Assert-Equal $writes ($stages -contains '02-ref-created.json')
+            Assert-Equal ($scenario -ceq 'native') ($stages -contains '03-dispatch-requested.json')
+            if($scenario -in @('native','preview','prose')){
+                Assert-Equal 0 $result.nativeExecutions
+                Assert-True (-not $result.suppliesNativeVerdict)
+                Assert-Equal $(switch($scenario){native{'DispatchRequested'};preview{'Preview'};prose{'NoNativeRequired'}}) $result.stage
+            }
+        }finally{
+            & $admission {
+                param($Original)
+                Set-Item function:script:Get-CiMainHead $Original.GetMain
+                Set-Item function:script:Get-CiIntegrationCandidate $Original.GetCandidate
+                Set-Item function:script:Invoke-CiApi $Original.Api
+                Remove-Variable dispatchControl -Scope Script
+            } $originalCommands
+        }
+    }
+}
 Invoke-Case 'Merge queue input freeze binds the complete integration tree, cumulative inputs and proposed version' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.MergeGroup.psm1')
     $f=New-MergeGroupFixture 'merge-group-native'

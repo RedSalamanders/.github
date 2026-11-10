@@ -716,3 +716,14 @@ used a relative marker path. Its two exact markers were preserved beneath the go
 sandbox, removed from their accidental locations, and the fixture now resolves its
 owned root first. Failed runs remain retained. No hosted native shadow, project rollout,
 required merge gate, local delegation or main adoption is established by these controls.
+
+### Trusted operator shadow admission controls
+
+All 103 engine cases and syntax checks for 13 workflows pass. The new admission
+case executes the actual controller against real Git main/head/merge/caller objects
+with recording canonical-acquisition and remote-write boundaries. Native admission
+creates only its exact trusted-main ref and dispatch inputs. Preview/prose cases
+write no remote state; wrong identity/caller bytes and changed main/candidate/ref
+refuse at the proper boundary. A refused dispatch preserves its earlier ref-created
+journal without a false acknowledgment. Product adapter code is an execution sentinel
+and is never invoked. Tests create no live remote ref/run and no native verdict.
