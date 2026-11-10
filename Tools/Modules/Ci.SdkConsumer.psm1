@@ -80,18 +80,14 @@ function Assert-CiSdkConsumerLease {
         }
         $expected=@{};foreach($property in $witness.toolBinding.PSObject.Properties){$expected[$property.Name]=[string]$property.Value}
         Assert-CiSdkToolBinding $expected $actual
-        & $abi {param($p) Assert-CiSdkAbiCompilerEnvironment -MSBuildSearchPaths $p} $expected
+        & $abi {param($e,$a,$p,$s) Assert-CiSdkAbiSearchPathBinding $e $a $p $s} $expected $actual $ProjectRoot $SdkRoot
+        $searchPaths=@{};foreach($name in @('IncludePath','LibraryPath','ReferencePath')){$searchPaths[$name]=([string]$actual[$name]).Replace('|',';')}
+        & $abi {param($p) Assert-CiSdkAbiCompilerEnvironment -MSBuildSearchPaths $p} $searchPaths
     }elseif($witness.schemaVersion -ne 1 -or $SdkContract){throw 'Unsupported SDK reader contract.'}
 }
 
 function Assert-CiSdkToolBinding {
     param([Collections.IDictionary]$Expected,[Collections.IDictionary]$Actual)
-    foreach($name in @('IncludePath','LibraryPath','ReferencePath')){
-        if(-not $Expected.Contains($name) -or -not $Actual.Contains($name) -or
-            $Expected[$name] -match '[|%\r\n]' -or $Actual[$name] -cne ([string]$Expected[$name]).Replace(';','|')){
-            throw "Qualified SDK actual compiler search property differs: $name."
-        }
-    }
     foreach($name in @('PlatformToolset','VCToolsVersion','WindowsTargetPlatformVersion','PreferredToolArchitecture','VCToolArchitecture','WindowsSDKToolArchitecture')){
         if(-not $Actual.Contains($name) -or $Actual[$name] -cne $Expected[$name]){throw "Qualified SDK actual compiler selection differs: $name."}
     }

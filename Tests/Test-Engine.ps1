@@ -1847,6 +1847,21 @@ Invoke-Case 'Qualified SDK witnesses bind actual compiler roots and reject downg
         $arguments=@('-NoProfile','-NonInteractive','-File',$command,'-ProjectRoot',$fixture,'-LeasePath',$witness.Path,'-SdkRoot',$payload,'-Platform','x64','-Configuration','Release','-SdkContract','QualifiedAbiV2','-ToolPropertyFile',$propertyPath)
         $child=Invoke-CiProcess (Get-Process -Id $PID).Path $arguments $engineRoot -AllowFailure
         Assert-True ($child.exitCode -eq 0) $child.stderr
+        $ownedInclude=Join-Path $build "source header's"
+        [void][IO.Directory]::CreateDirectory($ownedInclude)
+        $changed=$actual|ConvertTo-Json|ConvertFrom-Json -AsHashtable
+        $changed.IncludePath+='|'+$ownedInclude
+        [IO.File]::WriteAllLines($propertyPath,[string[]]@($changed.Keys|Sort-Object|ForEach-Object {$_+'='+$changed[$_]}))
+        $env:INCLUDE=$changed.IncludePath.Replace('|',';')
+        Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath
+        foreach($bad in @(($ownedInclude+'|'+$actual.IncludePath),($actual.IncludePath+'|'+$engineRoot))){
+            $changed.IncludePath=$bad
+            [IO.File]::WriteAllLines($propertyPath,[string[]]@($changed.Keys|Sort-Object|ForEach-Object {$_+'='+$changed[$_]}))
+            $env:INCLUDE=$bad.Replace('|',';')
+            Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release -SdkContract QualifiedAbiV2 -ToolPropertyFile $propertyPath}
+        }
+        $env:INCLUDE=$expected.IncludePath
+        [IO.File]::WriteAllLines($propertyPath,[string[]]@($actual.Keys|Sort-Object|ForEach-Object {$_+'='+$actual[$_]}))
         Assert-Refused {Assert-CiSdkConsumerLease -ProjectRoot $fixture -LeasePath $witness.Path -SdkRoot $payload -Platform x64 -Configuration Release}
         foreach($field in @('VCToolsVersion','VCToolsInstallDir','WindowsTargetPlatformVersion','WindowsSdkDir','VCTargetsPath','MSBuildBinPath','CLToolPath','CLToolExe','LinkToolExe','LibToolPath','FXCToolPath','FxCompileToolArchitecture','IncludePath','LibraryPath','ReferencePath')){
             $changed=$actual|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$changed[$field]='controlled-incompatible-value'
