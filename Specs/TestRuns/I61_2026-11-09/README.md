@@ -767,3 +767,15 @@ source 8fb488e94cff64f6da3a5fe5b561ac315f195f62. Every suite recorded zero capab
 skips; all three canonical prerequisite builds had zero warnings/errors, and all
 leases verified foreground/focus preservation and pointer restoration. This closes
 these local foreground profiles only, not native ARM64 or whole-repository qualification.
+
+### Native admission readiness
+
+[Readiness controls](Candidate_Readiness_2026-11-11.json): all 111 engine behavior
+cases and all 13 workflow syntax checks pass. The actual admission fixture now
+covers missing/pending cheap checks and readiness returning to pending immediately
+before ref creation or dispatch. No later remote stage proceeds; original journals
+and any earlier created ref remain. Pure catalog controls reject stale heads, wrong
+apps, duplicate/truncated catalogs, unsuccessful required checks and an Actions
+imitation of Root's real Entire gate. Pending native integration does not deadlock
+its own admission. App IDs were independently inspected through the live Root
+check API. This is readiness/control evidence, not hosted native/shadow acceptance.
