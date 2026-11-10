@@ -12,6 +12,9 @@ library build: x64 on x64 and arm64 on ARM64. Pass that property explicitly beca
 props can override an environment default. Resolve the corresponding native MSBuild executable
 (`Bin/amd64` or `Bin/arm64`); selecting legacy `Bin/MSBuild.exe` is not equivalent metadata acquisition.
 Native SDK checks and the final host guard remain required. A failed reference publishes no reusable input.
+Native SDK jobs have the explicit stable name `sdk (<platform>, <runner>)`. The artifact verifier requires
+that exact architecture/runner identity; automatic matrix-key enumeration order is not an identity contract.
+Changing matrix data order must not change names or broaden the verifier's native execution checks.
 
 The `sdk-inputs.yml` reusable workflow is a read-only, explicitly dispatched DxUi-main dependency-input
 role. `Policy/sdk-producer.json` owns exact reviewed source/API pins, producer-tooling snapshot and its
