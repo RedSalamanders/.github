@@ -191,7 +191,12 @@ function Open-CiQualifiedPinnedSdkInput {
     $envelope=& $qualified {param($d) Resolve-CiQualifiedSdkArtifactEnvelope $d.producerRun $d.attempt $d.sourceCommit $d.platform} $d
     $binding=& $qualified {param($a,$e,$d) Read-CiQualifiedSdkArchiveBinding $a $e $d.entryPath $d.referencePath $d.receiptPath $d.sourceCommit $d.apiRevision $d.platform} $archive $envelope $d
     if($binding.ManifestSha256 -cne $d.manifestSha256){throw 'Qualified SDK descriptor changed its original authenticated manifest.'}
-    $state=Get-CiSdkAbiReference -ToolingRoot $d.toolingRoot -MSBuildPath $MSBuildPath -ProjectPath (Join-Path $d.sourceRoot 'src/DxUi.vcxproj') -Platform $d.platform -PassThruBinding
+    # Applications select their native compiler host by default. Older pinned
+    # producer projects have a different default; evaluate the actual requested
+    # host explicitly, then require every real project to match its live binding.
+    $toolHost=[Environment]::GetEnvironmentVariable('PreferredToolArchitecture','Process')
+    if(-not $toolHost){$toolHost=[Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()}
+    $state=Get-CiSdkAbiReference -ToolingRoot $d.toolingRoot -MSBuildPath $MSBuildPath -ProjectPath (Join-Path $d.sourceRoot 'src/DxUi.vcxproj') -Platform $d.platform -PassThruBinding -PreferredToolArchitecture $toolHost
     if($state.Reference.digest -cne $binding.Reference.toolchainReference.digest){
         Write-Host 'Qualified SDK tool/header/library bytes differ from the actual consumer toolchain; retaining source fallback.'
         return $null
@@ -211,7 +216,7 @@ function Open-CiQualifiedPinnedSdkInput {
         $controller=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
         $controllerBytes=Get-CiSdkCheckoutContentIdentity $controller
         $reader=[pscustomobject]@{Entry=$entry;Cache=$cache;Qualified=$qualified;Abi=$abi;Envelope=$envelope;Binding=$binding;Request=$Request;
-            MSBuildPath=$MSBuildPath;Reference=$state.Reference;SourceRoots=$d;Closed=$false}
+            MSBuildPath=$MSBuildPath;PreferredToolArchitecture=$toolHost;Reference=$state.Reference;SourceRoots=$d;Closed=$false}
         return [pscustomobject]@{Reader=$reader;Witness=$witness;Descriptor=$DescriptorState;Closed=$false;SdkRoot=$entry.Payload;LeasePath=$witness.Path;
             StorageEngineRoot=$controller;StorageEngineIdentity=$controllerBytes;
             Evidence=[ordered]@{recipe='PinnedQualifiedReleaseSdkV2';inputKey=$entry.Key;manifestSha256=$entry.ManifestSha256;identity=$binding.Identity;
@@ -234,7 +239,7 @@ function Close-CiQualifiedPinnedSdkReader {
         if(($envelope|ConvertTo-Json -Compress) -cne ($Reader.Envelope|ConvertTo-Json -Compress)){throw 'Qualified SDK producer provenance changed during use.'}
         $binding=& $Reader.Qualified {param($a,$e,$d) Read-CiQualifiedSdkArchiveBinding $a $e $d.entryPath $d.referencePath $d.receiptPath $d.sourceCommit $d.apiRevision $d.platform} $d.archivePath $envelope $d
         if($binding.ManifestSha256 -cne $Reader.Binding.ManifestSha256 -or $binding.ReferenceSha256 -cne $Reader.Binding.ReferenceSha256){throw 'Qualified SDK original archive binding changed during use.'}
-        $reference=& $Reader.Abi {param($d,$m) Get-CiSdkAbiReference -ToolingRoot $d.toolingRoot -MSBuildPath $m -ProjectPath (Join-Path $d.sourceRoot 'src/DxUi.vcxproj') -Platform $d.platform} $d $Reader.MSBuildPath
+        $reference=& $Reader.Abi {param($d,$m,$h) Get-CiSdkAbiReference -ToolingRoot $d.toolingRoot -MSBuildPath $m -ProjectPath (Join-Path $d.sourceRoot 'src/DxUi.vcxproj') -Platform $d.platform -PreferredToolArchitecture $h} $d $Reader.MSBuildPath $Reader.PreferredToolArchitecture
         if($reference.digest -cne $Reader.Reference.digest){throw 'Qualified SDK consumer tool/header/library bytes changed during use.'}
         Assert-CiSdkProducerCheckouts -Request $Reader.Request -ToolingRoot $d.toolingRoot -SourceRoot $d.sourceRoot -StorageEngineRoot $d.storageEngineRoot
     }catch{$failure=$_}
