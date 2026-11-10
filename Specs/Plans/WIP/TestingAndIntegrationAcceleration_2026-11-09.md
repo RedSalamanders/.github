@@ -36,10 +36,12 @@ Latest deployment: optional shadow callers are merged in RedTilde #104, RedMonit
 Their complete independent tooling/validation and formatting checks passed; new main
 native campaigns and actual shadow acceptance retain separate gates. Candidate run
 metadata authentication is implemented for current candidate/attempt, caller/engine,
-native jobs and server artifact digests. Artifact bytes/canonical evidence, the trusted
+native jobs and server artifact digests. Independent bounded original archive,
+input/receipt/profile/canonical-evidence byte verification is also implemented, with
+live post-transfer reacquisition. Hosted shadow/verifier acceptance, the trusted
 required-check reporter, stale-base enforcement, local delegation and main adoption
-remain open. DxUi's four authorized foreground suites passed Debug and Release; ASan
-remains pending. Root's active Full retains one tooling-fixture failure; a corrected
+remain open. DxUi's four authorized foreground suites passed Debug, Release and ASan
+Debug with restoration verified. Root's active Full retains one tooling-fixture failure; a corrected
 empty-array fixture passed focused routing controls in a separate checkout. No active
 run was rewritten or cancelled, and this plan remains WIP.
 

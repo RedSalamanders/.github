@@ -727,3 +727,31 @@ write no remote state; wrong identity/caller bytes and changed main/candidate/re
 refuse at the proper boundary. A refused dispatch preserves its earlier ref-created
 journal without a false acknowledgment. Product adapter code is an execution sentinel
 and is never invoked. Tests create no live remote ref/run and no native verdict.
+
+### Candidate producer and original byte-verification controls
+
+The committed metadata slice passed all 106 engine cases and syntax checks for 13
+workflows. The byte-verification extension adds real ZIP fixtures for the original
+inputs, both receipts, complete native profiles and canonical evidence, including
+hostile catalogs, duplicate JSON properties, missing/extra/changed binary or evidence
+bytes, self-rehashed input changes and failed/zero/stale native metadata. The public
+recording transfer checks retain failures and refuse post-download candidate/attempt
+or catalog changes before publishing a result. These are synthetic controls; hosted
+shadow/verifier acceptance and merge enforcement remain separate open gates.
+
+The first metadata test run correctly refused an uncommitted controller in the
+existing admission case; committing the controller satisfied that prerequisite
+without weakening it. The first archive controls exposed a reserved PowerShell
+argument variable in the new negative recording fixture. It was replaced with a
+named request, and negative controls now assert the actual API/transfer boundary
+was reached. Failed results remain preserved. Use the final executed result below
+before claiming complete validation of the extension.
+
+### RedPrism live SDK2 consumer qualification
+
+[Original campaign evidence](SDK2_LivePrism_2026-11-10.json) records main run
+42885249187: both native Release regressions (seven suites each), both production
+packages and all seven jobs passed. All four roles selected the exact qualified SDK2
+inputs from producer 42866937316. Downloaded original receipt, canonical native
+evidence and production ZIP hashes agree. This is live native/package acceptance;
+the controlled 3x/2x acceleration targets remain unproved.

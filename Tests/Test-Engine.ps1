@@ -2717,6 +2717,7 @@ Invoke-Case 'Actual branch cache observer retains refusals for failed saves, for
 
 . (Join-Path $PSScriptRoot 'ExecutionBinding.Cases.ps1')
 . (Join-Path $PSScriptRoot 'CandidateResults.Cases.ps1')
+. (Join-Path $PSScriptRoot 'CandidateArchives.Cases.ps1')
 
 Invoke-Case 'Read-only cache syntax admits scoped capabilities and refuses write, dynamic and misplaced authority' {
     $lf=[string][char]10

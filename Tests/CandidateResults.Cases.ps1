@@ -121,14 +121,15 @@ Invoke-Case 'Public candidate result acquisition is read-only and refuses final 
                     }
                 }
             } $f $scenario
-            $args=@{Root=$f.root;PullRequest=43;ExpectedIdentity=$(if($scenario -ceq 'wrong-identity'){'d'*64}else{$f.candidate.identity});RunId='777';Attempt=2;IsolationNonce=$f.isolationNonce}
+            $request=@{Root=$f.root;PullRequest=43;ExpectedIdentity=$(if($scenario -ceq 'wrong-identity'){'d'*64}else{$f.candidate.identity});RunId='777';Attempt=2;IsolationNonce=$f.isolationNonce}
             if($scenario -ceq 'success'){
-                $result=Get-CiCandidateRunEnvelope @args
+                $result=Get-CiCandidateRunEnvelope @request
                 Assert-Equal 'CandidateRunArtifactEnvelope' $result.role
                 Assert-True (-not $result.suppliesNativeVerdict)
                 Assert-Equal 6 (& $candidateResults {$script:resultRoutes.Count})
-            }else{Assert-Refused {Get-CiCandidateRunEnvelope @args}}
-            if($scenario -ceq 'wrong-identity'){Assert-Equal 0 (& $candidateResults {$script:resultRoutes.Count})}
+            }else{Assert-Refused {Get-CiCandidateRunEnvelope @request}}
+            $expectedCalls=switch($scenario){'wrong-identity'{0};'candidate-race'{5};default{6}}
+            Assert-Equal $expectedCalls (& $candidateResults {$script:resultRoutes.Count})
         }
     }finally{
         & $candidateResults {param($saved) Set-Item Function:script:Get-CiIntegrationCandidate $saved.Candidate;Set-Item Function:script:Invoke-CiApi $saved.Api} $original

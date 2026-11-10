@@ -113,4 +113,9 @@ The required native execution and trusted result/reporting path remain under dev
 -IsolationNonce <original nonce>` independently authenticates the successful isolated
 producer metadata and original artifact digests. It reacquires current candidate and
 attempt state, runs no product code and supplies no native/merge/adoption verdict.
-Artifact bytes and canonical evidence require their separate verification.
+Use `Tools/Get-CandidateNativeResult.ps1` with the same inputs and `-OutputRoot <existing
+owned evidence directory>` to download and independently verify original archive,
+receipt, tested profile and canonical evidence bytes. It retains failures and refuses
+post-transfer candidate/attempt/catalog movement. It executes no downloaded code and
+does not grant merge, local delegation, adoption or production permission. Actual
+hosted verifier acceptance and required merge enforcement remain open.

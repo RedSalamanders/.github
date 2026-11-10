@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "role": "LiveSdk2ConsumerAcceptanceEvidence",
+  "verifiedUtc": "2026-11-10T22:59:05.0682771Z",
+  "scope": "Authenticated live main native regressions and production packaging, both architectures, exact SDK2 selection and downloaded receipt/evidence/ZIP hashes",
+  "controlledAccelerationTargetsProved": false,
+  "candidateGateEnabled": false,
+  "localDelegationEnabled": false,
+  "campaigns": [
+    {
+      "originalJobs": [
+        {
+          "id": 130095931594,
+          "name": "qualify / admission",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014703",
+          "labels": [
+            "ubuntu-24.04"
+          ]
+        },
+        {
+          "id": 130096188992,
+          "name": "qualify / regression (x64, windows-2025-vs2026)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014705",
+          "labels": [
+            "windows-2025-vs2026"
+          ]
+        },
+        {
+          "id": 130096189015,
+          "name": "qualify / regression (ARM64, windows-11-vs2026-arm)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014704",
+          "labels": [
+            "windows-11-vs2026-arm"
+          ]
+        },
+        {
+          "id": 130154055361,
+          "name": "qualify / test-gate",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014731",
+          "labels": [
+            "ubuntu-24.04"
+          ]
+        },
+        {
+          "id": 130154145517,
+          "name": "qualify / production (x64, windows-2025-vs2026)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014732",
+          "labels": [
+            "windows-2025-vs2026"
+          ]
+        },
+        {
+          "id": 130154146041,
+          "name": "qualify / production (ARM64, windows-11-vs2026-arm)",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014733",
+          "labels": [
+            "windows-11-vs2026-arm"
+          ]
+        },
+        {
+          "id": 130167757567,
+          "name": "qualify / complete",
+          "conclusion": "success",
+          "runner_name": "GitHub Actions 1000014744",
+          "labels": [
+            "ubuntu-24.04"
+          ]
+        }
+      ],
+      "producerAttempt": 1,
+      "engineRef": "cd9f01d1711d1abce1856ca4052f49e93eaef3ac",
+      "attempt": 1,
+      "platforms": [
+        {
+          "regressionReceiptSha256": "13cdd743a4711b8e1d77c5f882b9d07ec6d5cde5e36145da5a9432ba7cedb115",
+          "manifestSha256": "09cbd229c96ab93461187b5c9523c4265492286239ff5725ed1d249d7bc80fe7",
+          "productionReceiptSha256": "1dc2529d415cd327d3346559945980276963fd9851ed1d16b11aa720514a74fc",
+          "canonicalNativeEvidence": [
+            {
+              "sha256": "7a7e104e22be5c84a2e1d37d95ec650fcbcc308fbb60ea34291bb934619a9f65",
+              "file": "evidence/test-runs/20261110T205525652Z-684-3b653ff690794ddc93c8a4768be59069/payload/normal-suites.json"
+            },
+            {
+              "sha256": "f256fa847e9e3c42b8a934d148bf37df45826599ab78225ddf0bf2e2f25f0d9c",
+              "file": "evidence/test-runs/20261110T205525652Z-684-3b653ff690794ddc93c8a4768be59069/completed.json"
+            }
+          ],
+          "productionArchives": [
+            {
+              "sha256": "e8a40eac808700a70889ce57960b223f71c4a6b6e9d20ddd3e1569adb103f2a4",
+              "size": 3205723,
+              "file": "RedPrism-0.1.657-x64.zip"
+            }
+          ],
+          "unexpectedSkipped": 0,
+          "registered": 7,
+          "platform": "x64",
+          "preparationElapsedMs": 41936,
+          "failed": 0,
+          "executed": 7,
+          "logs": [
+            {
+              "sha256": "6af35c72bebe85c3ec1cbe937eab1100aa9ec3001d2826ffac5085e707212598",
+              "file": "regression-x64-completed.log",
+              "role": "regression"
+            },
+            {
+              "sha256": "9be782d726a307219d7a52c56753aeeaa5f9b996fe701067e57b9d067e61b606",
+              "file": "production-x64-completed.log",
+              "role": "production"
+            }
+          ],
+          "inputKey": "22c10221c095069bbe06c79d18bcefcb5cbc1eff4c4f81b11739084f6f726688"
+        },
+        {
+          "regressionReceiptSha256": "4b49fec895f67c7053e9d991fc37146c13c6507e1b6804032898799b9985cfcd",
+          "manifestSha256": "650b26db0af5e2798733100f07e9ff68a04bef08cf5471cbf3e2cabcfe7e8ae4",
+          "productionReceiptSha256": "7aebb060063d816caacd3fce82abfc5c6478212775a3f5873b42274624a7f14e",
+          "canonicalNativeEvidence": [
+            {
+              "sha256": "b251182b264b87a0bb47eef9486c3b54310f7f5355b4a6c7cd3ebf1d1768891b",
+              "file": "evidence/test-runs/20261110T204845214Z-7076-a46b7f74736044af91a4fb9ae29596f1/payload/normal-suites.json"
+            },
+            {
+              "sha256": "8b164a3338b79ed245ac24454b4b09313330c21e774493db7287f2598834358b",
+              "file": "evidence/test-runs/20261110T204845214Z-7076-a46b7f74736044af91a4fb9ae29596f1/completed.json"
+            }
+          ],
+          "productionArchives": [
+            {
+              "sha256": "6216f73009fd94e37943af798a66d1945f39a12940bc3fa8088e52da6e1a8b87",
+              "size": 3428519,
+              "file": "RedPrism-0.1.657-ARM64.zip"
+            }
+          ],
+          "unexpectedSkipped": 0,
+          "registered": 7,
+          "platform": "ARM64",
+          "preparationElapsedMs": 76688,
+          "failed": 0,
+          "executed": 7,
+          "logs": [
+            {
+              "sha256": "ba610ffa0cbe8b2628f3a72f2d3f0e449d79701949e720090de2205753453f9f",
+              "file": "regression-ARM64-completed.log",
+              "role": "regression"
+            },
+            {
+              "sha256": "cc9a928613c44292806e533acdef1302ec94c2a6167eb92ebbcd3af6e08c69c3",
+              "file": "production-ARM64-completed.log",
+              "role": "production"
+            }
+          ],
+          "inputKey": "3d029294bc8a4fbdcabc2d78f81815c647d3d769dd030164d5da2b57304a74b9"
+        }
+      ],
+      "repository": "RedSalamanders/RedPrism",
+      "sourceCommit": "500eff00cacbeb0a79bdb17b3960552bb000c4dc",
+      "runId": "42885249187",
+      "producerRun": "42866937316"
+    }
+  ]
+}
