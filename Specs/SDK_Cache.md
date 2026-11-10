@@ -7,6 +7,12 @@ the other application integrations, local candidates and acceleration acceptance
 
 ## Explicit pinned native SDK producer
 
+The qualified producer's final ABI metadata query must select the same native compiler host as its
+library build: x64 on x64 and arm64 on ARM64. Pass that property explicitly because historical source
+props can override an environment default. Resolve the corresponding native MSBuild executable
+(`Bin/amd64` or `Bin/arm64`); selecting legacy `Bin/MSBuild.exe` is not equivalent metadata acquisition.
+Native SDK checks and the final host guard remain required. A failed reference publishes no reusable input.
+
 The `sdk-inputs.yml` reusable workflow is a read-only, explicitly dispatched DxUi-main dependency-input
 role. `Policy/sdk-producer.json` owns exact reviewed source/API pins, producer-tooling snapshot and its
 storage-engine pin. Source, producer tooling and controller code are separate checkouts. Every actual

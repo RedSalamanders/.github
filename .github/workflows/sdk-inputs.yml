@@ -146,7 +146,8 @@ jobs:
           if($env:SDK_CONTRACT -ceq 'QualifiedAbiV2'){
             Import-Module ./.ci-engine/Tools/Modules/Ci.SdkQualifiedProducer.psm1
             Import-Module (Join-Path $producer 'Tools/VisualStudio.psm1')
-            $msbuild=Join-Path (Get-DxUiVisualStudioInstallation) 'MSBuild/Current/Bin/MSBuild.exe'
+            $nativeHost=if($env:SDK_PLATFORM -ceq 'x64'){'amd64'}else{'arm64'}
+            $msbuild=Join-Path (Get-DxUiVisualStudioInstallation) "MSBuild/Current/Bin/$nativeHost/MSBuild.exe"
             $reference=Write-CiQualifiedSdkAbiReference -SourceRoot $source -ToolingRoot $producer -StorageEngineRoot (Join-Path $producer '.ci-engine') -StoreRoot (Join-Path $producer '.build/sdk-input-store') -Version $env:SDK_VERSION -Platform $env:SDK_PLATFORM -MSBuildPath $msbuild -OutputFile (Join-Path $producer '.build/qualified-sdk/abi-reference.json')
             if(-not $reference){throw 'Qualified SDK ABI reference was not retained.'}
           }

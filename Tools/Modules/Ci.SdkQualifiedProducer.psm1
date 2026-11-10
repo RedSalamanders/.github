@@ -72,7 +72,7 @@ function Write-CiQualifiedSdkAbiReference {
         $entry=& $cache {param($s,$i,$h) Open-CiSdkCacheEntry -StoreRoot $s -Identity $i -ManifestSha256 $h} $StoreRoot $identity $receipt.sdkStoreManifestSha256
         if($null -eq $entry){throw 'The qualified SDK input version is unavailable.'}
         $timer.Restart();Write-Host '[SDK_ABI_REFERENCE] phase=PortableToolchain state=begin'
-        $reference=Get-CiSdkAbiReference -ToolingRoot $ToolingRoot -MSBuildPath $MSBuildPath -ProjectPath (Join-Path $SourceRoot 'src/DxUi.vcxproj') -Platform $Platform
+        $reference=Get-CiSdkAbiReference -ToolingRoot $ToolingRoot -MSBuildPath $MSBuildPath -ProjectPath (Join-Path $SourceRoot 'src/DxUi.vcxproj') -Platform $Platform -PreferredToolArchitecture $expectedHost.ToLowerInvariant()
         Write-Host "[SDK_ABI_REFERENCE] phase=PortableToolchain state=end elapsedMs=$($timer.ElapsedMilliseconds)"
         if($reference.compiler.preferredToolArchitecture -cne $expectedHost.ToLowerInvariant()){throw 'Qualified SDK references require the same native compiler-host selection used by the producer.'}
         $timer.Restart();Write-Host '[SDK_ABI_REFERENCE] phase=ProducerRecipeAfter state=begin'
