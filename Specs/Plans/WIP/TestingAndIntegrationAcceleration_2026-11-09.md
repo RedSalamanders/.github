@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 The 2026-11-11 scope decision below defers gate replacement and cross-run adoption; accepted acceleration work remains open and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 26, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 27, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -33,16 +33,21 @@ Current authority remains:
 
 Current rollout: Monitor #50, Tilde #106, Prism #18 and DxUi #246 are merged.
 Monitor main42950834765, Tilde main42952565762 and DxUi main42954632514 passed
-all seven jobs. Prism main42959845076 passed x64 regression and is still executing
-ARM64 regression. These are ordinary main results; optional shadow tooling grants no
+all seven jobs. Prism main42959845076 passed x64 regression but failed ARM64:
+`paste-exhaust` reported a clipboard-work acknowledgement failure, followed by the
+unchanged 5,400-second watchdog. Production was skipped. Preserved stdout/stderr
+identify the failing scenario; they do not establish a root cause. These are ordinary main results; optional shadow tooling grants no
 additional acceptance. Do not cancel running Actions.
 
 Shared #64/#65 merged the canonical actual-engine input reader and Windows path
 casing correction at `0573d4f3b294e3c3655349eb618ec7105b3d89b2`. All 120 local
 engine controls and all five hosted checks passed. Product Git ignores `.ci-engine`,
 so its actual implementation must be bound separately before local receipt reuse.
-All six client ports are implemented on isolated branches, committed or under final
-focused validation; their new integration/native acceptance remains open. Keep engine
+All six client ports are committed and published as drafts: Root #217, Xe #87,
+Monitor #52, Tilde #108, Prism #20 and DxUi #248. Focused integration checks pass;
+DxUi's complete tooling validation also passes, including historical paired-reader
+controls preserving each side's original engine/pin. Their current native acceptance
+remains open. Keep engine
 identity separate from product file/iteration maps. This closes an input hole; it
 does not replace a gate or grant a test result.
 
@@ -56,16 +61,25 @@ cycles with verified restoration. Those passes neither repair nor supersede the
 original Full. Root #215 reduces repeated unsafe-archive inspection; #216 permits
 exact verified entry continuation from a closed failed/interrupted Full. Both are
 drafts with focused integration controls, not complete native acceptance. Entire
-approval for #211 remains absent. A new Source Release Fresh Full is now building
+approval for #211 remains absent. A new Source Release Fresh Full is running
 at `03fe8ee22db0407643fb2803a1e974660ae5656d` with engine `0573d4f3`; it has no
-result yet and is separate from SDK and hosted acceptance.
+overall result yet. Its Source build has zero warnings/errors, ViewerPE noninteractive
+and all 1,265 tooling assertions passed, and Commands is progressing. This remains
+separate from SDK and hosted acceptance. The four ready sibling native matrices are
+queued serially behind its owned process drain; queued work is not a passed result.
 
 Xe #83/#84/#86 remain drafts: measurement input closure, contained metadata transport
-and independent-tooling retention are implemented and focused checks pass. The
+and independent-tooling retention are included in #87 and focused checks pass. The
 original Desk Clock memory-budget failure remains failed; later diagnostics do not
 establish its cause. Monitor's remaining independent-check retention port is now
-implemented with create-only attempts and failure/interruption invalidation, with
-final controls running. Remaining selected builds, local candidate SDKs, finer
+implemented with create-only attempts and failure/interruption invalidation; its
+complete independent tooling passed. One fresh/reuse pair measured 105,615/2,248 ms
+on unchanged inputs, with another build active: this is limited local cost evidence,
+not controlled overall acceleration acceptance. Root #218 adds a single-operation
+native project union and exact partial receipt admission for selftest-only routes;
+238 integration controls and a real compiler-free MSBuild union fixture passed.
+Full/PR/CI and Full Affected remain conservative; native cold-build/timing acceptance
+and earlier affected selection remain open. Remaining selected builds, local candidate SDKs, finer
 native/case closure, controlled acceleration/detection measurements and rollout keep
 this plan WIP. Earlier checkpoints below remain history, not current acceptance.
 
@@ -320,7 +334,7 @@ The [implementation evidence record](../../TestRuns/I61_2026-11-09/README.md) ow
 |---|---|---|
 | S0 | IN_PROGRESS | Refreshed all seven repositories and six client source/pin/scope/effective-main-rule inventories. Hosted native candidate checks and merge-queue/base requirements are absent in the observed rules. Full warm/cold cost accounting and pilot acceptance remain open. |
 | S1 | IN_PROGRESS | Root #209/#210 are merged; #211 still awaits Entire approval. Drafts #212/#213 preserve diagnostics, SDK recipe and contained metadata transport; all six current Source builds passed with zero warnings/errors. The latest local-origin SDK Full failed (2815 passed, 3 failed, 56 skipped). Quiet ViewerPE close/churn diagnostics pass without attributing or superseding the Full failures. #215 archive retention and #216 closed-run entry Resume have focused controls; final integration/native acceptance remains open. DxUi main42954632514 passed all seven jobs. |
-| S2 | IN_PROGRESS | DxUi PR #230 integrated evaluated target-union routing and coverage-bound receipts. Cold x64 Release built exactly library/Foundation/Embedded with zero warnings/errors; both native suites passed, Embedded observed 583,358 checks. Default selected build and public/direct Foundation execution passed; actual Full and added-Grid requests refused before native work. Full final tooling passed. Other projects/profiles and overall elapsed acceptance remain open. |
+| S2 | IN_PROGRESS | DxUi PR #230 integrated evaluated target-union routing and coverage-bound receipts. Cold x64 Release built exactly library/Foundation/Embedded with zero warnings/errors; both native suites passed, Embedded observed 583,358 checks. Default selected build and public/direct Foundation execution passed; actual Full and added-Grid requests refused before native work. Full final tooling passed. Root #218 adds explicit native unions and exact selected-receipt admission for selftest-only routes (238 controls plus actual synthetic MSBuild passed); Full Affected selection, native cold/profile/timing acceptance and other projects remain open. |
 | S3 | IN_PROGRESS | All three corrected SDK producers passed both architectures; all six original archives passed authenticated byte/ABI acquisition. Monitor42883975390, Tilde42883990951 and Prism42885249187 selected SDK2 in both native and production roles on both architectures and passed. Xe draft #83 repairs AV measurement closure but retains its Desk Clock memory failure. Root #213 has six current Source build passes; its later SDK Full failed and no aggregate SDK/native/hosted acceptance is claimed. Local unpinned candidates and controlled comparisons remain open. |
 | S4 | IN_PROGRESS | DxUi, Tilde #105 and Prism #18 retain independently completed tooling before later native failure. Tilde and Prism completed all three x64 Full profiles and ARM64 cross-builds. Xe #86 adds the same retention with focused controls; Monitor now has a tested port preserving immutable attempts and rejecting corrupt/interrupted/failed latest state. Shared #64/#65 bind actual ignored engine bytes; all six client ports are undergoing final integration checks. Root #215 reduces repeated archival inspection and #216 verifies closed-run entry continuation. Fine-grained native closure, broader component reuse, global snapshots and measurements remain open. |
 | S5 | IN_PROGRESS | DxUi #229 integrated scoped parallel identity and exact local preflight reuse. Same-binary x64 Release serial/parallel-2 runs passed identical 1,726 named cases and 19 suites, zero skips; one pair improved elapsed by 24.1%. Local prerequisite reuse measured about 1s versus 23s fresh in two alternating pairs. DxUi #238 merged at 1e8fcaac26eb099c3b1e5fa838652bf4b0447c97, selecting two suites only for hosted normal Release; local, Debug/ASan, foreground/performance and prerequisite serialization remain. Its native campaign 42773652579 passed both native regression and production branches plus completion; controlled hosted serial/parallel timing and overall targets remain open. |
