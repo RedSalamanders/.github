@@ -1503,6 +1503,49 @@ Invoke-Case 'Fast SDK bootstrap retains the exact ordinal raw map, missing-file 
     Assert-Refused {Get-CiSdkCheckoutContentIdentity $root}
 }
 
+Invoke-Case 'Shared raw checkout identity detects equal-size backdated edits and preserves the SDK compatibility projection' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SourceInputs.psm1')
+    $root=New-Fixture 'shared-raw-inputs'
+    $file=Join-Path $root 'src/main.cpp'
+    Write-FixtureFile $root 'src/main.cpp' 'aaaa'
+    $before=Get-CiCheckoutContentIdentity $root
+    Assert-Equal $before (Get-CiSdkCheckoutContentIdentity $root)
+    $stamp=[IO.File]::GetLastWriteTimeUtc($file)
+    Write-FixtureFile $root 'src/main.cpp' 'bbbb'
+    [IO.File]::SetLastWriteTimeUtc($file,$stamp)
+    Assert-True ((Get-CiCheckoutContentIdentity $root) -cne $before) 'Backdated raw input edit was ignored.'
+    Write-FixtureFile $root 'src/main.cpp' 'aaaa'
+    Assert-Equal $before (Get-CiCheckoutContentIdentity $root)
+}
+
+Invoke-Case 'Local engine input identity binds an independent exact clean checkout and ignores only generated outputs' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SourceInputs.psm1')
+    $root=New-Fixture 'local-engine-inputs'
+    $seed=New-Fixture 'local-engine-source'
+    Write-FixtureFile $seed '.gitignore' '.build/'
+    $null=Save-Fixture $seed 'Owned engine generated-output exclusion'
+    $engine=Assert-CiContainedPath $runRoot (Join-Path $root '.ci-engine')
+    $source=Assert-CiContainedPath $runRoot $seed
+    [IO.Directory]::Move($source,$engine)
+    Write-FixtureFile $root '.gitignore' '.ci-engine/'
+    $project=Read-CiProject $root
+    $project.engine.ref=Resolve-CiCommit $engine HEAD
+    Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 12)
+    $before=Get-CiPinnedEngineInputsIdentity -Root $root -EngineRoot $engine
+    Write-FixtureFile $engine '.build/diagnostic.json' '{"generated":true}'
+    Assert-Equal $before (Get-CiPinnedEngineInputsIdentity -Root $root -EngineRoot $engine)
+    $file=Join-Path $engine 'src/main.cpp'
+    $original=[IO.File]::ReadAllText($file)
+    Write-FixtureFile $engine 'src/main.cpp' 'changed policy implementation'
+    try{Assert-Refused {Get-CiPinnedEngineInputsIdentity -Root $root -EngineRoot $engine}}
+    finally{[IO.File]::WriteAllText($file,$original)}
+    Assert-Equal $before (Get-CiPinnedEngineInputsIdentity -Root $root -EngineRoot $engine)
+    $project.engine.ref='f'*40
+    Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 12)
+    Assert-Refused {Get-CiPinnedEngineInputsIdentity -Root $root -EngineRoot $engine}
+    Assert-Refused {Get-CiPinnedEngineInputsIdentity -Root $root -EngineRoot $engineRoot}
+}
+
 function New-CandidateFixture([string]$Name,[switch]$Prose,[switch]$ShadowCaller,[switch]$ReporterCaller,[string]$EngineRef=''){
     $root=New-Fixture $Name
     if($ReporterCaller -or $EngineRef){

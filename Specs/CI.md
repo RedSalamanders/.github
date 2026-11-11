@@ -229,6 +229,19 @@ keep read-only tokens. The manual check is not yet required; automatic invalidat
 strict stale-base enforcement and actual hosted reporter acceptance remain separate
 gates before local delegation or main adoption. See Integration_Candidates.md.
 
+Local evidence input acquisition uses `Ci.SourceInputs.psm1`'s
+`Get-CiPinnedEngineInputsIdentity` before reuse: the selected project's own ordinary
+`.ci-engine` must be an independent Git checkout at its exact clean manifest pin.
+Its raw current source bytes, including ignored-from-product engine implementation,
+enter the checkout-bound key. Missing/moved/dirty/wrong-pin engines refuse; timestamp
+or equal-size/backdated edits cannot preserve a prior raw source key. Generated engine
+`.build` outputs remain excluded. This supplies input identity, never a test verdict,
+SDK acceptance, delegation or main-result adoption. Product adapters must include the
+returned identity in each applicable local build/runtime/tooling closure.
+`Get-CiCheckoutContentIdentity` owns the shared ordinal raw path/SHA-256 projection
+and fresh no-follow checks; the existing SDK bootstrap name remains a thin
+compatibility route with byte-identical results. Keep this implementation centralized.
+
 Owned Windows engine process launches use a fresh private _MSPDBSRV_ENDPOINT_
 in their child environment. MSVC descendants inherit that operation's PDB RPC
 namespace instead of sharing a user-wide metadata server with another operation.

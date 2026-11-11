@@ -2,6 +2,12 @@
 
 One versioned CI engine serves RedSalamander, DxUi, RedXe, RedPrism, RedTilde and RedMonitor. Each project pins its reusable workflows and engine checkout to the same immutable commit and supplies a reviewed `.ci/project.json` adapter manifest.
 
+Local build/runtime/tooling evidence includes the actual generated engine inputs
+through `Tools/Modules/Ci.SourceInputs.psm1`'s `Get-CiPinnedEngineInputsIdentity`.
+It requires the project's independent clean `.ci-engine` checkout at the exact pin
+and hashes raw current source bytes; it grants no test pass or hosted authority.
+The SDK bootstrap keeps its existing API through the same shared raw-byte routine.
+
 PRs run formatting and compiler-free tooling. Main changes are classified cumulatively and admitted after five quiet minutes. Native x64 and ARM64 Release test builds must both execute and pass their regressions before either production Release build starts. Qualified application ZIPs remain internal artifacts until an explicit publication action promotes their unchanged bytes. DxUi retains SDK ZIPs as internal qualification artifacts and has no publication workflow or winget application.
 
 The manual `integration-capabilities.yml` probes server-issued read-only cache access
