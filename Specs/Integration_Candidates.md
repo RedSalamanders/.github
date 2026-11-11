@@ -2,8 +2,11 @@
 
 Status: input acquisition, manual native shadow execution and independent native-result
 verification are implemented. Hosted shadow/verifier acceptance, a required merge gate,
-delegation and main-result adoption remain open.
-Current compiler-free PR and native main obligations remain.
+delegation and main-result adoption are deferred by the user's 2026-11-11 decision
+to keep current local/main gates. Compiler-free PR and native main obligations remain.
+Optional tools below remain manual diagnostics. Do not automatically admit shadow
+campaigns, require their reports, delegate local obligations or adopt their results
+on main. No additional pre-merge native campaign is part of the accepted rollout.
 
 ## Independent producer metadata acquisition
 

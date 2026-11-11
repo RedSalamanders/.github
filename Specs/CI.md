@@ -173,6 +173,13 @@ rollout repairs its missing required-status rule while preserving existing revie
 merge-method, bypass, strict-update and create semantics. This static policy supplies
 no native verdict and does not enable candidate delegation or cross-run adoption.
 
+The accepted I61 scope decision on 2026-11-11 retains current local and main
+qualification gates and compiler-free PR checks. Candidate-gate replacement,
+automatic shadow admission/reporting, local delegation and candidate-to-main
+cross-run adoption are deferred. Optional manual diagnostic tools do not add a
+required pre-merge native campaign or authorize reduced coverage. Continue exact
+SDK/build reuse, selection and scheduling under the existing acceptance contracts.
+
 Isolated candidate batches retain their original canonical candidate and complete
 live controller/run/attempt binding. Native contexts rederive every batch field and
 admit only Release test-build/test roles. Pinned SDK preparation supports the bound

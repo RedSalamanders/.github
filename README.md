@@ -60,7 +60,9 @@ The normative contract is [Specs/CI.md](Specs/CI.md). Engine behavior tests use 
 
 `Tools/Get-IntegrationCandidate.ps1` freezes exact PR/main/synthetic-merge inputs through read-only API and
 Git acquisition. Its [strict input-only contract](Specs/Integration_Candidates.md) grants no native result,
-merge gate, local delegation or main adoption; those remain under implementation.
+merge gate, local delegation or main adoption. Replacement/delegation/adoption are
+deferred by the 2026-11-11 decision to retain current local/main gates; optional
+manual tools do not introduce another required pre-merge native campaign.
 
 ```powershell
 ./Tests/Test-Engine.ps1 -TestRoot Z:/RedSalamander.Perf
