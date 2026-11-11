@@ -142,3 +142,43 @@ Case 'local consumer refuses changed toolkit bytes before importing original bui
     }finally{[IO.File]::WriteAllBytes($file,$saved)}
     Check-LocalConsumerWriterUnlocked
 }
+Case 'local compiler preflight verifies a held owner across processes without creating output directories' {
+    $core=& $localConsumer {$script:consumer}
+    $output=Join-Path $consumerRoot '.build/local-unpinned/compiler-positive'
+    $witness=& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{fixture='native metadata remains synthetic'} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $output
+    try{
+        $script=Join-Path $consumerRoot '.ci-engine/Tools/Test-SdkConsumerLease.ps1'
+        $arguments=@('-NoProfile','-File',$script,'-ProjectRoot',$consumerRoot,'-LeasePath',$witness.Path,'-SdkRoot',$consumerEntry.Payload,'-Platform','x64','-Configuration','Release','-SdkContract','LocalUnpinnedAbiV1','-PreflightLocalOutputs','-OutputDirectory',(Join-Path $output 'bin'),'-IntermediateDirectory',(Join-Path $output 'obj'))
+        $null=& $core {param($p,$a)Invoke-CiProcess -FilePath $p -Arguments $a -TimeoutSeconds 30} (Join-Path $PSHOME $(if($IsWindows){'pwsh.exe'}else{'pwsh'})) $arguments
+        Check (-not(Test-Path -LiteralPath $output)) 'Read-only preflight created candidate artifacts.'
+        $record=Get-Content $witness.Path -Raw|ConvertFrom-Json
+        Check ($record.schemaVersion -eq 3 -and $record.contract -ceq 'LocalUnpinnedAbiV1' -and $record.role -ceq 'LocalUnpinnedSdkCompilerLease') 'Compiler owner lost its separate local role.'
+    }finally{$witness.Stream.Dispose()}
+}
+Case 'local compiler outputs refuse canonical, source and parent roots before any artifact write' {
+    $core=& $localConsumer {$script:consumer}
+    foreach($bad in @((Join-Path $consumerRoot '.build/x64/Release'),(Join-Path $consumerRoot 'would-write-source'),(Join-Path $consumerRoot '.build/local-unpinned'))){
+        Rejects-LocalConsumer {& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $bad} 'root|path|outside|escap'
+        Check (-not(Test-Path -LiteralPath $bad)) 'Refused output initialization created an artifact directory.'
+    }
+    $output=Join-Path $consumerRoot '.build/local-unpinned/compiler-refusals'
+    $witness=& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $output
+    try{
+        foreach($bad in @((Join-Path $consumerRoot '.build/x64/Release'),(Join-Path $consumerRoot 'would-write-source'))){
+            Rejects-LocalConsumer {& $core {param($r,$p,$s,$o,$i)Assert-CiLocalSdkOutputLease $r $p $s x64 Release $o $i} $consumerRoot $witness.Path $consumerEntry.Payload $bad (Join-Path $output 'obj')} 'root|path|outside|escap'
+            Check (-not(Test-Path -LiteralPath $bad)) 'Preflight refusal created a directory.'
+        }
+    }finally{$witness.Stream.Dispose()}
+    Rejects-LocalConsumer {& $core {param($r,$p,$s,$o)Assert-CiLocalSdkOutputLease $r $p $s x64 Release $o $o} $consumerRoot $witness.Path $consumerEntry.Payload $output} 'lease is closed'
+}
+Case 'local compiler witnesses refuse pinned downgrade and require actual tool metadata after preflight' {
+    $core=& $localConsumer {$script:consumer}
+    $output=Join-Path $consumerRoot '.build/local-unpinned/compiler-contract'
+    $witness=& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $output
+    try{
+        foreach($contract in @('','QualifiedAbiV2')){
+            Rejects-LocalConsumer {& $core {param($r,$p,$s,$c)Assert-CiSdkConsumerLease $r $p $s x64 Release -SdkContract $c} $consumerRoot $witness.Path $consumerEntry.Payload $contract} 'actual v2 contract'
+        }
+        Rejects-LocalConsumer {& $core {param($r,$p,$s,$f)Assert-CiSdkConsumerLease $r $p $s x64 Release -SdkContract LocalUnpinnedAbiV1 -ToolPropertyFile $f} $consumerRoot $witness.Path $consumerEntry.Payload (Join-Path $output 'missing.properties')} 'bounded actual tool properties'
+    }finally{$witness.Stream.Dispose()}
+}

@@ -138,6 +138,18 @@ Synthetic reader controls execute the actual storage/descriptor/Git/engine/file
 binding and failure cleanup. Only original native-build acquisition and Windows
 ABI metadata evaluation use recording boundaries; they grant no native verdict.
 
+The shared MSBuild guard has a separate `LocalUnpinnedAbiV1` compiler-lease
+contract (witness schema 3). It retains the live process/handle check and every
+actual-tool/search-path/per-translation-unit ABI restriction of v2. Local output
+and intermediate directories must be absolute, plain paths beneath one distinct
+operation in the application's `.build/local-unpinned/` tree. Read-only local
+preflight checks that ownership before MSBuild creates directories or writes its
+tool-properties file; the subsequent full verifier checks the evaluated output
+paths and bounded actual tool properties again. A local owner cannot downgrade
+to a pinned contract or skip actual metadata verification. Closed owners refuse.
+This guard does not create an application build adapter, accept a local test
+verdict or allow canonical qualification/package routes to consume local outputs.
+
 `Ci.LocalSdkSnapshot.psm1` exposes a separate data-only `LocalUnpinnedSdkSnapshot`
 role. It is not accepted by the pinned SDK reader, importer, application build,
 qualification or publication routes. Producer capture and consumer/linker integration
