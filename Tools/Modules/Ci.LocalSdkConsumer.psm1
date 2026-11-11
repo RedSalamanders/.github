@@ -88,19 +88,19 @@ function Open-CiLocalSdkConsumerInput {
 
 function Close-CiLocalSdkConsumerInput {
     [CmdletBinding()]
-    param([Parameter(Mandatory)][object]$Input)
-    if($Input.Closed){throw 'Local SDK consumer input is already closed.'}
+    param([Parameter(Mandatory)][object]$SdkInput)
+    if($SdkInput.Closed){throw 'Local SDK consumer input is already closed.'}
     $failure=$null
     try{
-        if((Get-CiCheckoutContentIdentity $Input.ProjectRoot) -cne $Input.SourceBytes -or
-            (Get-CiPinnedEngineInputsIdentity -Root $Input.ProjectRoot -EngineRoot ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..')))) -cne $Input.EngineInputs){throw 'Application or actual engine inputs changed during local SDK use.'}
-        $null=& $script:descriptors {param($h) Read-CiLocalSdkSnapshotDescriptor $h.Path $h.Sha256} $Input.Descriptor
-        Assert-CiLocalConsumerProducer $Input.Descriptor
-        $null=Get-CiLocalConsumerAbi $Input.Descriptor $Input.MSBuildPath
+        if((Get-CiCheckoutContentIdentity $SdkInput.ProjectRoot) -cne $SdkInput.SourceBytes -or
+            (Get-CiPinnedEngineInputsIdentity -Root $SdkInput.ProjectRoot -EngineRoot ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..')))) -cne $SdkInput.EngineInputs){throw 'Application or actual engine inputs changed during local SDK use.'}
+        $null=& $script:descriptors {param($h) Read-CiLocalSdkSnapshotDescriptor $h.Path $h.Sha256} $SdkInput.Descriptor
+        Assert-CiLocalConsumerProducer $SdkInput.Descriptor
+        $null=Get-CiLocalConsumerAbi $SdkInput.Descriptor $SdkInput.MSBuildPath
     }catch{$failure=$_}
-    try{& $script:descriptors {param($h) Close-CiLocalSdkSnapshotDescriptor $h} $Input.Descriptor}
+    try{& $script:descriptors {param($h) Close-CiLocalSdkSnapshotDescriptor $h} $SdkInput.Descriptor}
     catch{if($null -eq $failure){$failure=$_}else{Write-Warning ('Local SDK data close also failed: '+$_.Exception.Message)}}
-    finally{$Input.Closed=$true}
+    finally{$SdkInput.Closed=$true}
     if($null -ne $failure){throw $failure}
 }
 
