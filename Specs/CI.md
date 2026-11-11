@@ -234,3 +234,13 @@ implementation remains in the normal behavioral dependency closure.
 The boundary follows [Microsoft BuildXL's MSVC endpoint use](https://github.com/microsoft/BuildXL/blob/main/Public/Sdk/Experimental/Msvc/Native/Tools/Link/Link.dsc).
 Environment controls alone do not qualify actual concurrent MSVC lifetimes; retain
 separate native acceptance before claiming the observed C1090 failures repaired.
+
+Direct native command callers use Invoke-CiNativeCommand when they need to preserve
+live console output and ordinary native exit handling. Its small child bridge accepts
+a bounded JSON array of literal string arguments, sets a private metadata endpoint
+inside only that child and executes the native application without evaluating command
+text. Parent environment/current directory stay unchanged, including concurrent
+runspace callers. Native failures keep their exact exit code; compiler-free calls
+refuse before launch. The bridge supports up to12000JSON characters and rejects
+larger payloads visibly rather than truncating arguments. Existing contained-process
+launchers instead apply Set-CiNativeProcessEnvironment to their own ProcessStartInfo.
