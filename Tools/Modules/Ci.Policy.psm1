@@ -20,6 +20,22 @@ function Set-CiNativeProcessEnvironment {
     return $endpoint
 }
 
+function Invoke-CiNativeCommand {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$FilePath,[AllowEmptyCollection()][string[]]$Arguments=@(),
+        [Parameter(Mandatory)][string]$WorkingDirectory)
+    if($env:CI_NATIVE_BUILDS_DISABLED -ceq 'true'){throw 'Native tool invocation is forbidden in compiler-free execution.'}
+    $json=ConvertTo-Json -InputObject @($Arguments) -Compress
+    if($json.Length -gt 12000){throw 'Native argument payload exceeds the supported direct command-line size.'}
+    $hostPath=(Get-Process -Id $PID).Path
+    # The bridge receives JSON data as one argument, never interpolated shell or
+    # PowerShell source. Its environment belongs only to the new child, including
+    # when independent runspaces call this helper concurrently.
+    & $hostPath -NoProfile -NonInteractive -InputFormat Text -OutputFormat Text -File (Join-Path $PSScriptRoot '../Invoke-NativeTool.ps1') `
+        -FilePath $FilePath -WorkingDirectory $WorkingDirectory -ArgumentsJson $json
+    $global:LASTEXITCODE=$LASTEXITCODE
+}
+
 function Protect-CiDiagnostic {
     param([AllowEmptyString()][string]$Text)
     foreach($secret in @($env:GH_TOKEN,$env:WINGET_TOKEN)){if($secret){$Text=$Text.Replace($secret,'<credential>')}}
@@ -343,4 +359,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
+Export-ModuleMember -Function Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
