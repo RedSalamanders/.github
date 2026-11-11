@@ -124,6 +124,12 @@ header and library reference. A mismatch refuses this explicit local request.
 
 The reader's role is `LocalUnpinnedSdkConsumerInput` and its evidence recipe is
 `LocalUnpinnedReleaseSdk`. Neither is accepted as a pinned build or a test result.
+The snapshot's Windows producer identity normalizes path casing for its key.
+Before original native build/provenance or ABI evaluation, the reader resolves
+that same plain source directory to its filesystem spelling. Expanded MSBuild
+path identities otherwise differ for a casing alias despite unchanged bytes.
+Only equivalent Windows casing is accepted here; this does not redirect source,
+rewrite the descriptor/key or remove any source, native-input, byte or ABI check.
 Opening the reader does not create a compiler witness, link an application,
 choose output paths or publish a build receipt. Consumer build adapters remain
 unfinished.
