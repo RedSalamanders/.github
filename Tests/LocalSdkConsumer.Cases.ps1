@@ -149,7 +149,7 @@ Case 'local compiler preflight verifies a held owner across processes without cr
     try{
         $script=Join-Path $consumerRoot '.ci-engine/Tools/Test-SdkConsumerLease.ps1'
         $arguments=@('-NoProfile','-File',$script,'-ProjectRoot',$consumerRoot,'-LeasePath',$witness.Path,'-SdkRoot',$consumerEntry.Payload,'-Platform','x64','-Configuration','Release','-SdkContract','LocalUnpinnedAbiV1','-PreflightLocalOutputs','-OutputDirectory',(Join-Path $output 'bin'),'-IntermediateDirectory',(Join-Path $output 'obj'))
-        $null=& $core {param($p,$a)Invoke-CiProcess -FilePath $p -Arguments $a -TimeoutSeconds 30} (Join-Path $PSHOME $(if($IsWindows){'pwsh.exe'}else{'pwsh'})) $arguments
+        $null=& $core {param($p,$a,$r)Invoke-CiProcess -FilePath $p -Arguments $a -WorkingDirectory $r -TimeoutSeconds 30} (Join-Path $PSHOME $(if($IsWindows){'pwsh.exe'}else{'pwsh'})) $arguments $consumerRoot
         Check (-not(Test-Path -LiteralPath $output)) 'Read-only preflight created candidate artifacts.'
         $record=Get-Content $witness.Path -Raw|ConvertFrom-Json
         Check ($record.schemaVersion -eq 3 -and $record.contract -ceq 'LocalUnpinnedAbiV1' -and $record.role -ceq 'LocalUnpinnedSdkCompilerLease') 'Compiler owner lost its separate local role.'
@@ -158,14 +158,14 @@ Case 'local compiler preflight verifies a held owner across processes without cr
 Case 'local compiler outputs refuse canonical, source and parent roots before any artifact write' {
     $core=& $localConsumer {$script:consumer}
     foreach($bad in @((Join-Path $consumerRoot '.build/x64/Release'),(Join-Path $consumerRoot 'would-write-source'),(Join-Path $consumerRoot '.build/local-unpinned'))){
-        Rejects-LocalConsumer {& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $bad} 'root|path|outside|escap'
+        Rejects-LocalConsumer {& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $bad} 'contained repository/sandbox child|separate operation'
         Check (-not(Test-Path -LiteralPath $bad)) 'Refused output initialization created an artifact directory.'
     }
     $output=Join-Path $consumerRoot '.build/local-unpinned/compiler-refusals'
     $witness=& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $output
     try{
         foreach($bad in @((Join-Path $consumerRoot '.build/x64/Release'),(Join-Path $consumerRoot 'would-write-source'))){
-            Rejects-LocalConsumer {& $core {param($r,$p,$s,$o,$i)Assert-CiLocalSdkOutputLease $r $p $s x64 Release $o $i} $consumerRoot $witness.Path $consumerEntry.Payload $bad (Join-Path $output 'obj')} 'root|path|outside|escap'
+            Rejects-LocalConsumer {& $core {param($r,$p,$s,$o,$i)Assert-CiLocalSdkOutputLease $r $p $s x64 Release $o $i} $consumerRoot $witness.Path $consumerEntry.Payload $bad (Join-Path $output 'obj')} 'contained repository/sandbox child|separate operation'
             Check (-not(Test-Path -LiteralPath $bad)) 'Preflight refusal created a directory.'
         }
     }finally{$witness.Stream.Dispose()}

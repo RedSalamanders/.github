@@ -11,7 +11,7 @@
     <Error Condition="'$(CiSdkVerifiedRootNormalized)'!='$(CiSdkImportedRootNormalized)'" Text="Pinned SDK v1 import root differs from the verified reader payload." />
     <Error Condition="'$(DxUiRoot)'!=''" Text="Pinned SDK v1 cannot mix source and SDK recipes." />
     <!-- Verify ownership before MakeDir or WriteLinesToFile can touch either tree. -->
-    <Exec Condition="'$(CiSdkContract)'=='LocalUnpinnedAbiV1'" Command="pwsh -NoProfile -NonInteractive -File &quot;$(MSBuildThisFileDirectory)..\Test-SdkConsumerLease.ps1&quot; -ProjectRoot &quot;$(CiSdkProjectRoot)&quot; -LeasePath &quot;$(CiSdkLeasePath)&quot; -SdkRoot &quot;$(CiSdkRoot)&quot; -Platform &quot;$(Platform)&quot; -Configuration &quot;$(Configuration)&quot; -SdkContract &quot;$(CiSdkContract)&quot; -PreflightLocalOutputs -OutputDirectory &quot;$(OutDir)&quot; -IntermediateDirectory &quot;$(IntDir)&quot;" />
+    <Exec Condition="'$(CiSdkContract)'=='LocalUnpinnedAbiV1'" Command="pwsh -NoProfile -NonInteractive -File &quot;$(MSBuildThisFileDirectory)..\Test-SdkConsumerLease.ps1&quot; -ProjectRoot &quot;$(CiSdkProjectRoot)&quot; -LeasePath &quot;$(CiSdkLeasePath)&quot; -SdkRoot &quot;$(CiSdkRoot)&quot; -Platform &quot;$(Platform)&quot; -Configuration &quot;$(Configuration)&quot; -SdkContract &quot;$(CiSdkContract)&quot; -PreflightLocalOutputs -OutputDirectory &quot;$(OutDir)/.&quot; -IntermediateDirectory &quot;$(IntDir)/.&quot;" />
     <PropertyGroup Condition="('$(CiSdkContract)'=='QualifiedAbiV2' or '$(CiSdkContract)'=='LocalUnpinnedAbiV1')">
       <CiSdkToolBindingFile>$([System.IO.Path]::GetFullPath('$(IntDir)CiSdkToolBinding.$(MSBuildProjectFile).txt'))</CiSdkToolBindingFile>
     </PropertyGroup>
