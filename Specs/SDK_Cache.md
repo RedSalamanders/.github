@@ -1,8 +1,9 @@
 # Immutable dependency SDK inputs
 
-Status: immutable storage, pinned producer/distribution and explicit application readers are implemented.
-Monitor and RedXe have locally qualified SDK consumer paths. Automatic hosted SDK-hit acceptance,
-the other application integrations, local candidates and acceleration acceptance remain in
+Status: immutable storage, pinned producer/distribution and explicit application-reader mechanisms are implemented.
+Every consumer retains its own integration, native, production and runtime acceptance
+under its owning contracts. Current deployment, failures, local-candidate work and
+controlled acceleration acceptance are tracked in
 [I61](Plans/WIP/TestingAndIntegrationAcceleration_2026-11-09.md).
 
 ## Explicit pinned native SDK producer

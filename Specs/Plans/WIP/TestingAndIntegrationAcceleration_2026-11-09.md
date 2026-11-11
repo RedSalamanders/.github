@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 The 2026-11-11 scope decision below defers gate replacement and cross-run adoption; accepted acceleration work remains open and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 24, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 26, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -31,34 +31,43 @@ Current authority remains:
 
 **User decision, 2026-11-11: keep the current local and main gates.** Native candidate-gate replacement, local-to-hosted delegation, automatic shadow admission/reporting and cross-run candidate-to-main adoption are deferred, not implementation prerequisites for this accepted scope. Do not add a second pre-merge native campaign, dispatch a shadow pilot, change billing, deploy a GitHub App or replace branch enforcement to pursue those deferred items. Existing optional manual shadow/report tools remain diagnostic and grant no acceptance authority. Continue SDK/build reuse, precise selection, independent obligation retention, bounded scheduling and measured acceleration within the existing local/main obligations. Current compiler-free PR checks remain.
 
-Latest deployment: optional shadow callers are merged in RedTilde #104, RedMonitor
-#48, RedPrism #16 and DxUi #244. Monitor #49 advanced to capacity/freshness engine318;
-Prism #17 advanced to optional reporter engine476. Each deployment passed independent
-validation; each corresponding main campaign passed both native and production roles
-except Prism's newest campaign, still running. These are ordinary main results, not
-hosted shadow acceptance. Original run metadata, bounded original artifact bytes,
-coverage and live post-transfer rechecks are implemented. Shared #58 added an optional
-trusted manual reporter; actual hosted acceptance, automatic admission/invalidation,
-required/stale-base enforcement, local delegation and main adoption remain open.
+Current rollout: Monitor #50, Tilde #106, Prism #18 and DxUi #246 are merged.
+Monitor main42950834765, Tilde main42952565762 and DxUi main42954632514 passed
+all seven jobs. Prism main42959845076 passed x64 regression and is still executing
+ARM64 regression. These are ordinary main results; optional shadow tooling grants no
+additional acceptance. Do not cancel running Actions.
 
-The following deployment snapshot is retained as revision24 history and is
-superseded by revision25 at the end of this document.
+Shared #64/#65 merged the canonical actual-engine input reader and Windows path
+casing correction at `0573d4f3b294e3c3655349eb618ec7105b3d89b2`. All 120 local
+engine controls and all five hosted checks passed. Product Git ignores `.ci-engine`,
+so its actual implementation must be bound separately before local receipt reuse.
+All six client ports are implemented on isolated branches, committed or under final
+focused validation; their new integration/native acceptance remains open. Keep engine
+identity separate from product file/iteration maps. This closes an input hole; it
+does not replace a gate or grant a test result.
 
-Shared #59/#60 added private compiler metadata endpoints and a literal, streaming
-native command bridge. All118 final hosted engine controls pass. Product launcher
-adoption is in progress in Monitor #50, Tilde #106 and a separate DxUi branch, with
-native acceptance still pending. Tilde #105's independent Tooling/Format retention
-passed all three x64 native profiles and three ARM64 cross-builds; Prism #18's port
-passed Debug and is continuing its other profiles. DxUi's four authorized foreground
-suites passed all three x64 profiles with restoration verified.
+Root's current Source recipe passed all six builds with zero warnings/errors;
+PR #213 retains exact source/profile evidence. Its later local-origin SDK Full
+finished **FAILED: 2815 passed, 3 failed, 56 skipped**, with 15 of 18 promoted entries.
+The tooling fragment is fixed in #213. The ViewerPE close-time and interactive
+restoration failures remain unexplained. Quiet diagnostics passed three close
+attempts (37/36/36 ms against the unchanged 500 ms budget) and all six interactive churn
+cycles with verified restoration. Those passes neither repair nor supersede the
+original Full. Root #215 reduces repeated unsafe-archive inspection; #216 permits
+exact verified entry continuation from a closed failed/interrupted Full. Both are
+drafts with focused integration controls, not complete native acceptance. Entire
+approval for #211 remains absent. A new Source Release Fresh Full is now building
+at `03fe8ee22db0407643fb2803a1e974660ae5656d` with engine `0573d4f3`; it has no
+result yet and is separate from SDK and hosted acceptance.
 
-Root's six Source builds passed with zero warnings/errors, and focused Debug/ASan
-independent-volume controls passed. Its original SDK Full remains failed (2812 passed,
-2 failed,60 skipped); neither focused retries nor cross-builds supply aggregate Full.
-A fresh SDK Full is running with corrected fixtures and existing-root preflight, but
-has found a separate changelog-fragment format failure. Preserve that result and fix
-the fragment after the running checkout drains. Never edit inputs during qualification
-or discard failed evidence. No GitHub Action was cancelled. This plan remains WIP.
+Xe #83/#84/#86 remain drafts: measurement input closure, contained metadata transport
+and independent-tooling retention are implemented and focused checks pass. The
+original Desk Clock memory-budget failure remains failed; later diagnostics do not
+establish its cause. Monitor's remaining independent-check retention port is now
+implemented with create-only attempts and failure/interruption invalidation, with
+final controls running. Remaining selected builds, local candidate SDKs, finer
+native/case closure, controlled acceleration/detection measurements and rollout keep
+this plan WIP. Earlier checkpoints below remain history, not current acceptance.
 
 ## 2. Why do local tests, PR checks and main seem to repeat everything?
 
@@ -310,10 +319,10 @@ The [implementation evidence record](../../TestRuns/I61_2026-11-09/README.md) ow
 | Slice | Current state | Implemented and remaining |
 |---|---|---|
 | S0 | IN_PROGRESS | Refreshed all seven repositories and six client source/pin/scope/effective-main-rule inventories. Hosted native candidate checks and merge-queue/base requirements are absent in the observed rules. Full warm/cold cost accounting and pilot acceptance remain open. |
-| S1 | IN_PROGRESS | RedSalamander #209/#210 merged the strict runner/adapter handoff and bounded dependency retries. Failed native run 42703183362 is retained; #211 repairs hosted fixtures and preserves the nested ARM64 retirement cause, awaiting Entire approval. Follow-up draft #212 adds shared Terminal failure reporting, acceptance diagnostics and a deterministic image-reservation handshake. Its broad noninteractive PrePush has 1,538 passing native cases, zero failures and 30 declared skips; all 1,243 Pester assertions pass. The overall result is NOT_EVALUATED because four focus-taking entries remain pending. CI/security pass; hosted Root acceptance and the ARM64 retirement diagnosis remain open. DxUi 42703189525 passed both native regression/production roles. |
+| S1 | IN_PROGRESS | Root #209/#210 are merged; #211 still awaits Entire approval. Drafts #212/#213 preserve diagnostics, SDK recipe and contained metadata transport; all six current Source builds passed with zero warnings/errors. The latest local-origin SDK Full failed (2815 passed, 3 failed, 56 skipped). Quiet ViewerPE close/churn diagnostics pass without attributing or superseding the Full failures. #215 archive retention and #216 closed-run entry Resume have focused controls; final integration/native acceptance remains open. DxUi main42954632514 passed all seven jobs. |
 | S2 | IN_PROGRESS | DxUi PR #230 integrated evaluated target-union routing and coverage-bound receipts. Cold x64 Release built exactly library/Foundation/Embedded with zero warnings/errors; both native suites passed, Embedded observed 583,358 checks. Default selected build and public/direct Foundation execution passed; actual Full and added-Grid requests refused before native work. Full final tooling passed. Other projects/profiles and overall elapsed acceptance remain open. |
-| S3 | IN_PROGRESS | All three corrected SDK producers passed both architectures; all six original archives passed authenticated byte/ABI acquisition. Live Monitor42883975390, Tilde42883990951 and Prism42885249187 campaigns selected SDK2 in both native and production roles on both architectures and passed. Xe's both native regressions passed before its AV measurement route failed; draft83 repairs that route but retains a genuine subsequent Desk Clock memory failure. Root's SDK-preserving runner has six zero-warning Source builds and focused Debug/ASan volume passes; fresh local-origin SDK Full remains running with a separate tooling failure, not hosted acceptance. Local unpinned candidates and controlled comparison remain open. |
-| S4 | IN_PROGRESS | DxUi and RedTilde retain each completed independent tooling/format obligation before later native failure, with unchanged complete input/tool/environment checks and native/batch baselines kept separate. Tilde #105 passed all three x64 runtime and ARM64 cross-build profiles. Prism has the same focused behavioral port with 33 controls passing; full/native acceptance is in progress. Fine-grained native closure, broader component reuse and Root full-snapshot over-invalidation remain open. |
+| S3 | IN_PROGRESS | All three corrected SDK producers passed both architectures; all six original archives passed authenticated byte/ABI acquisition. Monitor42883975390, Tilde42883990951 and Prism42885249187 selected SDK2 in both native and production roles on both architectures and passed. Xe draft #83 repairs AV measurement closure but retains its Desk Clock memory failure. Root #213 has six current Source build passes; its later SDK Full failed and no aggregate SDK/native/hosted acceptance is claimed. Local unpinned candidates and controlled comparisons remain open. |
+| S4 | IN_PROGRESS | DxUi, Tilde #105 and Prism #18 retain independently completed tooling before later native failure. Tilde and Prism completed all three x64 Full profiles and ARM64 cross-builds. Xe #86 adds the same retention with focused controls; Monitor now has a tested port preserving immutable attempts and rejecting corrupt/interrupted/failed latest state. Shared #64/#65 bind actual ignored engine bytes; all six client ports are undergoing final integration checks. Root #215 reduces repeated archival inspection and #216 verifies closed-run entry continuation. Fine-grained native closure, broader component reuse, global snapshots and measurements remain open. |
 | S5 | IN_PROGRESS | DxUi #229 integrated scoped parallel identity and exact local preflight reuse. Same-binary x64 Release serial/parallel-2 runs passed identical 1,726 named cases and 19 suites, zero skips; one pair improved elapsed by 24.1%. Local prerequisite reuse measured about 1s versus 23s fresh in two alternating pairs. DxUi #238 merged at 1e8fcaac26eb099c3b1e5fa838652bf4b0447c97, selecting two suites only for hosted normal Release; local, Debug/ASan, foreground/performance and prerequisite serialization remain. Its native campaign 42773652579 passed both native regression and production branches plus completion; controlled hosted serial/parallel timing and overall targets remain open. |
 | S6A | IN_PROGRESS | Root #209 and #210 merged valid-fragment routing and coordinated 904a8cb engine/prose ownership. RedXe #78, RedMonitor #40 and RedTilde #101 preserve runtime Markdown/example bytes. Five other clients deployed matching 904a8cb pins/callers; DxUi subsequently adopted e3c637b in #232. RedXe, RedTilde and RedMonitor adoption campaigns passed both native roles/architectures. RedMonitor #33 reused its identical successful native inputs without rebuilding. Prism #13's diagnostic follow-up passed both native regression and production branches in 42781905176; that execution does not diagnose or relabel the earlier 90-minute ARM64 timeout. Final selection/detection comparison and source-bound acceptance remain open. |
 | S6B | NOT_STARTED | Case-level narrowing and broader historical/seeded failure comparison remain required. |
