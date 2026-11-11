@@ -343,4 +343,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
+Export-ModuleMember -Function Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
