@@ -20,7 +20,7 @@ foreach($value in $values){
     if($value -isnot [string] -or $value.Contains([char]0)){throw 'Native arguments must be literal strings without NUL.'}
 }
 $nativeArguments=[string[]]@($values)
-$command=Get-Command -Name $FilePath -CommandType Application -ErrorAction Stop|Select-Object -First 1
+$command=Get-Command -Name ([Management.Automation.WildcardPattern]::Escape($FilePath)) -CommandType Application -ErrorAction Stop|Select-Object -First 1
 $directory=(Resolve-Path -LiteralPath $WorkingDirectory -ErrorAction Stop).Path
 if(-not(Test-Path -LiteralPath $directory -PathType Container)){throw 'Native working directory must already exist.'}
 Import-Module (Join-Path $PSScriptRoot 'Modules/Ci.Policy.psm1')

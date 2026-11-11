@@ -2959,6 +2959,13 @@ exit 7
         Assert-True (($errors -join [Environment]::NewLine).Contains('native-bridge-stderr'))
         Assert-Equal 'must-not-reuse-caller-service' $env:_MSPDBSRV_ENDPOINT_
         if($IsWindows){Assert-True ($record.endpoint -cmatch '^red-ci-[a-f0-9]{32}$')}else{Assert-Equal 'must-not-reuse-caller-service' $record.endpoint}
+        if($IsWindows){
+            $literal=Join-Path $root 'native [literal] 子/cmd.exe'
+            [void][IO.Directory]::CreateDirectory((Split-Path $literal))
+            Copy-Item -LiteralPath (Join-Path ([Environment]::SystemDirectory) 'cmd.exe') -Destination $literal
+            Invoke-CiNativeCommand -FilePath $literal -WorkingDirectory $root -Arguments @('/d','/c','exit','9')
+            Assert-Equal 9 $LASTEXITCODE
+        }
         $env:CI_NATIVE_BUILDS_DISABLED='true'
         Assert-Refused {Invoke-CiNativeCommand -FilePath missing-native.exe -WorkingDirectory $root}
     }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')};$global:LASTEXITCODE=0}
