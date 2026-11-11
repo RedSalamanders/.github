@@ -829,8 +829,29 @@ calls refuse before launch. Product launcher migration remains separate.
 
 The user chose to keep current local/main gates. Candidate-gate replacement,
 automatic shadow admission/reporting, local delegation and cross-run adoption are
-deferred; no second pre-merge native campaign is required. See plan revision25 for
+deferred; no second pre-merge native campaign is required. See plan revision26 for
 the latest exact rollout and failed/pending local qualification identities.
-RedMonitor main42950834765 passed both native and both production roles. Tilde
-main42952565762 passed both native roles and was still in production. DxUi
-main42954632514 was running. These are ordinary main results, not shadow acceptance.
+RedMonitor main42950834765, Tilde main42952565762 and DxUi main42954632514
+passed all seven jobs. Prism main42959845076 passed x64 regression, with ARM64
+regression still running. These are ordinary main results, not shadow acceptance.
+
+### Actual local engine input identity
+
+[Engine input controls](Engine_Input_Identity_2026-11-11.json) preserve the original
+120-case result at `d8250b01a50975f394523cad0cc3c902c0c3d712`, integrated through
+shared #64/#65 at `0573d4f3b294e3c3655349eb618ec7105b3d89b2`. All local cases and
+all five hosted checks passed. The controls cover raw working-byte identity,
+same-size/backdated edits, exact independent engine checkout/pin, generated output
+exclusion, refusal of dirty/foreign/wrong-pin inputs and Windows path casing aliases.
+The existing SDK raw projection remains byte-identical through its compatibility
+entrypoint. These controls supply no product test, hosted candidate or main-adoption
+result; all six product call sites retain separate rollout and native acceptance.
+
+Final client controls passed against the new input binding: Xe 36 scoped cases,
+Tilde 62 (including direct Source/SDK build identities), Prism 34, DxUi 45, Root
+204 focused schema/build/evidence/runner/inventory controls with zero failures/skips,
+and Monitor's complete independent tooling suite including 15 public-wrapper cases.
+Monitor additionally checks failed/started/corrupt latest state and immutable success
+across native failure. Its real fresh/reuse command measurement is running and is
+not a published speedup. Final source commits, broader validation and native results
+remain separate in the plan and owning product evidence.

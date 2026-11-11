@@ -1,0 +1,608 @@
+{
+  "schemaVersion": 1,
+  "passed": true,
+  "executed": 120,
+  "failed": 0,
+  "cases": [
+    {
+      "name": "Prose changes create zero native obligation and retain native input identity",
+      "passed": true,
+      "elapsedMs": 2112
+    },
+    {
+      "name": "Current conformance refuses extension-wide Markdown exclusions without invalidating historical manifest reads",
+      "passed": true,
+      "elapsedMs": 1088
+    },
+    {
+      "name": "Compiler-free planner command is restricted to the reviewed DxUi adapter and preserves nonzero exits",
+      "passed": true,
+      "elapsedMs": 1205
+    },
+    {
+      "name": "A code merge followed by docs still carries the cumulative code obligation",
+      "passed": true,
+      "elapsedMs": 2689
+    },
+    {
+      "name": "Shipped schema and test fixture Markdown override surrounding exclusions",
+      "passed": true,
+      "elapsedMs": 1151
+    },
+    {
+      "name": "Complete comparison sees meaningful input beyond 300 changed paths",
+      "passed": true,
+      "elapsedMs": 1673
+    },
+    {
+      "name": "A rename into an excluded folder retains the old meaningful path",
+      "passed": true,
+      "elapsedMs": 1542
+    },
+    {
+      "name": "Deleting a native input changes its identity",
+      "passed": true,
+      "elapsedMs": 1577
+    },
+    {
+      "name": "Unicode paths survive Git transport and are meaningful",
+      "passed": true,
+      "elapsedMs": 1338
+    },
+    {
+      "name": "Unknown inputs are conservative and an unreadable comparison is refused",
+      "passed": true,
+      "elapsedMs": 687
+    },
+    {
+      "name": "Strict schema rejects unknown policy keys and invalid path patterns",
+      "passed": true,
+      "elapsedMs": 534
+    },
+    {
+      "name": "Snapshot uses the exact committed manifest rather than mutable working-tree policy",
+      "passed": true,
+      "elapsedMs": 1251
+    },
+    {
+      "name": "Public classification command returns the same real Git decision",
+      "passed": true,
+      "elapsedMs": 1575
+    },
+    {
+      "name": "Three nearby merges admit only after five minutes from the last merge",
+      "passed": true,
+      "elapsedMs": 20
+    },
+    {
+      "name": "Continuous merges reset admission without a hidden maximum-deferral override",
+      "passed": true,
+      "elapsedMs": 5
+    },
+    {
+      "name": "Recorded failures survive docs and only an explicit retry readmits identical inputs",
+      "passed": true,
+      "elapsedMs": 7
+    },
+    {
+      "name": "Regression gate rejects empty execution, disabled assertions, skips and stale identities",
+      "passed": true,
+      "elapsedMs": 21
+    },
+    {
+      "name": "State updates use a captured parent and a non-forced ref update",
+      "passed": true,
+      "elapsedMs": 36
+    },
+    {
+      "name": "Real Git fast-forward semantics refuse competing sibling state commits",
+      "passed": true,
+      "elapsedMs": 1271
+    },
+    {
+      "name": "An ended workflow without a recorded qualification never recovers as success",
+      "passed": true,
+      "elapsedMs": 9
+    },
+    {
+      "name": "API routes outside the reviewed repositories are refused before credential use",
+      "passed": true,
+      "elapsedMs": 21
+    },
+    {
+      "name": "Pinned formatter produces a narrow real patch and leaves the Git head unchanged",
+      "passed": true,
+      "elapsedMs": 3016
+    },
+    {
+      "name": "Revision options cannot turn classification into a Git write or external command",
+      "passed": true,
+      "elapsedMs": 610
+    },
+    {
+      "name": "Static project command selection refuses compiler-dependent entry points",
+      "passed": true,
+      "elapsedMs": 514
+    },
+    {
+      "name": "Manual qualification selects only the requested architectures before native setup",
+      "passed": true,
+      "elapsedMs": 3050
+    },
+    {
+      "name": "Windowless child diagnostics preserve both output streams and the real exit code",
+      "passed": true,
+      "elapsedMs": 791
+    },
+    {
+      "name": "Production admission refuses test-role evidence, stale attempts and modified ZIP bytes",
+      "passed": true,
+      "elapsedMs": 987
+    },
+    {
+      "name": "The global test gate needs both architecture receipts from the same admitted run",
+      "passed": true,
+      "elapsedMs": 468
+    },
+    {
+      "name": "winget manifests carry schema headers, use the ZIP nested executable and reject SDK, missing licensing and unsafe paths",
+      "passed": true,
+      "elapsedMs": 555
+    },
+    {
+      "name": "Unpublished winget installation proves every alias, product smoke and manifest-based cleanup without list correlation",
+      "passed": true,
+      "elapsedMs": 627
+    },
+    {
+      "name": "winget validation warnings are accepted and logged, while other validation failures refuse before install",
+      "passed": true,
+      "elapsedMs": 1063
+    },
+    {
+      "name": "winget resolution registers the inbox App Installer only when its alias is absent, and refuses when it stays absent",
+      "passed": true,
+      "elapsedMs": 552
+    },
+    {
+      "name": "An existing portable product is refused before any install or removal",
+      "passed": true,
+      "elapsedMs": 756
+    },
+    {
+      "name": "Missing, foreign-target and stale-version aliases reject qualification and clean only the owned product",
+      "passed": true,
+      "elapsedMs": 1465
+    },
+    {
+      "name": "A failing or timed-out installed product probe retains failure and still uninstalls its owned package",
+      "passed": true,
+      "elapsedMs": 1089
+    },
+    {
+      "name": "A partial install is cleaned but a foreign registration is never removed",
+      "passed": true,
+      "elapsedMs": 2765
+    },
+    {
+      "name": "Cleanup failure cannot write a passing native installation proof",
+      "passed": true,
+      "elapsedMs": 1600
+    },
+    {
+      "name": "Undeclared or unbounded product smoke commands are refused before installation",
+      "passed": true,
+      "elapsedMs": 3951
+    },
+    {
+      "name": "Submission needs source-matching native alias, product probe and actual cleanup counts",
+      "passed": true,
+      "elapsedMs": 2064
+    },
+    {
+      "name": "Manual native admission retains a failed input until explicit retry is supplied",
+      "passed": true,
+      "elapsedMs": 5672
+    },
+    {
+      "name": "winget transport creates one exact manifest PR and reuses it on retry",
+      "passed": true,
+      "elapsedMs": 2148
+    },
+    {
+      "name": "Explicit formatting commits use real Git narrow staging and fresh-head dispatch",
+      "passed": true,
+      "elapsedMs": 15508
+    },
+    {
+      "name": "Production SDK receipts expose distinct real artifact and receipt outputs",
+      "passed": true,
+      "elapsedMs": 1469
+    },
+    {
+      "name": "Prepare command exports distinct version and directory without release mutation",
+      "passed": true,
+      "elapsedMs": 505
+    },
+    {
+      "name": "Manual bot-push rechecks bind all three required checks to the exact new PR head",
+      "passed": true,
+      "elapsedMs": 591
+    },
+    {
+      "name": "Native architecture checks refuse emulated, malformed and truncated images",
+      "passed": true,
+      "elapsedMs": 508
+    },
+    {
+      "name": "Workflow conformance refuses a native PR route, pin drift and unreviewed timers",
+      "passed": true,
+      "elapsedMs": 1017
+    },
+    {
+      "name": "SDK conformance retains qualification and rejects every hosted publication route",
+      "passed": true,
+      "elapsedMs": 868
+    },
+    {
+      "name": "SDK publication APIs refuse before downloads, remote calls or output creation",
+      "passed": true,
+      "elapsedMs": 515
+    },
+    {
+      "name": "Pin migration removes only the generated SDK publisher and preserves custom changes",
+      "passed": true,
+      "elapsedMs": 6306
+    },
+    {
+      "name": "Sandbox evidence and workspace logs retain separate artifact roots",
+      "passed": true,
+      "elapsedMs": 19
+    },
+    {
+      "name": "SDK library handoff stays within one successful regression run attempt and preserves the global production gate",
+      "passed": true,
+      "elapsedMs": 5
+    },
+    {
+      "name": "Queue compatibility validates the official value and noncancellation rules",
+      "passed": true,
+      "elapsedMs": 8
+    },
+    {
+      "name": "Pinned SDK admission is manual main only and preserves independent native architecture requests",
+      "passed": true,
+      "elapsedMs": 657
+    },
+    {
+      "name": "SDK producer checks actual clean Git identities, main ancestry, API and storage pin before setup",
+      "passed": true,
+      "elapsedMs": 8906
+    },
+    {
+      "name": "Actual SDK workflow resolver writes six independent outputs including its validated contract without compilation",
+      "passed": true,
+      "elapsedMs": 1696
+    },
+    {
+      "name": "Actual SDK producer branch emits a qualified reference only after every SDK gate succeeds",
+      "passed": true,
+      "elapsedMs": 670
+    },
+    {
+      "name": "Actual qualified producer ABI query explicitly preserves each native compiler host",
+      "passed": true,
+      "elapsedMs": 14
+    },
+    {
+      "name": "SDK workflow keeps reviewed tooling separate, read-only tokens and native-success attempt-bound artifacts",
+      "passed": true,
+      "elapsedMs": 10
+    },
+    {
+      "name": "SDK compilation checks the actual live reader handle across processes and refuses stale or mismatched settings",
+      "passed": true,
+      "elapsedMs": 1428
+    },
+    {
+      "name": "Explicit SDK ABI controls refuse compiler-free invocation before creating fixtures",
+      "passed": true,
+      "elapsedMs": 1049
+    },
+    {
+      "name": "Application SDK binding verifies the actual lock and clean pinned controller before invoking any producer tooling",
+      "passed": true,
+      "elapsedMs": 1780
+    },
+    {
+      "name": "Local SDK descriptors are independent, strictly typed and cannot change the application lock or profile",
+      "passed": true,
+      "elapsedMs": 533
+    },
+    {
+      "name": "Fast SDK bootstrap retains the exact ordinal raw map, missing-file refusal and per-read reparse barriers",
+      "passed": true,
+      "elapsedMs": 773
+    },
+    {
+      "name": "Shared raw checkout identity detects equal-size backdated edits and preserves the SDK compatibility projection",
+      "passed": true,
+      "elapsedMs": 754
+    },
+    {
+      "name": "Local engine input identity binds an independent exact clean checkout and ignores only generated outputs",
+      "passed": true,
+      "elapsedMs": 2402
+    },
+    {
+      "name": "Candidate freeze uses the complete immutable synthetic merge, exact parents, native inputs and version",
+      "passed": true,
+      "elapsedMs": 3437
+    },
+    {
+      "name": "Candidate snapshots refuse draft, closed, conflicting, unknown, moved and malformed PR metadata",
+      "passed": true,
+      "elapsedMs": 1436
+    },
+    {
+      "name": "Candidate recheck refuses source/base movement and complete descriptor tampering, including recomputed digests",
+      "passed": true,
+      "elapsedMs": 7371
+    },
+    {
+      "name": "Current REST candidate acquisition reads the exact merge ref independently of PR payloads",
+      "passed": true,
+      "elapsedMs": 7
+    },
+    {
+      "name": "Prose-only candidate inputs create no native obligation and supply no execution or qualification verdict",
+      "passed": true,
+      "elapsedMs": 2088
+    },
+    {
+      "name": "Candidate shadow inputs bind the exact isolated controller and frozen native batch without verdict authority",
+      "passed": true,
+      "elapsedMs": 3734
+    },
+    {
+      "name": "Public shadow acquisition refuses invalid hosted context before API requests or output mutation",
+      "passed": true,
+      "elapsedMs": 2169
+    },
+    {
+      "name": "Actual shadow gateway rechecks independent controller refs, workflow blob and complete candidate after acquisition",
+      "passed": true,
+      "elapsedMs": 3720
+    },
+    {
+      "name": "Isolated native batch roundtrips retain live context and cannot enter production",
+      "passed": true,
+      "elapsedMs": 1751
+    },
+    {
+      "name": "Manual candidate shadow execution keeps isolated read-only test roles and original attempt evidence",
+      "passed": true,
+      "elapsedMs": 3
+    },
+    {
+      "name": "Actual shadow freeze script retains canonical batch data and refuses mismatched engine or failed acquisition before outputs",
+      "passed": true,
+      "elapsedMs": 4792
+    },
+    {
+      "name": "Trusted shadow admission creates only an exact main ref and dispatch, preserving preview and race journals",
+      "passed": true,
+      "elapsedMs": 34115
+    },
+    {
+      "name": "Merge queue input freeze binds the complete integration tree, cumulative inputs and proposed version",
+      "passed": true,
+      "elapsedMs": 3323
+    },
+    {
+      "name": "Merge queue inputs refuse other events, repositories, branches, malformed refs and non-descendant heads",
+      "passed": true,
+      "elapsedMs": 1323
+    },
+    {
+      "name": "Merge queue recheck refuses advanced main, replaced queue heads and self-rehashed descriptor changes",
+      "passed": true,
+      "elapsedMs": 6464
+    },
+    {
+      "name": "Merge queue REST ref parsing refuses another ref, a tag and an invalid commit",
+      "passed": true,
+      "elapsedMs": 4
+    },
+    {
+      "name": "Prose-only merge queue snapshots grant no baseline success, membership, native execution or adoption",
+      "passed": true,
+      "elapsedMs": 2367
+    },
+    {
+      "name": "Public merge group acquisition cross-checks real fetched objects and refuses API, ref and controller races",
+      "passed": true,
+      "elapsedMs": 10376
+    },
+    {
+      "name": "Hosted SDK envelopes bind the reviewed workflow, engine, selected native job and server archive digest",
+      "passed": true,
+      "elapsedMs": 121
+    },
+    {
+      "name": "SDK archive validation refuses traversal, links and case collisions before any extraction",
+      "passed": true,
+      "elapsedMs": 43
+    },
+    {
+      "name": "SDK compatibility misses retain source fallback while source, ABI policy and corruption cannot become hits",
+      "passed": true,
+      "elapsedMs": 15
+    },
+    {
+      "name": "SDK main preparation has explicit distribution and refuses local or compiler-free execution before side effects",
+      "passed": true,
+      "elapsedMs": 57
+    },
+    {
+      "name": "SDK preparation diagnostics retain separate exact requests and outcomes without replacing earlier evidence",
+      "passed": true,
+      "elapsedMs": 447
+    },
+    {
+      "name": "A successful SDK preparation constructs a complete descriptor accepted by the real reader schema",
+      "passed": true,
+      "elapsedMs": 506
+    },
+    {
+      "name": "Portable SDK file references bind complete bytes and roles while surviving relocation and metadata-only changes",
+      "passed": true,
+      "elapsedMs": 458
+    },
+    {
+      "name": "Portable SDK references reject incomplete, duplicate, inconsistent and tampered records without granting admission",
+      "passed": true,
+      "elapsedMs": 477
+    },
+    {
+      "name": "Portable SDK ABI evaluation refuses compiler overrides and compiler-free execution before native evaluation",
+      "passed": true,
+      "elapsedMs": 4
+    },
+    {
+      "name": "Qualified SDK transport stays disabled before API calls and filesystem side effects",
+      "passed": true,
+      "elapsedMs": 954
+    },
+    {
+      "name": "Qualified SDK preparation constructs the actual strict archive-bound reader descriptor",
+      "passed": true,
+      "elapsedMs": 522
+    },
+    {
+      "name": "Qualified SDK witnesses bind actual compiler roots and reject downgrade, changed tools, missing metadata and closed owners",
+      "passed": true,
+      "elapsedMs": 1566
+    },
+    {
+      "name": "Qualified SDK import binds original entry and reference from held archive bytes and preserves all v1 identities",
+      "passed": true,
+      "elapsedMs": 828
+    },
+    {
+      "name": "Public SDK import binds the held authenticated archive and refuses post-transfer or extracted-manifest substitution",
+      "passed": true,
+      "elapsedMs": 657
+    },
+    {
+      "name": "Branch cache diagnostic permits only its frozen isolated writer and independent main reader",
+      "passed": true,
+      "elapsedMs": 10
+    },
+    {
+      "name": "Actual branch cache observer retains refusals for failed saves, foreign scopes and leaked restores",
+      "passed": true,
+      "elapsedMs": 444
+    },
+    {
+      "name": "Actual regression writer retains frozen engine, version and attempt through JSON roundtrip",
+      "passed": true,
+      "elapsedMs": 1971
+    },
+    {
+      "name": "Execution binding refuses legacy, stale, mistyped, empty, duplicated and out-of-profile records",
+      "passed": true,
+      "elapsedMs": 1308
+    },
+    {
+      "name": "Execution publication refuses changed source and independently mismatched run or version inputs",
+      "passed": true,
+      "elapsedMs": 1046
+    },
+    {
+      "name": "Candidate producer envelope binds both hosted architectures and server digests without a native verdict",
+      "passed": true,
+      "elapsedMs": 1986
+    },
+    {
+      "name": "Candidate producer envelope refuses stale attempts, identities, jobs, detectors and artifact substitution",
+      "passed": true,
+      "elapsedMs": 2056
+    },
+    {
+      "name": "Public candidate result acquisition is read-only and refuses final candidate or producer races",
+      "passed": true,
+      "elapsedMs": 1936
+    },
+    {
+      "name": "Candidate byte verifier binds both original receipts, complete profiles and canonical evidence without extracting code",
+      "passed": true,
+      "elapsedMs": 2028
+    },
+    {
+      "name": "Candidate archives refuse hostile catalogs, malformed JSON and changed server-bound bytes",
+      "passed": true,
+      "elapsedMs": 2188
+    },
+    {
+      "name": "Candidate byte verification refuses self-rehashed inputs, incomplete profiles, altered evidence and changed native identities",
+      "passed": true,
+      "elapsedMs": 25918
+    },
+    {
+      "name": "Public native result acquisition retains failures and refuses post-download attempt/catalog races before result publication",
+      "passed": true,
+      "elapsedMs": 2089
+    },
+    {
+      "name": "Candidate readiness requires exact-head successful cheap checks and the original Root review app",
+      "passed": true,
+      "elapsedMs": 22
+    },
+    {
+      "name": "Trusted reporter invokes original byte verification and fails closed on context, source, prerequisite, producer and check ownership changes",
+      "passed": true,
+      "elapsedMs": 45191
+    },
+    {
+      "name": "Native reporter workflow confines check writes to trusted-main metadata and invokes no candidate code or native build",
+      "passed": true,
+      "elapsedMs": 11
+    },
+    {
+      "name": "Read-only cache syntax admits scoped capabilities and refuses write, dynamic and misplaced authority",
+      "passed": true,
+      "elapsedMs": 6
+    },
+    {
+      "name": "Cache capability refusal retains its actual early report before any save attempt",
+      "passed": true,
+      "elapsedMs": 712
+    },
+    {
+      "name": "Shared native architecture lanes bound all actual native roles without holding a coordinating lease",
+      "passed": true,
+      "elapsedMs": 8
+    },
+    {
+      "name": "Queued native start rechecks the original merge and live context, candidate, readiness and isolated ref before native side effects",
+      "passed": true,
+      "elapsedMs": 15379
+    },
+    {
+      "name": "Owned process launches isolate Windows compiler metadata endpoints while preserving the caller and unrelated child environment",
+      "passed": true,
+      "elapsedMs": 488
+    },
+    {
+      "name": "Manual native metadata controls refuse compiler-free invocation before imports, tool discovery or output creation",
+      "passed": true,
+      "elapsedMs": 344
+    },
+    {
+      "name": "Synchronous native bridge preserves literal arguments, live console output, working directory, exit and caller environment",
+      "passed": true,
+      "elapsedMs": 1398
+    }
+  ]
+}
