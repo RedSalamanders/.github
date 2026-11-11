@@ -151,6 +151,30 @@ then close dependency input. Misordered close fails and releases both handles;
 it cannot authorize a local build receipt. These APIs perform no application
 build, linker-input verification or build-result publication by themselves.
 
+`Ci.LocalSdkBuild.psm1` supplies the explicit local application build broker.
+Each product owns its reviewed literal solution/project, target, executable and
+five distinct SDK/engine/output/test/version property names; the shared engine
+does not infer product layouts. An optional product-owned dependency preparation
+callback runs after dependency acquisition and before consumer output ownership.
+The broker creates a fresh exclusive operation beneath `.build/local-unpinned/`,
+starts the compiler frame, evaluates the actual application project and checks
+both output paths before compilation. It invokes the selected real MSBuild with
+the same Release SDK and tool properties, requires zero warnings/errors, and
+reads bounded, plain linker tracking files to establish that the actual link
+used the held `DxUi.lib` and no other archive with that name. Missing tracking
+fails. This route does not reuse canonical application outputs or kill an
+independently launched application.
+
+After child drain, successful compiler/input close is required before a
+create-only `LocalUnpinnedApplicationBuild` result is written. Failed operations
+retain their directories, available build log and a failure record; they produce
+no accepted result. The result records source, engine, dependency, actual linker
+inputs and executable bytes. Its `testsExecuted`, `repositoryQualified` and
+`productionQualified` fields remain false. Product tests, pinned PrePush/native
+qualification, packaging and publication remain separate gates. The broker
+refuses hosted and compiler-free invocation before discovery. Synthetic contract
+and linker-file controls do not establish application build acceptance.
+
 The shared MSBuild guard has a separate `LocalUnpinnedAbiV1` compiler-lease
 contract (witness schema 3). It retains the live process/handle check and every
 actual-tool/search-path/per-translation-unit ABI restriction of v2. Local output
