@@ -2913,6 +2913,18 @@ Invoke-Case 'Owned process launches isolate Windows compiler metadata endpoints 
     }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}}
 }
 
+Invoke-Case 'Manual native metadata controls refuse compiler-free invocation before imports, tool discovery or output creation' {
+    $previous=$env:CI_NATIVE_BUILDS_DISABLED
+    try{
+        $env:CI_NATIVE_BUILDS_DISABLED='true'
+        $absent=Join-Path $runRoot 'must-not-create-native-pdb-control'
+        $result=Invoke-CiProcess -FilePath (Get-Process -Id $PID).Path -WorkingDirectory $engineRoot -AllowFailure -Arguments @('-NoProfile','-File',
+            (Join-Path $engineRoot 'Tests/Test-NativePdbIsolation.ps1'),'-HarnessRoot',$absent,'-EngineRoot',$engineRoot,'-TestRoot',$absent,'-CompilerPath','missing-cl.exe')
+        Assert-True ($result.exitCode -ne 0 -and ($result.stdout+$result.stderr).Contains('forbidden in compiler-free execution'))
+        Assert-True (-not(Test-Path -LiteralPath $absent))
+    }finally{$env:CI_NATIVE_BUILDS_DISABLED=$previous}
+}
+
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count
 $summary = [ordered]@{ schemaVersion = 1; passed = $failed -eq 0; executed = $script:rows.Count; failed = $failed; cases = $script:rows.ToArray() }
 $resultPath = Join-Path $runRoot 'results.json'

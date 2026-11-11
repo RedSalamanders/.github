@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 No remaining slice is waived and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 22, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 23, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -293,7 +293,7 @@ All six clients also own `.ci/project.json`, reusable-workflow callers, `Specs/B
 
 Record each slice as NOT_STARTED / IMPLEMENTED / LOCALLY_VALIDATED / HOSTED_ACCEPTED with source and evidence references; use IN_PROGRESS for a slice whose subparts have different states. Do not mark a checkbox for merely editing a plan or writing a test.
 
-### Current implementation record — 2026-11-10
+### Current implementation record — 2026-11-11
 
 The [implementation evidence record](../../TestRuns/I61_2026-11-09/README.md) owns exact commands, measurements, delivery references and limits. The shared engine and five clients have integrated the first layer; hosted acceptance is recorded per repository and is not overall completion.
 
@@ -303,11 +303,11 @@ The [implementation evidence record](../../TestRuns/I61_2026-11-09/README.md) ow
 | S1 | IN_PROGRESS | RedSalamander #209/#210 merged the strict runner/adapter handoff and bounded dependency retries. Failed native run 42703183362 is retained; #211 repairs hosted fixtures and preserves the nested ARM64 retirement cause, awaiting Entire approval. Follow-up draft #212 adds shared Terminal failure reporting, acceptance diagnostics and a deterministic image-reservation handshake. Its broad noninteractive PrePush has 1,538 passing native cases, zero failures and 30 declared skips; all 1,243 Pester assertions pass. The overall result is NOT_EVALUATED because four focus-taking entries remain pending. CI/security pass; hosted Root acceptance and the ARM64 retirement diagnosis remain open. DxUi 42703189525 passed both native regression/production roles. |
 | S2 | IN_PROGRESS | DxUi PR #230 integrated evaluated target-union routing and coverage-bound receipts. Cold x64 Release built exactly library/Foundation/Embedded with zero warnings/errors; both native suites passed, Embedded observed 583,358 checks. Default selected build and public/direct Foundation execution passed; actual Full and added-Grid requests refused before native work. Full final tooling passed. Other projects/profiles and overall elapsed acceptance remain open. |
 | S3 | IN_PROGRESS | All three corrected qualified SDK campaigns 42866937316 / 42866944166 / 42866951701 passed both architectures. All six original archives passed real authenticated acquisition and byte/ABI checks. This revision enables qualified distribution for those exact run/attempts. Monitor #46, Xe #81, Tilde #102 and Prism #14 integrated qualified Release SDK adapters after six Source builds, three ordinary x64 profiles, actual local SDK runtime/production/extraction and refusal controls. Their current integrated acceptance is Source fallback; deploying this engine pin and observing live native SDK hits remains pending. Root's SDK-preserving runner repair is under qualification. Isolated local candidates and controlled comparison remain pending. |
-| S4 | IN_PROGRESS | Root immutable pattern compilation and DxUi profile baselines are integrated; rejected hashing/cache experiments remain removed. Tilde #100 and Prism #11 revoke failed/interrupted baselines and coordinate profile leases. DxUi #240 integrated actual concurrent restore ownership and #241 retains independently completed Tooling before later native failure; public-runner continuation/mutation/revocation controls and final ordinary native qualification pass. Partial native-result retention and broader dependency-scoped reuse remain open. |
+| S4 | IN_PROGRESS | DxUi and RedTilde retain each completed independent tooling/format obligation before later native failure, with unchanged complete input/tool/environment checks and native/batch baselines kept separate. Tilde #105 passed all three x64 runtime and ARM64 cross-build profiles. Prism has the same focused behavioral port with 33 controls passing; full/native acceptance is in progress. Fine-grained native closure, broader component reuse and Root full-snapshot over-invalidation remain open. |
 | S5 | IN_PROGRESS | DxUi #229 integrated scoped parallel identity and exact local preflight reuse. Same-binary x64 Release serial/parallel-2 runs passed identical 1,726 named cases and 19 suites, zero skips; one pair improved elapsed by 24.1%. Local prerequisite reuse measured about 1s versus 23s fresh in two alternating pairs. DxUi #238 merged at 1e8fcaac26eb099c3b1e5fa838652bf4b0447c97, selecting two suites only for hosted normal Release; local, Debug/ASan, foreground/performance and prerequisite serialization remain. Its native campaign 42773652579 passed both native regression and production branches plus completion; controlled hosted serial/parallel timing and overall targets remain open. |
 | S6A | IN_PROGRESS | Root #209 and #210 merged valid-fragment routing and coordinated 904a8cb engine/prose ownership. RedXe #78, RedMonitor #40 and RedTilde #101 preserve runtime Markdown/example bytes. Five other clients deployed matching 904a8cb pins/callers; DxUi subsequently adopted e3c637b in #232. RedXe, RedTilde and RedMonitor adoption campaigns passed both native roles/architectures. RedMonitor #33 reused its identical successful native inputs without rebuilding. Prism #13's diagnostic follow-up passed both native regression and production branches in 42781905176; that execution does not diagnose or relabel the earlier 90-minute ARM64 timeout. Final selection/detection comparison and source-bound acceptance remain open. |
 | S6B | NOT_STARTED | Case-level narrowing and broader historical/seeded failure comparison remain required. |
-| S7 | IN_PROGRESS | Shared #29 and #44 integrated strict read-only PR/merge-queue input acquisition, exact API/Git/controller drift checks and 89 behavioral cases. The manual compiler-free cache capability probe and strict read/none linter compatibility are locally validated; actual server denial still needs hosted acceptance. Native execution, trusted required gate/reporter, branch-policy enforcement and delegation remain unimplemented. No local obligation has been removed. |
+| S7 | IN_PROGRESS | Shared #51-58 implement strict frozen PR/merge inputs, optional isolated read-only native shadow execution, original attempt/artifact/receipt/profile/evidence byte verification, exact-head readiness, bounded repository/architecture native lanes, post-queue freshness and an optional trusted manual reporter. Real branch-cache positive/negative host pairs passed Linux/x64/ARM64. Reporter controls cover 20 recording scenarios; 115 engine cases passed before the subsequent metadata-isolation work. Actual hosted shadow/reporter acceptance, automatic invalidation, required native/stale-base enforcement and local delegation remain open. No existing obligation has been removed. |
 | S8 | IN_PROGRESS | Same-run DxUi Release library inputs can avoid duplicate compilation while preserving actual regression and production SDK smoke. RedMonitor #33 demonstrates existing exact-input main outcome reuse. Adoption of trusted pre-merge candidate test results remains unimplemented. |
 | S9 / S10 | OPEN / IN_PROGRESS | Repository rollout and evidence reconciliation continue. Cadence acceptance, controlled organization-wide speed/detection measurements, remaining slice implementation and final closeout are required. |
 
@@ -851,3 +851,26 @@ Revision 22 continuation:
 - DxUi main42919694632 completed both native and production architectures. These
   hosted results and the local foreground profile evidence retain distinct scope.
   S2/S4/S5/S6B/S7 enforcement/S8/S9/S10 and controlled3x/2x remain unfinished.
+
+Revision 23 continuation:
+
+- Shared #58 merged optional trusted manual reporting; Prism #17 deployed engine
+  476d3faf after full independent validation (including tooling), Static and format
+  passed. Prism's separate receipt-retention change passed33focused controls and
+  full independent validation. Native profiles/actual hosted candidate remain open.
+- Owned Windows engine process launches now receive private MSVC metadata endpoints.
+  All116engine cases pass after preserving an accidentally omitted changed-path
+  export. The original4failed controls remain preserved; no assertion was weakened.
+- Actual x64 MSVC /Zi and /ZI controls prove shared service lifetime coupling and
+  private service survival with another real compilation after the first owned job
+  closes. The reproducible manual native control uses the canonical Root sandbox
+  and containment helper, rejects compiler-free calls before imports/output and
+  retains helper/compiler provenance. This is component qualification, not product,
+  ARM64, ASan-runtime or original-C1090 reproduction acceptance. Product contained
+  launchers still need to adopt the shared helper.
+- Root Source x64 Debug and Release builds passed with zero warnings/errors. A
+  later ASan build refused a concurrent SDK-store path reference from the other
+  owned worktree; no process was killed. ARM64-first continuation preserves the
+  earlier accepted builds and leaves the ownership-classification corner open.
+  SDK Release under a private metadata endpoint built0warnings/errors and its
+  fresh Full is running. Earlier failures remain distinct evidence.
