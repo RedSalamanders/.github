@@ -7,6 +7,12 @@ the other application integrations, local candidates and acceleration acceptance
 
 ## Explicit pinned native SDK producer
 
+Raw checkout acquisition is centralized in `Ci.SourceInputs.psm1`'s
+`Get-CiCheckoutContentIdentity`. The existing SDK bootstrap entrypoint
+`Get-CiSdkCheckoutContentIdentity` remains a thin compatibility route to that exact
+ordinal path/raw SHA-256 projection, including fresh no-follow and missing-file
+checks. Moving the implementation grants no new SDK admission or producer trust.
+
 The qualified producer's final ABI metadata query must select the same native compiler host as its
 library build: x64 on x64 and arm64 on ARM64. Pass that property explicitly because historical source
 props can override an environment default. Resolve the corresponding native MSBuild executable
