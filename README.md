@@ -55,6 +55,11 @@ checks. Explicit `Tools/Test-SdkConsumerPolicy.ps1` runs actual MSBuild admissio
 SDK, without product compilation or a native runtime verdict. See the [SDK contract](Specs/SDK_Cache.md).
 Local/manual qualification keeps the existing source recipe. Create-only expected-key and outcome records under .build/evidence/sdk-input-preparation accompany native artifacts. Hosted consumer acceptance is tracked separately.
 
+The separate `Ci.LocalSdkSnapshot.psm1` data foundation captures immutable, explicitly
+local-unpinned payloads with dirty-source invalidation and entry leases. Pinned SDK
+and application readers reject that role. Producer capture and isolated consumer
+link integration remain pending; see the [snapshot contract](Specs/SDK_Cache.md#local-unpinned-snapshot-data-foundation).
+
 Organization-owned implementation plans are indexed in [Specs/Plans/WIP](Specs/Plans/WIP/README.md). Completed plans move to [Specs/Plans/Done](Specs/Plans/Done/README.md) under the [plan lifecycle rule](AGENTS.md#plan-lifecycle), after implementation, validation and normative documentation closeout.
 
 DxUi's coordinated adapter can hand off the exact Release library/PDB inputs from successful regression to
