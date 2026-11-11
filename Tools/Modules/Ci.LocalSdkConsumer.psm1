@@ -7,6 +7,18 @@ $script:descriptors=Import-Module (Join-Path $PSScriptRoot 'Ci.LocalSdkDescripto
 $script:consumer=Import-Module (Join-Path $PSScriptRoot 'Ci.SdkConsumer.psm1') -PassThru
 $script:abi=Import-Module (Join-Path $PSScriptRoot 'Ci.SdkAbi.psm1') -PassThru
 
+function Get-CiLocalConsumerProducerRoot {
+    param($Descriptor)
+    # Cache identity deliberately normalizes Windows casing. The original native
+    # evaluator hashes expanded MSBuild paths and needs filesystem spelling.
+    $requested=$Descriptor.Record.identity.producerRoot
+    $item=Get-Item -LiteralPath $requested -Force -ErrorAction Stop
+    $comparison=if($IsWindows){[StringComparison]::OrdinalIgnoreCase}else{[StringComparison]::Ordinal}
+    if(-not $item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+        -not $item.FullName.Equals($requested,$comparison)){throw 'Local SDK producer must remain the same plain source directory.'}
+    return $item.FullName
+}
+
 function Assert-CiLocalConsumerProducer {
     param($Descriptor)
     $record=$Descriptor.Record
@@ -15,7 +27,8 @@ function Assert-CiLocalConsumerProducer {
     }
     # The descriptor reader authenticates the complete toolkit before this import.
     $libraryModule=Import-Module (Join-Path $record.toolingBootstrap.root 'Tools/SdkLibraryInputs.psm1') -PassThru
-    $current=& $libraryModule {param($r,$p) Assert-DxUiSdkLibraryBuild -Root $r -Platform $p} $record.identity.producerRoot $record.identity.inputs.platform
+    $producer=Get-CiLocalConsumerProducerRoot $Descriptor
+    $current=& $libraryModule {param($r,$p) Assert-DxUiSdkLibraryBuild -Root $r -Platform $p} $producer $record.identity.inputs.platform
     $path=Join-Path $Descriptor.Snapshot.Payload 'provenance/library-inputs.json'
     if(-not [IO.File]::Exists($path) -or (Get-Item -LiteralPath $path).Length -gt 8MB){throw 'Local SDK consumer requires bounded original library build provenance.'}
     $captured=[IO.File]::ReadAllText($path)|ConvertFrom-Json -AsHashtable
@@ -43,7 +56,7 @@ function Get-CiLocalConsumerAbi {
     if(-not $hostTool){$hostTool=[Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()}
     $actual=& $script:abi {param($t,$m,$p,$a,$h)
         Get-CiSdkAbiReference -ToolingRoot $t -MSBuildPath $m -ProjectPath $p -Platform $a -PreferredToolArchitecture $h -PassThruBinding
-    } $record.toolingBootstrap.root $MSBuildPath (Join-Path $record.identity.producerRoot 'src/DxUi.vcxproj') $record.identity.inputs.platform $hostTool
+    } $record.toolingBootstrap.root $MSBuildPath (Join-Path (Get-CiLocalConsumerProducerRoot $Descriptor) 'src/DxUi.vcxproj') $record.identity.inputs.platform $hostTool
     if($actual.Reference.digest -cne $reference.digest){throw 'Local SDK ABI differs from the actual selected consumer toolchain.'}
     return $actual
 }

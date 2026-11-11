@@ -31,6 +31,7 @@ $reference=& $abiModule {param($c,$f) New-CiSdkAbiReference $c $f} $compiler $fi
     $script:localFixtureReference=$r;$script:localFixtureMismatch=$false;$script:localFixtureHook=$null
     function script:Get-CiSdkAbiReference {
         param($ToolingRoot,$MSBuildPath,$ProjectPath,$Platform,$PreferredToolArchitecture,[switch]$PassThruBinding)
+        $script:localFixtureProjectPath=$ProjectPath
         if($script:localFixtureHook){& $script:localFixtureHook}
         $ref=$script:localFixtureReference|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable
         if($script:localFixtureMismatch){$ref.digest='0'*64}
@@ -43,6 +44,8 @@ $moduleDirectory=Join-Path $tooling 'Tools';[void][IO.Directory]::CreateDirector
 $moduleSource=@'
 function Assert-DxUiSdkLibraryBuild {
     param([string]$Root,[string]$Platform)
+    if(-not $Root.Equals((Get-Item -LiteralPath $Root).FullName,[StringComparison]::Ordinal)){throw 'Original native acquisition requires physical producer spelling.'}
+    [IO.File]::WriteAllText((Join-Path $Root '.build/last-native-reader-root.txt'),$Root)
     Get-Content -LiteralPath (Join-Path $Root '.build/current-library.json') -Raw|ConvertFrom-Json -AsHashtable
 }
 Export-ModuleMember -Function Assert-DxUiSdkLibraryBuild
@@ -91,6 +94,18 @@ Case 'local consumer admission binds real immutable bytes and preserves a distin
         Check (-not [IO.File]::Exists((Join-Path $consumerRoot '.build/build-receipt.json'))) 'Dependency admission published a build result.'
     }finally{Close-LocalConsumerFixture $value}
     Rejects-LocalConsumer {Close-LocalConsumerFixture $value} 'already closed'
+    Check-LocalConsumerWriterUnlocked
+}
+Case 'local native acquisition preserves filesystem spelling without changing the normalized descriptor or key' {
+    $physical=(Get-Item -LiteralPath $producer).FullName
+    if($IsWindows){Check ($consumerEntry.Manifest.identity.producerRoot -cne $physical) 'Windows fixture did not exercise the cache identity casing alias.'}
+    $value=Open-LocalConsumerFixture
+    try{
+        Check ([IO.File]::ReadAllText((Join-Path $producer '.build/last-native-reader-root.txt')) -ceq $physical) 'Original native provenance was evaluated with an identity-normalized path alias.'
+        $abiProject=& $abiModule {$script:localFixtureProjectPath}
+        Check ($abiProject -ceq (Join-Path $physical 'src/DxUi.vcxproj')) 'Actual ABI evaluation lost physical producer spelling.'
+        Check ((Get-FileHash $consumerDescriptor).Hash.ToLowerInvariant() -ceq $consumerHash -and $value.Evidence.inputKey -ceq $consumerEntry.Key) 'Native evaluation rewrote or rekeyed the independently frozen descriptor.'
+    }finally{Close-LocalConsumerFixture $value}
     Check-LocalConsumerWriterUnlocked
 }
 Case 'local consumer refuses hosted or non-Release input before discovery' {
