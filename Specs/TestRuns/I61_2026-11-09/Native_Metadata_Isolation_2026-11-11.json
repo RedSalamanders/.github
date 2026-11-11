@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "role": "NativeMetadataIsolationComponentQualification",
+  "sourceCommit": "e1b27ccdef3a9fba8989e82851a9edc090ee088f",
+  "engineControls": 117,
+  "failed": 0,
+  "engineResultId": "engine-20261111T013826624Z-07d6c599877546c69aac6bef67b9c0ed/results.json",
+  "engineResultSha256": "5b0f4e6c21cc9216b79a8ebe54b613cc33e169bcc5b00d5b5ed0cc333c36509a",
+  "nativeScopeSha256": "abc1dc7e91b88e1359dcea27e8c06afd2e3c150604cedca4f253c265fc7f6204",
+  "helperProvenance": [
+    {
+      "name": "SanitizedEnvironment.psm1",
+      "sha256": "12574a17c3fe953c157429f8c3f3ff3b3cf556059bb04d6ea69b9ba1ab3023f5"
+    },
+    {
+      "name": "TestSandbox.psm1",
+      "sha256": "88acdd3118dcd849691f8684fd83189b05f4c883961ad6cf96d62c13b8f7e13a"
+    },
+    {
+      "name": "Ci.Policy.psm1",
+      "sha256": "8a10f0f3b367c3c00340dfbef3b37f1aa9ed295cf78f250450e08f40c0570d48"
+    }
+  ],
+  "compilerSha256": "f1023c336447d8ab00e28e9c02e25fd6206928f894df22f11cfb0d4233a10f25",
+  "nativeControls": [
+    {
+      "mode": "shared-negative-control",
+      "passed": true,
+      "secondServiceSurvived": false,
+      "debugFlag": "/Zi",
+      "secondCompileAfterCleanup": false,
+      "originalOwnedServiceRetired": true
+    },
+    {
+      "mode": "isolated-positive",
+      "passed": true,
+      "secondServiceSurvived": true,
+      "debugFlag": "/Zi",
+      "secondCompileAfterCleanup": true,
+      "originalOwnedServiceRetired": true
+    },
+    {
+      "mode": "shared-negative-control",
+      "passed": true,
+      "secondServiceSurvived": false,
+      "debugFlag": "/ZI",
+      "secondCompileAfterCleanup": false,
+      "originalOwnedServiceRetired": true
+    },
+    {
+      "mode": "isolated-positive",
+      "passed": true,
+      "secondServiceSurvived": true,
+      "debugFlag": "/ZI",
+      "secondCompileAfterCleanup": true,
+      "originalOwnedServiceRetired": true
+    }
+  ],
+  "nativeFixtureScope": "Actual x64 MSVC compiler, /Zi and /ZI, zero warnings/errors; owned native service lifetime",
+  "originalC1090Reproduced": false,
+  "productQualified": false,
+  "arm64RuntimeQualified": false,
+  "asanRuntimeQualified": false,
+  "productLauncherAdoption": "Pending",
+  "preservedFailedControls": [
+    "Missing changed-path export:4engine failures before correction",
+    "Direct compiler-parent attribution unsupported by service spawn broker",
+    "Case-only fixture path collision before distinct Windows-safe names"
+  ]
+}

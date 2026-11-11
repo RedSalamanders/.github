@@ -128,3 +128,10 @@ Root also retains its existing Entire approval. Missing/pending/failed/stale or
 wrong-app checks stop admission before the next remote write. Original successful
 check identities are retained in the frozen journal. These prerequisites supply no
 native or merge verdict and do not replace the still-open capacity/enforcement gates.
+
+Owned Windows engine children get private compiler metadata endpoints. Product
+contained launchers can reuse Set-CiNativeProcessEnvironment at their own launch
+boundary. The manual native component control is Tests/Test-NativePdbIsolation.ps1;
+pass explicit reviewed HarnessRoot, EngineRoot, existing marked TestRoot and discovered
+x64 CompilerPath. It compiles only owned fixtures, refuses compiler-free calls and
+retains provenance. Passing it grants no product/platform/native merge verdict.

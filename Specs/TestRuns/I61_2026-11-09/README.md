@@ -800,3 +800,17 @@ The reporter clears an earlier owned success before directly invoking the verifi
 then binds success to current source/readiness/original producer bytes. Missing,
 failed, cancelled, stale or ambiguous evidence refuses; another owner is not overwritten.
 These controls establish no hosted reporter pass or required-check enforcement.
+
+### Native compiler metadata isolation
+
+[Metadata controls](Native_Metadata_Isolation_2026-11-11.json): all117engine cases
+pass. The manual [native lifetime control](../../../Tests/Test-NativePdbIsolation.ps1)
+passed four actual x64 MSVC /Zi and /ZI controls with zero warnings/errors. Each shared
+negative gives only the two owned fixture jobs one fresh endpoint and observes their
+coupled native service lifetime. Each isolated positive observes separate services,
+retires A, proves B survives and actually compiles in B again. Ownership uses the
+canonical harness's exact job-membership predicate; no foreign service is stopped.
+Compiler/helper hashes are retained. This qualifies the component boundary, not a
+product, ARM64, ASan runtime or reproduction/repair of every historical C1090 failure.
+Product contained launchers still need to adopt the shared helper. Earlier failed
+export, attribution and Windows case-collision controls remain preserved locally.
