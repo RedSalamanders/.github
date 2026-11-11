@@ -5,3 +5,4 @@ Unfinished shared or organization-owned plans live here. Each has exactly one en
 | Status | ID | Plan | Owner / next action |
 | --- | --- | --- | --- |
 | ACTIVE | I61 | [Testing and integration acceleration across RedSalamanders](TestingAndIntegrationAcceleration_2026-11-09.md) | Organization integration owner. Continue accepted build/test acceleration across six clients and the shared engine, qualify remaining changes and measured targets. User chose to keep local/main gates; candidate replacement, delegation and cross-run adoption are deferred. |
+| ACTIVE | I62 | [Explicit state machines across the shared CI engine and organization tooling](ExplicitStateMachines_2026-11-10.md) | Organization CI and tooling owner. Plan only; implementation not started. Execute S0-S4 in the shared engine and coordinate Pattern D convergence across the six client repositories. |
