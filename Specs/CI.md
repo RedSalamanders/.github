@@ -221,3 +221,16 @@ native artifacts and updates only its owned exact-head native check. Candidate j
 keep read-only tokens. The manual check is not yet required; automatic invalidation,
 strict stale-base enforcement and actual hosted reporter acceptance remain separate
 gates before local delegation or main adoption. See Integration_Candidates.md.
+
+Owned Windows engine process launches use a fresh private _MSPDBSRV_ENDPOINT_
+in their child environment. MSVC descendants inherit that operation's PDB RPC
+namespace instead of sharing a user-wide metadata server with another operation.
+Nested owned launchers obtain their own namespace. The parent environment and all
+compiler/linker flags remain unchanged; no foreign server is stopped or searched
+by name. Product contained launchers reuse Set-CiNativeProcessEnvironment at
+their actual launch boundary when adopting this policy. This coordination value
+is not an ABI/compiler input or reusable receipt identity; the launcher's reviewed
+implementation remains in the normal behavioral dependency closure.
+The boundary follows [Microsoft BuildXL's MSVC endpoint use](https://github.com/microsoft/BuildXL/blob/main/Public/Sdk/Experimental/Msvc/Native/Tools/Link/Link.dsc).
+Environment controls alone do not qualify actual concurrent MSVC lifetimes; retain
+separate native acceptance before claiming the observed C1090 failures repaired.

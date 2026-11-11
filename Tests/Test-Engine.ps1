@@ -2889,6 +2889,30 @@ Invoke-Case 'Queued native start rechecks the original merge and live context, c
     }
 }
 
+Invoke-Case 'Owned process launches isolate Windows compiler metadata endpoints while preserving the caller and unrelated child environment' {
+    $names=@('_MSPDBSRV_ENDPOINT_','I61_PROCESS_ENV_CONTROL');$saved=@{}
+    foreach($name in $names){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
+    try{
+        $env:_MSPDBSRV_ENDPOINT_='foreign-parent-service'
+        $env:I61_PROCESS_ENV_CONTROL='unchanged child input'
+        $hostPath=(Get-Process -Id $PID).Path
+        $command='[ordered]@{endpoint=$env:_MSPDBSRV_ENDPOINT_;control=$env:I61_PROCESS_ENV_CONTROL}|ConvertTo-Json -Compress'
+        $a=(Invoke-CiProcess -FilePath $hostPath -Arguments @('-NoProfile','-Command',$command) -WorkingDirectory $engineRoot).stdout|ConvertFrom-Json
+        $b=(Invoke-CiProcess -FilePath $hostPath -Arguments @('-NoProfile','-Command',$command) -WorkingDirectory $engineRoot).stdout|ConvertFrom-Json
+        Assert-Equal 'foreign-parent-service' $env:_MSPDBSRV_ENDPOINT_
+        foreach($result in @($a,$b)){
+            Assert-Equal 'unchanged child input' $result.control
+            if($IsWindows){Assert-True ($result.endpoint -cmatch '^red-ci-[a-f0-9]{32}$')}else{Assert-Equal 'foreign-parent-service' $result.endpoint}
+        }
+        if($IsWindows){Assert-True ($a.endpoint -cne $b.endpoint)}
+        $unsafe=[Diagnostics.ProcessStartInfo]::new();$unsafe.FileName=$hostPath
+        $unsafe.Environment['_MSPDBSRV_ENDPOINT_']='must remain unchanged'
+        $unsafe.UseShellExecute=$true
+        Assert-Refused {Set-CiNativeProcessEnvironment -ProcessStartInfo $unsafe}
+        Assert-Equal 'must remain unchanged' $unsafe.Environment['_MSPDBSRV_ENDPOINT_']
+    }finally{foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}}
+}
+
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count
 $summary = [ordered]@{ schemaVersion = 1; passed = $failed -eq 0; executed = $script:rows.Count; failed = $failed; cases = $script:rows.ToArray() }
 $resultPath = Join-Path $runRoot 'results.json'
