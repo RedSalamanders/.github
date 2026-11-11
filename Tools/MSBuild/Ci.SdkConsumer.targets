@@ -10,10 +10,12 @@
     </PropertyGroup>
     <Error Condition="'$(CiSdkVerifiedRootNormalized)'!='$(CiSdkImportedRootNormalized)'" Text="Pinned SDK v1 import root differs from the verified reader payload." />
     <Error Condition="'$(DxUiRoot)'!=''" Text="Pinned SDK v1 cannot mix source and SDK recipes." />
-    <PropertyGroup Condition="'$(CiSdkContract)'=='QualifiedAbiV2'">
+    <!-- Verify ownership before MakeDir or WriteLinesToFile can touch either tree. -->
+    <Exec Condition="'$(CiSdkContract)'=='LocalUnpinnedAbiV1'" Command="pwsh -NoProfile -NonInteractive -File &quot;$(MSBuildThisFileDirectory)..\Test-SdkConsumerLease.ps1&quot; -ProjectRoot &quot;$(CiSdkProjectRoot)&quot; -LeasePath &quot;$(CiSdkLeasePath)&quot; -SdkRoot &quot;$(CiSdkRoot)&quot; -Platform &quot;$(Platform)&quot; -Configuration &quot;$(Configuration)&quot; -SdkContract &quot;$(CiSdkContract)&quot; -PreflightLocalOutputs -OutputDirectory &quot;$(OutDir)/.&quot; -IntermediateDirectory &quot;$(IntDir)/.&quot;" />
+    <PropertyGroup Condition="('$(CiSdkContract)'=='QualifiedAbiV2' or '$(CiSdkContract)'=='LocalUnpinnedAbiV1')">
       <CiSdkToolBindingFile>$([System.IO.Path]::GetFullPath('$(IntDir)CiSdkToolBinding.$(MSBuildProjectFile).txt'))</CiSdkToolBindingFile>
     </PropertyGroup>
-    <ItemGroup Condition="'$(CiSdkContract)'=='QualifiedAbiV2'">
+    <ItemGroup Condition="('$(CiSdkContract)'=='QualifiedAbiV2' or '$(CiSdkContract)'=='LocalUnpinnedAbiV1')">
       <_CiSdkToolProperty Remove="@(_CiSdkToolProperty)" />
       <_CiSdkToolProperty Include="PlatformToolset"><Value>$(PlatformToolset)</Value></_CiSdkToolProperty>
       <_CiSdkToolProperty Include="VCToolsInstallDir"><Value>$(VCToolsInstallDir)</Value></_CiSdkToolProperty>
@@ -44,19 +46,20 @@
       <_CiSdkToolProperty Include="FxCompileToolArchitecture"><Value>$(FxCompileToolArchitecture)</Value></_CiSdkToolProperty>
       <_CiSdkToolProperty Include="MultiProcFXC"><Value>$(MultiProcFXC)</Value></_CiSdkToolProperty>
     </ItemGroup>
-    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(CiSdkToolBindingFile)'))" Condition="'$(CiSdkContract)'=='QualifiedAbiV2'" />
-    <WriteLinesToFile File="$(CiSdkToolBindingFile)" Lines="@(_CiSdkToolProperty->'%(Identity)=%(Value)')" Overwrite="true" Encoding="UTF-8" Condition="'$(CiSdkContract)'=='QualifiedAbiV2'" />
+    <ItemGroup Condition="'$(CiSdkContract)'=='LocalUnpinnedAbiV1'"><_CiSdkToolProperty Include="OutDir"><Value>$(OutDir)</Value></_CiSdkToolProperty><_CiSdkToolProperty Include="IntDir"><Value>$(IntDir)</Value></_CiSdkToolProperty></ItemGroup>
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(CiSdkToolBindingFile)'))" Condition="('$(CiSdkContract)'=='QualifiedAbiV2' or '$(CiSdkContract)'=='LocalUnpinnedAbiV1')" />
+    <WriteLinesToFile File="$(CiSdkToolBindingFile)" Lines="@(_CiSdkToolProperty->'%(Identity)=%(Value)')" Overwrite="true" Encoding="UTF-8" Condition="('$(CiSdkContract)'=='QualifiedAbiV2' or '$(CiSdkContract)'=='LocalUnpinnedAbiV1')" />
     <Exec Command="pwsh -NoProfile -NonInteractive -File &quot;$(MSBuildThisFileDirectory)..\Test-SdkConsumerLease.ps1&quot; -ProjectRoot &quot;$(CiSdkProjectRoot)&quot; -LeasePath &quot;$(CiSdkLeasePath)&quot; -SdkRoot &quot;$(CiSdkRoot)&quot; -Platform &quot;$(Platform)&quot; -Configuration &quot;$(Configuration)&quot; -SdkContract &quot;$(CiSdkContract)&quot; -ToolPropertyFile &quot;$(CiSdkToolBindingFile)&quot;" />
   </Target>
   <Target Name="CiValidateSdkConsumer" BeforeTargets="PrepareForBuild;ClCompile" DependsOnTargets="CiRequireSdkConsumerLease" Condition="'$(CiSdkRoot)'!='' or '$(DxUiSdkRoot)'!=''">
-    <ItemGroup Condition="'$(CiSdkContract)'=='QualifiedAbiV2'">
+    <ItemGroup Condition="('$(CiSdkContract)'=='QualifiedAbiV2' or '$(CiSdkContract)'=='LocalUnpinnedAbiV1')">
       <!-- The SDK's packaged public/dependency headers own this recipe. Keep
            local project include directories after that immutable interface. -->
       <ClCompile Update="@(ClCompile)"><AdditionalIncludeDirectories>$(DxUiSdkRoot)include;%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
     </ItemGroup>
-    <Error Condition="'$(CiSdkContract)'=='QualifiedAbiV2' and '%(ClCompile.CompileAsManaged)'!='' and '%(ClCompile.CompileAsManaged)'!='false'" Text="Qualified SDK inputs support native C++ translation units only." />
-    <Error Condition="'$(CiSdkContract)'=='QualifiedAbiV2' and $([System.Text.RegularExpressions.Regex]::IsMatch('%(ClCompile.PreprocessorDefinitions)', '(^|;)(_HAS_EXCEPTIONS|_CHAR_UNSIGNED|__CLR_VER|_M_CEE)(=|;|$)'))" Text="Qualified SDK inputs forbid custom exception, character-layout or managed ABI definitions." />
-    <Error Condition="'$(CiSdkContract)'=='QualifiedAbiV2' and $([System.Text.RegularExpressions.Regex]::IsMatch('%(ClCompile.AdditionalOptions)', '(?i)(^|\s)[/-](B[1-4]|clr|ZW|J\b|vm|Zc:char8_t-)'))" Text="Qualified SDK inputs forbid opaque backend or unsupported ABI compiler overrides." />
+    <Error Condition="('$(CiSdkContract)'=='QualifiedAbiV2' or '$(CiSdkContract)'=='LocalUnpinnedAbiV1') and '%(ClCompile.CompileAsManaged)'!='' and '%(ClCompile.CompileAsManaged)'!='false'" Text="Qualified SDK inputs support native C++ translation units only." />
+    <Error Condition="('$(CiSdkContract)'=='QualifiedAbiV2' or '$(CiSdkContract)'=='LocalUnpinnedAbiV1') and $([System.Text.RegularExpressions.Regex]::IsMatch('%(ClCompile.PreprocessorDefinitions)', '(^|;)(_HAS_EXCEPTIONS|_CHAR_UNSIGNED|__CLR_VER|_M_CEE)(=|;|$)'))" Text="Qualified SDK inputs forbid custom exception, character-layout or managed ABI definitions." />
+    <Error Condition="('$(CiSdkContract)'=='QualifiedAbiV2' or '$(CiSdkContract)'=='LocalUnpinnedAbiV1') and $([System.Text.RegularExpressions.Regex]::IsMatch('%(ClCompile.AdditionalOptions)', '(?i)(^|\s)[/-](B[1-4]|clr|ZW|J\b|vm|Zc:char8_t-)'))" Text="Qualified SDK inputs forbid opaque backend or unsupported ABI compiler overrides." />
     <Error Condition="'$(EnableASAN)'=='true' or '$(DxUiDisableStlAnnotations)'=='true'" Text="Pinned SDK v1 requires a non-ASan consumer with STL annotations enabled." />
     <Error Condition="'%(ClCompile.RuntimeLibrary)'!='MultiThreadedDLL' or '%(ClCompile.LanguageStandard)'!='stdcpplatest' or '%(ClCompile.EnableASAN)'=='true'" Text="Pinned SDK v1 requires /MD, stdcpplatest and no ASan in every consumer translation unit." />
     <Error Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(ClCompile.PreprocessorDefinitions)', '(^|;)(_DEBUG|_DISABLE_(STL|VECTOR|STRING)_ANNOTATION|_ITERATOR_DEBUG_LEVEL|_HAS_ITERATOR_DEBUGGING|_SECURE_SCL)(=|;|$)'))" Text="Pinned SDK v1 forbids Debug, disabled-annotation or custom iterator-layout consumer definitions." />

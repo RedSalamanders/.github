@@ -1,13 +1,16 @@
 <#
 .SYNOPSIS Tests immutable SDK byte storage and leases without compilation or SDK acceptance.
 .PARAMETER TestRoot Existing marked RedSalamander.Perf root, or a hosted RUNNER_TEMP descendant.
+.PARAMETER NativeMsBuildPath Optional application-selected Windows MSBuild.exe for explicit output/ABI target controls. Never compiles a product. Refused in compiler-free execution; omitted by ordinary CI fixtures.
 .OUTPUTS Retained synthetic fixtures and results.json below a unique owned root.
 .NOTES No product, account, publication, desktop or dependency pin changes. Fake library bytes test storage only.
 .EXAMPLE ./Tests/Test-SdkCache.ps1 -TestRoot Z:/RedSalamander.Perf
 #>
-[CmdletBinding()]param([Parameter(Mandatory)][string]$TestRoot)
+[CmdletBinding()]param([Parameter(Mandatory)][string]$TestRoot,[string]$NativeMsBuildPath='')
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+if($NativeMsBuildPath -and (-not $IsWindows -or $env:CI_NATIVE_BUILDS_DISABLED -ceq 'true')){throw 'Explicit MSBuild metadata controls are unavailable in compiler-free or non-Windows execution.'}
+if($NativeMsBuildPath -and (-not [IO.Path]::IsPathFullyQualified($NativeMsBuildPath) -or -not [IO.File]::Exists($NativeMsBuildPath) -or [IO.Path]::GetFileName($NativeMsBuildPath) -ine 'MSBuild.exe')){throw 'Select an existing absolute Windows MSBuild.exe for explicit metadata controls.'}
 $engine=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 Import-Module (Join-Path $engine 'Tools/Modules/Ci.SdkCache.psm1') -Force
 $selected=[IO.Path]::GetFullPath($TestRoot).TrimEnd('\','/')

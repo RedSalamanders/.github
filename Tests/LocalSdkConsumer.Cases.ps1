@@ -142,3 +142,91 @@ Case 'local consumer refuses changed toolkit bytes before importing original bui
     }finally{[IO.File]::WriteAllBytes($file,$saved)}
     Check-LocalConsumerWriterUnlocked
 }
+Case 'local compiler preflight verifies a held owner across processes without creating output directories' {
+    $core=& $localConsumer {$script:consumer}
+    $output=Join-Path $consumerRoot '.build/local-unpinned/compiler-positive'
+    $witness=& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{fixture='native metadata remains synthetic'} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $output
+    try{
+        $script=Join-Path $consumerRoot '.ci-engine/Tools/Test-SdkConsumerLease.ps1'
+        $arguments=@('-NoProfile','-File',$script,'-ProjectRoot',$consumerRoot,'-LeasePath',$witness.Path,'-SdkRoot',$consumerEntry.Payload,'-Platform','x64','-Configuration','Release','-SdkContract','LocalUnpinnedAbiV1','-PreflightLocalOutputs','-OutputDirectory',(Join-Path $output 'bin'),'-IntermediateDirectory',(Join-Path $output 'obj'))
+        $null=& $core {param($p,$a,$r)Invoke-CiProcess -FilePath $p -Arguments $a -WorkingDirectory $r -TimeoutSeconds 30} (Join-Path $PSHOME $(if($IsWindows){'pwsh.exe'}else{'pwsh'})) $arguments $consumerRoot
+        Check (-not(Test-Path -LiteralPath $output)) 'Read-only preflight created candidate artifacts.'
+        $record=Get-Content $witness.Path -Raw|ConvertFrom-Json
+        Check ($record.schemaVersion -eq 3 -and $record.contract -ceq 'LocalUnpinnedAbiV1' -and $record.role -ceq 'LocalUnpinnedSdkCompilerLease') 'Compiler owner lost its separate local role.'
+    }finally{$witness.Stream.Dispose()}
+}
+Case 'local compiler outputs refuse canonical, source and parent roots before any artifact write' {
+    $core=& $localConsumer {$script:consumer}
+    foreach($bad in @((Join-Path $consumerRoot '.build/x64/Release'),(Join-Path $consumerRoot 'would-write-source'),(Join-Path $consumerRoot '.build/local-unpinned'))){
+        Rejects-LocalConsumer {& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $bad} 'contained repository/sandbox child|separate operation'
+        Check (-not(Test-Path -LiteralPath $bad)) 'Refused output initialization created an artifact directory.'
+    }
+    $output=Join-Path $consumerRoot '.build/local-unpinned/compiler-refusals'
+    $witness=& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $output
+    try{
+        foreach($bad in @((Join-Path $consumerRoot '.build/x64/Release'),(Join-Path $consumerRoot 'would-write-source'))){
+            Rejects-LocalConsumer {& $core {param($r,$p,$s,$o,$i)Assert-CiLocalSdkOutputLease $r $p $s x64 Release $o $i} $consumerRoot $witness.Path $consumerEntry.Payload $bad (Join-Path $output 'obj')} 'contained repository/sandbox child|separate operation'
+            Check (-not(Test-Path -LiteralPath $bad)) 'Preflight refusal created a directory.'
+        }
+    }finally{$witness.Stream.Dispose()}
+    Rejects-LocalConsumer {& $core {param($r,$p,$s,$o)Assert-CiLocalSdkOutputLease $r $p $s x64 Release $o $o} $consumerRoot $witness.Path $consumerEntry.Payload $output} 'lease is closed'
+}
+Case 'local compiler witnesses refuse pinned downgrade and require actual tool metadata after preflight' {
+    $core=& $localConsumer {$script:consumer}
+    $output=Join-Path $consumerRoot '.build/local-unpinned/compiler-contract'
+    $witness=& $core {param($r,$s,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding @{} -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $output
+    try{
+        foreach($contract in @('','QualifiedAbiV2')){
+            Rejects-LocalConsumer {& $core {param($r,$p,$s,$c)Assert-CiSdkConsumerLease $r $p $s x64 Release -SdkContract $c} $consumerRoot $witness.Path $consumerEntry.Payload $contract} 'actual v2 contract'
+        }
+        Rejects-LocalConsumer {& $core {param($r,$p,$s,$f)Assert-CiSdkConsumerLease $r $p $s x64 Release -SdkContract LocalUnpinnedAbiV1 -ToolPropertyFile $f} $consumerRoot $witness.Path $consumerEntry.Payload (Join-Path $output 'missing.properties')} 'bounded actual tool properties'
+    }finally{$witness.Stream.Dispose()}
+}
+if($NativeMsBuildPath){
+    Case 'real MSBuild preserves spaced trailing paths and rejects escaped outputs, ABI changes and downgrade' {
+        $core=& $localConsumer {$script:consumer}
+        $output=Join-Path $consumerRoot '.build/local-unpinned/actual compiler with spaces'
+        $expected=[ordered]@{PlatformToolset='v145';VCToolsVersion='14.52.37025';WindowsTargetPlatformVersion='10.0.26100.0';PreferredToolArchitecture='x64';VCToolArchitecture='Native64Bit';WindowsSDKToolArchitecture='Native64Bit';
+            VCToolsInstallDir=(Join-Path $root 'abi-fixture/MSVCTools');WindowsSdkDir=(Join-Path $root 'abi-fixture/WindowsTools');VCTargetsPath=(Join-Path $root 'abi-fixture/VCTargets');MSBuildBinPath=[IO.Path]::GetDirectoryName($NativeMsBuildPath);
+            IncludePath='';LibraryPath='';ReferencePath='';CL=(Join-Path $root 'abi-fixture/MSVCTools/cl.exe');Link=(Join-Path $root 'abi-fixture/MSVCTools/link.exe');Lib=(Join-Path $root 'abi-fixture/MSVCTools/lib.exe');FXC=(Join-Path $root 'abi-fixture/WindowsTools/fxc.exe')}
+        $witness=& $core {param($r,$s,$b,$o)New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform x64 -ToolBinding $b -Contract LocalUnpinnedAbiV1 -OutputRoot $o} $consumerRoot $consumerEntry.Payload $expected $output
+        $properties=[ordered]@{CiSdkProjectRoot=$consumerRoot;CiSdkRoot=$consumerEntry.Payload;DxUiSdkRoot=$consumerEntry.Payload;CiSdkLeasePath=$witness.Path;CiSdkContract='LocalUnpinnedAbiV1';Platform='x64';Configuration='Release';
+            OutDir=((Join-Path $output 'bin with spaces')+'\');IntDir=((Join-Path $output 'objects with spaces')+'\')}
+        foreach($name in @('PlatformToolset','VCToolsVersion','WindowsTargetPlatformVersion','PreferredToolArchitecture','VCToolArchitecture','WindowsSDKToolArchitecture','VCToolsInstallDir','WindowsSdkDir','VCTargetsPath','IncludePath','LibraryPath','ReferencePath')){$properties[$name]=$expected[$name]}
+        $elements=@($properties.Keys|ForEach-Object {'    <'+$_+'>'+[Security.SecurityElement]::Escape([string]$properties[$_])+'</'+$_+'>'})
+        $xml=@'
+<Project>
+  <PropertyGroup>
+@PROPERTIES@
+    <OutDir Condition="'$(FixtureCase)'=='bad-output'">@BADOUT@\</OutDir>
+    <IntDir Condition="'$(FixtureCase)'=='bad-intermediate'">@BADINT@\</IntDir>
+    <CiSdkContract Condition="'$(FixtureCase)'=='downgrade'">QualifiedAbiV2</CiSdkContract>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="not-compiled.cpp">
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary><LanguageStandard>stdcpplatest</LanguageStandard><PreprocessorDefinitions>NDEBUG</PreprocessorDefinitions>
+      <RuntimeLibrary Condition="'$(FixtureCase)'=='bad-crt'">MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+  </ItemGroup>
+  <Import Project="@TARGETS@" />
+</Project>
+'@
+        $badOutput=Join-Path $consumerRoot 'refused output';$badIntermediate=Join-Path $consumerRoot 'refused intermediate'
+        $xml=$xml.Replace('@PROPERTIES@',($elements -join "`n")).Replace('@BADOUT@',[Security.SecurityElement]::Escape($badOutput)).Replace('@BADINT@',[Security.SecurityElement]::Escape($badIntermediate)).Replace('@TARGETS@',[Security.SecurityElement]::Escape((Join-Path $consumerRoot '.ci-engine/Tools/MSBuild/Ci.SdkConsumer.targets')))
+        $project=Join-Path $consumerRoot '.build/local-compiler.proj';[IO.File]::WriteAllText($project,$xml)
+        try{
+            foreach($scenario in @('valid','bad-output','bad-intermediate','bad-crt','downgrade')){
+                $result=& $core {param($p,$a,$r)Invoke-CiProcess -FilePath $p -Arguments $a -WorkingDirectory $r -TimeoutSeconds 60 -AllowFailure} $NativeMsBuildPath @($project,'/nologo','/v:minimal','/t:CiValidateSdkConsumer',('/p:FixtureCase='+$scenario)) $consumerRoot
+                [IO.File]::WriteAllText((Join-Path $root ('msbuild-'+$scenario+'.log')),($result.stdout+$result.stderr))
+                if($scenario -ceq 'valid'){Check ($result.exitCode -eq 0) ('Actual MSBuild local contract failed: '+$result.stdout+$result.stderr)}
+                else{
+                    $pattern=switch($scenario){'bad-crt'{'requires /MD'};'downgrade'{'actual v2 contract'};default{'contained repository/sandbox child'}}
+                    Check ($result.exitCode -ne 0 -and ($result.stdout+$result.stderr) -match $pattern) ('Actual MSBuild did not enforce '+$scenario+': '+$result.stdout+$result.stderr)
+                }
+            }
+            Check (-not(Test-Path -LiteralPath $badOutput) -and -not(Test-Path -LiteralPath $badIntermediate)) 'MSBuild wrote an escaped directory before refusal.'
+            Check ([IO.File]::Exists((Join-Path $output 'objects with spaces/CiSdkToolBinding.local-compiler.proj.txt'))) 'Actual tool metadata was not checked beneath the owned output tree.'
+            Check (-not @(Get-ChildItem -LiteralPath $output -Recurse -File|Where-Object Extension -in @('.exe','.dll','.obj','.lib')).Count) 'Metadata controls unexpectedly compiled a native artifact.'
+        }finally{$witness.Stream.Dispose()}
+    }
+}

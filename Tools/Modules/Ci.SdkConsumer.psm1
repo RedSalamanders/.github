@@ -36,29 +36,45 @@ function Get-CiSdkReaderProcessIdentity {
     throw 'SDK reader process identity is unsupported on this operating system.'
 }
 
+function Resolve-CiLocalSdkOutputRoot {
+    param([string]$ProjectRoot,[string]$OutputRoot)
+    if(-not [IO.Path]::IsPathFullyQualified($OutputRoot)){throw 'Local SDK compilation requires an absolute separate output root.'}
+    $parent=Join-Path $ProjectRoot '.build/local-unpinned'
+    $resolved=Assert-CiContainedPath $parent $OutputRoot
+    if($resolved.TrimEnd('\','/').Equals([IO.Path]::GetFullPath($parent).TrimEnd('\','/'),[StringComparison]::OrdinalIgnoreCase)){throw 'Local SDK output must select a separate operation below local-unpinned.'}
+    return $resolved
+}
+
 function New-CiSdkConsumerWitness {
-    param([string]$ProjectRoot,[string]$SdkRoot,[string]$Platform,[Collections.IDictionary]$ToolBinding=$null)
+    param([string]$ProjectRoot,[string]$SdkRoot,[string]$Platform,[Collections.IDictionary]$ToolBinding=$null,
+        [ValidateSet('QualifiedAbiV2','LocalUnpinnedAbiV1')][string]$Contract='QualifiedAbiV2',[string]$OutputRoot='')
+    if($Contract -ceq 'LocalUnpinnedAbiV1'){
+        if($null -eq $ToolBinding){throw 'Local SDK compilation requires an actual tool binding.'}
+        $OutputRoot=Resolve-CiLocalSdkOutputRoot $ProjectRoot $OutputRoot
+    }elseif($OutputRoot){throw 'Pinned SDK witnesses do not accept a local output override.'}
     $directory=Assert-CiContainedPath $ProjectRoot (Join-Path $ProjectRoot '.build/sdk-leases')
     [void][IO.Directory]::CreateDirectory($directory)
     $path=Assert-CiContainedPath $ProjectRoot (Join-Path $directory ([guid]::NewGuid().ToString('N')+'.json'))
     $record=[ordered]@{schemaVersion=1;ownerPid=$PID;ownerIdentity=(Get-CiSdkReaderProcessIdentity $PID);
         projectRoot=[IO.Path]::GetFullPath($ProjectRoot);sdkRoot=[IO.Path]::GetFullPath($SdkRoot);platform=$Platform;configuration='Release'}
     if($null -ne $ToolBinding){$record.schemaVersion=2;$record.contract='QualifiedAbiV2';$record.toolBinding=$ToolBinding}
+    if($Contract -ceq 'LocalUnpinnedAbiV1'){
+        $record.schemaVersion=3;$record.contract=$Contract;$record.role='LocalUnpinnedSdkCompilerLease';$record.outputRoot=$OutputRoot
+    }
     $stream=[IO.File]::Open($path,[IO.FileMode]::CreateNew,[IO.FileAccess]::ReadWrite,[IO.FileShare]::Read)
     try{$bytes=[Text.UTF8Encoding]::new($false).GetBytes(($record|ConvertTo-Json -Compress));$stream.Write($bytes);$stream.Flush($true)}catch{$stream.Dispose();throw}
     return @{Path=$path;Stream=$stream}
 }
 
-function Assert-CiSdkConsumerLease {
+function Read-CiSdkConsumerLiveWitness {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$ProjectRoot,[Parameter(Mandatory)][string]$LeasePath,
-        [Parameter(Mandatory)][string]$SdkRoot,[Parameter(Mandatory)][string]$Platform,[Parameter(Mandatory)][string]$Configuration,
-        [string]$SdkContract='',[string]$ToolPropertyFile='')
+        [Parameter(Mandatory)][string]$SdkRoot,[Parameter(Mandatory)][string]$Platform,[Parameter(Mandatory)][string]$Configuration)
     $directory=Assert-CiContainedPath $ProjectRoot (Join-Path $ProjectRoot '.build/sdk-leases')
     $path=Assert-CiContainedPath $directory $LeasePath
     if($Configuration -cne 'Release' -or -not(Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Item $path).Length -gt 16KB){throw 'SDK compilation requires an active Release reader owner.'}
     $witness=Get-Content -LiteralPath $path -Raw|ConvertFrom-Json
-    if($witness.schemaVersion -notin @(1,2) -or $witness.projectRoot -cne [IO.Path]::GetFullPath($ProjectRoot) -or
+    if($witness.schemaVersion -notin @(1,2,3) -or $witness.projectRoot -cne [IO.Path]::GetFullPath($ProjectRoot) -or
         $witness.sdkRoot -cne [IO.Path]::GetFullPath($SdkRoot) -or $witness.platform -cne $Platform -or $witness.configuration -cne $Configuration){throw 'SDK reader witness has another project, payload or profile.'}
     if((Get-CiSdkReaderProcessIdentity $witness.ownerPid) -cne $witness.ownerIdentity){throw 'SDK reader owner is stale.'}
     # A surviving JSON file and a recycled/live PID are insufficient: the parent must still hold its handle.
@@ -67,8 +83,34 @@ function Assert-CiSdkConsumerLease {
     try{$exclusive=[IO.File]::Open($path,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)}catch [IO.IOException]{$held=$true}
     finally{if($null -ne $exclusive){$exclusive.Dispose()}}
     if(-not $held){throw 'SDK reader lease is closed; direct/stale MSBuild use is refused.'}
-    if($witness.schemaVersion -eq 2){
-        if($witness.contract -cne 'QualifiedAbiV2' -or $SdkContract -cne 'QualifiedAbiV2'){throw 'Qualified SDK compilation requires its actual v2 contract.'}
+    return $witness
+}
+
+function Assert-CiLocalSdkOutputLease {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$ProjectRoot,[Parameter(Mandatory)][string]$LeasePath,
+        [Parameter(Mandatory)][string]$SdkRoot,[Parameter(Mandatory)][string]$Platform,[Parameter(Mandatory)][string]$Configuration,
+        [Parameter(Mandatory)][string]$OutputDirectory,[Parameter(Mandatory)][string]$IntermediateDirectory)
+    $witness=Read-CiSdkConsumerLiveWitness $ProjectRoot $LeasePath $SdkRoot $Platform $Configuration
+    if($witness.schemaVersion -ne 3 -or $witness.contract -cne 'LocalUnpinnedAbiV1' -or $witness.role -cne 'LocalUnpinnedSdkCompilerLease'){
+        throw 'Local SDK output admission requires its explicit local compiler lease.'
+    }
+    $root=Resolve-CiLocalSdkOutputRoot $ProjectRoot $witness.outputRoot
+    foreach($path in @($OutputDirectory,$IntermediateDirectory)){
+        if(-not [IO.Path]::IsPathFullyQualified($path)){throw 'Local SDK output and intermediate directories must be absolute.'}
+        [void](Assert-CiContainedPath $root $path)
+    }
+}
+
+function Assert-CiSdkConsumerLease {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$ProjectRoot,[Parameter(Mandatory)][string]$LeasePath,
+        [Parameter(Mandatory)][string]$SdkRoot,[Parameter(Mandatory)][string]$Platform,[Parameter(Mandatory)][string]$Configuration,
+        [string]$SdkContract='',[string]$ToolPropertyFile='')
+    $witness=Read-CiSdkConsumerLiveWitness $ProjectRoot $LeasePath $SdkRoot $Platform $Configuration
+    if($witness.schemaVersion -in @(2,3)){
+        $requiredContract=if($witness.schemaVersion -eq 3){'LocalUnpinnedAbiV1'}else{'QualifiedAbiV2'}
+        if($witness.contract -cne $requiredContract -or $SdkContract -cne $requiredContract){throw 'Qualified SDK compilation requires its actual v2 contract, or an explicit local ABI contract.'}
         $abi=Import-Module (Join-Path $PSScriptRoot 'Ci.SdkAbi.psm1') -PassThru
         $propertyPath=Assert-CiContainedPath (Join-Path $ProjectRoot '.build') $ToolPropertyFile
         if(-not [IO.File]::Exists($propertyPath) -or (Get-Item -LiteralPath $propertyPath).Length -gt 16KB){throw 'Qualified SDK compilation requires bounded actual tool properties.'}
@@ -77,6 +119,11 @@ function Assert-CiSdkConsumerLease {
             $parts=$line.Split('=',2)
             if($parts.Count -ne 2 -or $parts[0] -cnotmatch '^[A-Za-z][A-Za-z0-9]*$' -or $actual.ContainsKey($parts[0])){throw 'Invalid or duplicate SDK tool property.'}
             $actual[$parts[0]]=$parts[1]
+        }
+        if($witness.schemaVersion -eq 3){
+            if(-not $actual.ContainsKey('OutDir') -or -not $actual.ContainsKey('IntDir')){throw 'Local SDK compiler properties omit actual output directories.'}
+            Assert-CiLocalSdkOutputLease $ProjectRoot $LeasePath $SdkRoot $Platform $Configuration $actual.OutDir $actual.IntDir
+            [void](Assert-CiContainedPath $witness.outputRoot $propertyPath)
         }
         $expected=@{};foreach($property in $witness.toolBinding.PSObject.Properties){$expected[$property.Name]=[string]$property.Value}
         Assert-CiSdkToolBinding $expected $actual
@@ -271,4 +318,4 @@ function Close-CiPinnedSdkInput {
     if($null -ne $primary){throw $primary}
 }
 
-Export-ModuleMember -Function Open-CiApplicationSdkInput,Open-CiPinnedSdkInput,Close-CiPinnedSdkInput,Assert-CiSdkConsumerLease
+Export-ModuleMember -Function Open-CiApplicationSdkInput,Open-CiPinnedSdkInput,Close-CiPinnedSdkInput,Assert-CiSdkConsumerLease,Assert-CiLocalSdkOutputLease
