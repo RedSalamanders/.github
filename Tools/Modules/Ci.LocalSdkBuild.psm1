@@ -27,7 +27,7 @@ function Read-CiLocalSdkBuildContract {
 
 function Get-CiLocalSdkLinkInput {
     param([string]$IntermediateRoot,[string]$SdkRoot,[string]$Platform)
-    $wanted=[IO.Path]::GetFullPath((Join-Path $SdkRoot ("lib/$Platform/Release/DxUi.lib"))).Replace('/','\')
+    $wanted=[IO.Path]::GetFullPath((Join-Path $SdkRoot ("lib/$Platform/Release/DxUi.lib")))
     $found=$false;$evidence=[Collections.Generic.List[object]]::new()
     # Unlike the SDK payload catalog, this traversal reads only bounded linker
     # tracking files, not potentially many GiB of compiler intermediates.
@@ -49,8 +49,8 @@ function Get-CiLocalSdkLinkInput {
         if($log.Length -gt 32MB){throw 'Local linker input tracking exceeds its bounded read.'}
         $text=[IO.File]::ReadAllText($log.FullName)
         foreach($line in ($text -split '\r?\n')){
-            $value=$line.Trim().Trim('"').Replace('/','\')
-            if($value -notmatch '(?i)(^|\\)DxUi\.lib$'){continue}
+            $value=$line.Trim().Trim('"').Replace([IO.Path]::AltDirectorySeparatorChar,[IO.Path]::DirectorySeparatorChar)
+            if($value -notmatch '(?i)(^|[\\/])DxUi\.lib$'){continue}
             if(-not [IO.Path]::IsPathFullyQualified($value) -or -not [IO.Path]::GetFullPath($value).Equals($wanted,[StringComparison]::OrdinalIgnoreCase)){
                 throw 'Actual linker tracking names a DxUi library outside the held immutable snapshot.'
             }

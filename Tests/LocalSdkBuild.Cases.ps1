@@ -7,7 +7,7 @@ foreach($name in @('App.sln','App.vcxproj')){[IO.File]::WriteAllText((Join-Path 
 $buildContract=[ordered]@{buildFile='App.sln';metadataProject='App.vcxproj';target='App';sdkProperty='AppSdkRoot';engineProperty='AppEngineRoot';outputProperty='AppOutputRoot';testsProperty='AppTests';versionProperty='AppVersion';executable='App.exe'}
 Case 'local application contract rejects property collisions, target injection and foreign build inputs' {
     & $localBuild {param($r,$c)Read-CiLocalSdkBuildContract $r $c} $buildRoot $buildContract
-    foreach($pair in @(@('target','App;Other'),@('engineProperty','AppSdkRoot'),@('outputProperty','Bad=Value'),@('buildFile','../App.sln'),@('metadataProject','App.sln'),@('executable','C:/App.exe'))){
+    foreach($pair in @(@('target','App;Other'),@('engineProperty','AppSdkRoot'),@('outputProperty','Bad=Value'),@('buildFile','../App.sln'),@('metadataProject','App.sln'),@('executable',(Join-Path ([IO.Path]::GetPathRoot($buildRoot)) 'App.exe')))){
         $changed=$buildContract|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$changed[$pair[0]]=$pair[1]
         Refuses {& $localBuild {param($r,$c)Read-CiLocalSdkBuildContract $r $c} $buildRoot $changed}
     }
