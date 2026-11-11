@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 No remaining slice is waived and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 19, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 20, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -780,3 +780,30 @@ Revision 18 continuation:
   production branches are still running. RedPrism 42885249187 remains in native
   qualification. Overall 3x/2x targets and remaining S2/S4/S5/S6B/S7/S8/S9/S10
   acceptance remain open. This plan stays WIP.
+
+Revision 20 continuation:
+
+- Shared #55 merged independent candidate run and original-byte verification.
+  All 110 controls plus Linux/Windows hosted checks passed. The result command
+  executes no downloaded code and authorizes no merge, delegation or adoption.
+- Native admission now requires successful exact-head cheap CI/security checks
+  and Root's existing Entire review gate, using original app identities and
+  repeated checks before remote writes. All 111 controls and 13 workflow syntax
+  checks pass. Required native reporting/enforcement, capacity, hosted shadow
+  acceptance, local delegation and main adoption remain open.
+- RedTilde draft #105 extends independent tooling/format result retention before
+  later native work. Its 61 focused controls, complete validators, static caller
+  checks and clean formatting pass. The initial long worktree failed design-fixture
+  seeding at the Windows path budget; that run and its independently retained
+  successful tooling remain preserved. The identical commit passes actual complete
+  noninteractive x64 Debug in a shorter fresh owned checkout without changed
+  assertions or copied receipts. Release/ASan native and ARM64 build qualification
+  continue; the PR remains draft.
+- DxUi #245 aligned stale scoped guidance with its already deployed two-worker
+  hosted Release adapter. No code or selection changed. All four foreground suites
+  already passed Debug/Release/ASan; controlled paired concurrency evidence remains
+  separate. RedTilde's DFFE main 42918805111 passed both native and production roles.
+- Root's current Full completed native execution and is archiving evidence with its
+  original tooling-fixture failure preserved; no final Full pass is claimed. Root
+  approval and Xe's original clock-memory failure remain open. No Actions were
+  cancelled. Remaining slices and controlled 3x/2x acceptance keep this plan in WIP.

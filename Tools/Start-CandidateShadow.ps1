@@ -11,6 +11,9 @@ Exact identity acquired independently with Get-IntegrationCandidate.ps1.
 CandidateShadowDispatchRequest JSON. DispatchRequested means an API request, not a run or pass.
 .NOTES
 Requires PowerShell 7.4, Git and an operator GH_TOKEN with repository contents/Actions write.
+Checks read permission is also required. Exact-head cheap CI/security checks must
+already pass; Root additionally retains its existing Entire approval gate. Readiness
+is rechecked before each remote write. Missing, pending, failed or stale checks refuse.
 Creates one unique ci-native branch at trusted main, append-only .build/ci admission
 journals and one workflow dispatch. Never moves existing refs, merges, writes checks,
 cancels runs, publishes products or supplies a native/adoption verdict. Failures retain

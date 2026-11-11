@@ -13,6 +13,12 @@ current producer/candidate/catalog state before publishing a verification record
 Neither command writes a required check, delegates local coverage, adopts a main
 result or authorizes production. Hosted acceptance and enforcement remain open.
 
+Trusted shadow admission requires current-head successful cheap CI/security checks
+and Root's existing Entire review gate, with original app identities. It rechecks
+them before each remote stage and preserves partial journals/refs on refusal. Readiness
+metadata supplies no native verdict; integration enforcement and capacity control
+remain separate requirements under the candidate contract.
+
 Organization-owned implementation work is indexed in [Plans/WIP](Plans/WIP/README.md); completed work is indexed in [Plans/Done](Plans/Done/README.md). The canonical [plan lifecycle rule](../AGENTS.md#plan-lifecycle) governs implementation/validation closeout and migration of durable requirements into this contract or the other owning specifications. WIP proposals do not change active CI policy.
 
 ## Source and input identity
