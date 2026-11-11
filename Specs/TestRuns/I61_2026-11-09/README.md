@@ -829,11 +829,12 @@ calls refuse before launch. Product launcher migration remains separate.
 
 The user chose to keep current local/main gates. Candidate-gate replacement,
 automatic shadow admission/reporting, local delegation and cross-run adoption are
-deferred; no second pre-merge native campaign is required. See plan revision26 for
+deferred; no second pre-merge native campaign is required. See plan revision27 for
 the latest exact rollout and failed/pending local qualification identities.
 RedMonitor main42950834765, Tilde main42952565762 and DxUi main42954632514
-passed all seven jobs. Prism main42959845076 passed x64 regression, with ARM64
-regression still running. These are ordinary main results, not shadow acceptance.
+passed all seven jobs. Prism main42959845076 passed x64 regression but failed ARM64
+at the clipboard acknowledgement/watchdog boundary detailed below. These are
+ordinary main results, not shadow acceptance.
 
 ### Actual local engine input identity
 
@@ -852,6 +853,25 @@ Tilde 62 (including direct Source/SDK build identities), Prism 34, DxUi 45, Root
 204 focused schema/build/evidence/runner/inventory controls with zero failures/skips,
 and Monitor's complete independent tooling suite including 15 public-wrapper cases.
 Monitor additionally checks failed/started/corrupt latest state and immutable success
-across native failure. Its real fresh/reuse command measurement is running and is
-not a published speedup. Final source commits, broader validation and native results
-remain separate in the plan and owning product evidence.
+across native failure. Its original fresh/reuse pair at `86376bd7b0e9d89e348a03e27ce943e2a0d78a5a`
+measured 105,615.01/2,247.8336 ms with identical inputs and an unrelated build active.
+The owning Monitor measurement directory preserves the scope and raw records; this
+single pair does not establish controlled overall speed targets. All six ports are
+published drafts, with current native qualification still pending.
+
+Root #218's selected-project implementation passed 238 integration controls with
+zero failures/skips and one actual MSBuild synthetic union invocation, without C++
+compilation. Source `1c17edc3270d59c2bba1f3c1cee6cdd9a3f4fb34` retains exact partial
+receipt scope; Full/PR/CI and Full Affected remain conservative. Native cold-build,
+runtime/profile and timing acceptance are pending. This evidence grants no Full pass.
+
+Prism main [42959845076](https://github.com/RedSalamanders/RedPrism/actions/runs/42959845076)
+at `692d14b29869d48571e5a14c241f3bebf3051ad0` finished failed on ARM64, while x64
+regression passed. Preserved ARM64 stdout identifies `paste-exhaust`; stderr reports
+clipboard work failing to acknowledge its bounded wait. The application remained
+running until the unchanged 5,400-second watchdog failed. Evidence finalization also
+refused the still-open stderr file; workspace artifacts retained the partial logs.
+The included crash-probe dumps are expected probe artifacts, not a dump of the hung
+application. No root cause or successful ARM64 runtime result is inferred, and
+production was correctly skipped. Local paths and process IDs remain in the private
+handoff, with the public run retaining the original artifacts.
