@@ -238,6 +238,8 @@ or equal-size/backdated edits cannot preserve a prior raw source key. Generated 
 `.build` outputs remain excluded. This supplies input identity, never a test verdict,
 SDK acceptance, delegation or main-result adoption. Product adapters must include the
 returned identity in each applicable local build/runtime/tooling closure.
+Windows root/path casing aliases preserve that same checkout identity; distinct
+physical checkout locations remain distinct inputs.
 `Get-CiCheckoutContentIdentity` owns the shared ordinal raw path/SHA-256 projection
 and fresh no-follow checks; the existing SDK bootstrap name remains a thin
 compatibility route with byte-identical results. Keep this implementation centralized.

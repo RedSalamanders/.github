@@ -70,7 +70,10 @@ function Get-CiPinnedEngineInputsIdentity {
     if((Invoke-CiGit $engine @('-c','core.fsmonitor=false','status','--porcelain','--untracked-files=all')).stdout.Trim()){
         throw 'Local engine checkout must be clean before reusable evidence is consulted.'
     }
-    return Get-CiSha256 ($projectRoot+[char]0+$engine+[char]0+$head+[char]0+$content)
+    # Windows checkout aliases differ only in casing; preserve the physical checkout identity.
+    $identityRoot=if([OperatingSystem]::IsWindows()){$projectRoot.ToLowerInvariant()}else{$projectRoot}
+    $identityEngine=if([OperatingSystem]::IsWindows()){$engine.ToLowerInvariant()}else{$engine}
+    return Get-CiSha256 ($identityRoot+[char]0+$identityEngine+[char]0+$head+[char]0+$content)
 }
 
 Export-ModuleMember -Function Get-CiCheckoutContentIdentity,Get-CiPinnedEngineInputsIdentity

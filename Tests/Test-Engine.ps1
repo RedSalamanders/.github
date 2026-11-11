@@ -1532,6 +1532,9 @@ Invoke-Case 'Local engine input identity binds an independent exact clean checko
     $project.engine.ref=Resolve-CiCommit $engine HEAD
     Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 12)
     $before=Get-CiPinnedEngineInputsIdentity -Root $root -EngineRoot $engine
+    if([OperatingSystem]::IsWindows()){
+        Assert-Equal $before (Get-CiPinnedEngineInputsIdentity -Root $root.ToUpperInvariant() -EngineRoot $engine.ToUpperInvariant())
+    }
     Write-FixtureFile $engine '.build/diagnostic.json' '{"generated":true}'
     Assert-Equal $before (Get-CiPinnedEngineInputsIdentity -Root $root -EngineRoot $engine)
     $file=Join-Path $engine 'src/main.cpp'
