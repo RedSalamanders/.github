@@ -31,10 +31,12 @@ function Get-CiLocalSdkLinkInput {
     $found=$false;$evidence=[Collections.Generic.List[object]]::new()
     # Unlike the SDK payload catalog, this traversal reads only bounded linker
     # tracking files, not potentially many GiB of compiler intermediates.
+    if((Get-Item -LiteralPath $IntermediateRoot -Force).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Local linker tracking never follows reparse points.'}
     $pending=[Collections.Generic.Stack[string]]::new();$pending.Push($IntermediateRoot)
     $logs=[Collections.Generic.List[IO.FileInfo]]::new();$entries=0
     while($pending.Count){
-        $directory=$pending.Pop();[void](Assert-CiContainedPath $IntermediateRoot $directory)
+        $directory=$pending.Pop()
+        if(-not [IO.Path]::GetFullPath($directory).Equals([IO.Path]::GetFullPath($IntermediateRoot),[StringComparison]::OrdinalIgnoreCase)){[void](Assert-CiContainedPath $IntermediateRoot $directory)}
         foreach($entry in Get-ChildItem -LiteralPath $directory -Force -ErrorAction Stop){
             $entries++;if($entries -gt 65536){throw 'Local intermediate tracking exceeds its bounded inventory.'}
             if($entry.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Local linker tracking never follows reparse points.'}
