@@ -814,3 +814,13 @@ Compiler/helper hashes are retained. This qualifies the component boundary, not 
 product, ARM64, ASan runtime or reproduction/repair of every historical C1090 failure.
 Product contained launchers still need to adopt the shared helper. Earlier failed
 export, attribution and Windows case-collision controls remain preserved locally.
+
+### Direct native command bridge
+
+[Bridge controls](Native_Command_Bridge_2026-11-11.json): all118engine cases passed;
+final focused controls also pass after literal executable-path handling was refined.
+A two-way handshake proves output reaches the caller before child completion. Real
+child processes preserve exit7/exit9, both streams, caller location/environment and
+literal empty, Unicode, quote, trailing-backslash, metacharacter, switch and newline
+arguments. A copied system executable exercises a bracketed Unicode path. Compiler-free
+calls refuse before launch. Product launcher migration remains separate.
