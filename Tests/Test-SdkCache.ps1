@@ -23,6 +23,7 @@ if($hosted){
 if((Get-Item -LiteralPath $selected).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Reparse test roots are unsupported.'}
 $root=Join-Path $selected ('unified-ci/sdk-store-'+[DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')+'-'+[guid]::NewGuid().ToString('N'))
 [void][IO.Directory]::CreateDirectory($root)
+Write-Host "SDK store fixture: $root"
 & git -C $root init -q
 if($LASTEXITCODE){throw 'Cannot initialize owned store fixture.'}
 $store=Join-Path $root '.build/sdk-cache'
@@ -303,6 +304,95 @@ Case 'local corruption fails both acquisition and close while retaining original
     Check ($null -eq (Open-CiLocalSdkSnapshot $store $localIdentity ('0'*64))) 'An absent exact manifest locator was not a cache miss.'
     $reader=Open-CiLocalSdkSnapshot $store $localIdentity $localEntry.ManifestSha256
     Close-CiLocalSdkSnapshot $reader
+}
+
+Import-Module (Join-Path $engine 'Tools/Modules/Ci.LocalSdkDescriptor.psm1') -Force
+$tooling=Join-Path $root '.build/descriptor-tooling'
+[void][IO.Directory]::CreateDirectory($tooling)
+$null=Invoke-CiGit $tooling @('init','--initial-branch=main')
+foreach($setting in @(@('user.name','Descriptor Fixture'),@('user.email','fixture@example.invalid'),@('commit.gpgsign','false'),@('core.autocrlf','false'),@('core.hooksPath',(Join-Path $tooling '.empty-hooks')))){$null=Invoke-CiGit $tooling @('config',$setting[0],$setting[1])}
+[IO.File]::WriteAllText((Join-Path $tooling '.gitignore'),".build/`n.ci-engine/`n")
+$toolingText=@'
+[IO.File]::WriteAllText((Join-Path $PSScriptRoot 'producer-code-was-invoked'),'must not execute')
+# synthetic toolkit source 1
+'@
+[IO.File]::WriteAllText((Join-Path $tooling 'tooling.ps1'),$toolingText)
+$engineHead=Resolve-CiCommit $engine HEAD
+[void][IO.Directory]::CreateDirectory((Join-Path $tooling '.ci'))
+$project=[ordered]@{schemaVersion=1;policyVersion='1';repository='RedSalamanders/DxUi';engine=@{repository='RedSalamanders/.github';ref=$engineHead};kind='sdk';
+    adapter='Tools/Invoke-ProjectCi.ps1';include=@();exclude=@();formatRoots=@('src');versionBase='0.1';winget=$null}
+[IO.File]::WriteAllText((Join-Path $tooling '.ci/project.json'),($project|ConvertTo-Json -Depth 8))
+$null=Invoke-CiGit $tooling @('clone','--quiet','--no-hardlinks',$engine,'.ci-engine')
+$null=Invoke-CiGit (Join-Path $tooling '.ci-engine') @('checkout','--quiet','--detach',$engineHead)
+$null=Invoke-CiGit $tooling @('add','--all');$null=Invoke-CiGit $tooling @('commit','-m','Descriptor toolkit baseline')
+$descriptorStore=Join-Path $tooling '.build/local-sdk-snapshots'
+Initialize-CiSdkStore $tooling $descriptorStore
+$descriptorEntry=Publish-CiLocalSdkSnapshot $descriptorStore $localIdentity $localPayload
+$bootstrap=[ordered]@{root=$tooling;sourceBytes=(Get-CiCheckoutContentIdentity $tooling);engineInputsIdentity=(Get-CiPinnedEngineInputsIdentity -Root $tooling -EngineRoot (Join-Path $tooling '.ci-engine'))}
+$descriptorRecord=[ordered]@{schemaVersion=1;role='LocalUnpinnedSdkSnapshot';storeRoot=$descriptorStore;identity=$descriptorEntry.Manifest.identity;
+    manifestSha256=$descriptorEntry.ManifestSha256;key=$descriptorEntry.Key;
+    producerTooling=@{repository='RedSalamanders/DxUi';commit=(Resolve-CiCommit $tooling HEAD);contentIdentity=$bootstrap.sourceBytes;role='LocalUnpinnedProducerTooling'};toolingBootstrap=$bootstrap}
+$descriptorPath=Join-Path $tooling '.build/local-sdk-capture/fixture/local-unpinned-snapshot.json'
+[void][IO.Directory]::CreateDirectory((Split-Path $descriptorPath))
+[IO.File]::WriteAllText($descriptorPath,($descriptorRecord|ConvertTo-Json -Depth 14))
+$descriptorBytes=[IO.File]::ReadAllBytes($descriptorPath)
+$descriptorHash=(Get-FileHash $descriptorPath).Hash.ToLowerInvariant()
+Case 'frozen descriptor bootstrap and real snapshot lease do not import producer code' {
+    $parsed=Read-CiLocalSdkSnapshotDescriptor $descriptorPath $descriptorHash
+    Check ($parsed.Role -ceq 'LocalUnpinnedSdkSnapshotDescriptor') 'Descriptor lost its local data-only role.'
+    $reader=Open-CiLocalSdkSnapshotDescriptor $descriptorPath $descriptorHash
+    try{
+        Check ($reader.Role -ceq 'LocalUnpinnedSdkSnapshotDescriptorLease' -and -not $reader.Closed) 'No live local descriptor lease.'
+        Check ($reader.Snapshot.Payload -ceq $descriptorEntry.Payload) 'Descriptor selected another SDK payload.'
+    }finally{Close-CiLocalSdkSnapshotDescriptor $reader}
+    Refuses {Close-CiLocalSdkSnapshotDescriptor $reader}
+    Check (-not(Test-Path -LiteralPath (Join-Path $tooling 'producer-code-was-invoked'))) 'Descriptor reading executed producer code.'
+}
+Case 'descriptor hash, schema, original key and ownership changes fail before use' {
+    Refuses {Read-CiLocalSdkSnapshotDescriptor $descriptorPath ('0'*64)}
+    foreach($field in @('passed','key','storeRoot')){
+        $bad=$descriptorRecord|ConvertTo-Json -Depth 14|ConvertFrom-Json -AsHashtable
+        switch($field){passed{$bad.passed=$true};key{$bad.key='0'*64};storeRoot{$bad.storeRoot=Join-Path $root '.build/foreign-to-toolkit'}}
+        [IO.File]::WriteAllText($descriptorPath,($bad|ConvertTo-Json -Depth 14))
+        $frozen=(Get-FileHash $descriptorPath).Hash.ToLowerInvariant()
+        Refuses {Read-CiLocalSdkSnapshotDescriptor $descriptorPath $frozen}
+    }
+    [IO.File]::WriteAllBytes($descriptorPath,$descriptorBytes)
+}
+Case 'same-size timestamp-preserved toolkit edits invalidate independently frozen bootstrap' {
+    $file=Join-Path $tooling 'tooling.ps1';$bytes=[IO.File]::ReadAllBytes($file);$time=[IO.File]::GetLastWriteTimeUtc($file)
+    try{
+        [IO.File]::WriteAllText($file,$toolingText.Replace('source 1','source 2'));[IO.File]::SetLastWriteTimeUtc($file,$time)
+        Refuses {Open-CiLocalSdkSnapshotDescriptor $descriptorPath $descriptorHash}
+    }finally{[IO.File]::WriteAllBytes($file,$bytes);[IO.File]::SetLastWriteTimeUtc($file,$time)}
+}
+Case 'ignored actual toolkit engine edits invalidate bootstrap separately from product source' {
+    $file=Join-Path $tooling '.ci-engine/AGENTS.md';$bytes=[IO.File]::ReadAllBytes($file)
+    try{
+        [IO.File]::AppendAllText($file,"`n# changed actual engine")
+        Check ((Get-CiCheckoutContentIdentity $tooling) -ceq $bootstrap.sourceBytes) 'Ignored engine polluted the toolkit product map.'
+        Refuses {Open-CiLocalSdkSnapshotDescriptor $descriptorPath $descriptorHash}
+    }finally{[IO.File]::WriteAllBytes($file,$bytes)}
+}
+Case 'descriptor mutation on close fails and releases the actual snapshot reader' {
+    $reader=Open-CiLocalSdkSnapshotDescriptor $descriptorPath $descriptorHash
+    try{
+        [IO.File]::AppendAllText($descriptorPath,' ')
+        Refuses {Close-CiLocalSdkSnapshotDescriptor $reader}
+        Check ($reader.Closed -and $reader.Snapshot.Closed) 'Descriptor failure leaked the immutable reader lease.'
+        $storage=Get-Module Ci.SdkCache
+        & $storage {param($s,$k)$lease=Enter-CiSdkEntryLock $s $k -Writer;$lease.Dispose()} $descriptorStore $descriptorEntry.Key
+    }finally{[IO.File]::WriteAllBytes($descriptorPath,$descriptorBytes)}
+}
+Case 'descriptor bounds and exclusive ownership reject incomplete reads' {
+    try{
+        [IO.File]::WriteAllBytes($descriptorPath,[byte[]]::new(8MB+1))
+        $largeHash=(Get-FileHash $descriptorPath).Hash.ToLowerInvariant()
+        Refuses {Read-CiLocalSdkSnapshotDescriptor $descriptorPath $largeHash}
+        [IO.File]::WriteAllBytes($descriptorPath,$descriptorBytes)
+        $writer=[IO.File]::Open($descriptorPath,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
+        try{Refuses {Read-CiLocalSdkSnapshotDescriptor $descriptorPath $descriptorHash}}finally{$writer.Dispose()}
+    }finally{[IO.File]::WriteAllBytes($descriptorPath,$descriptorBytes)}
 }
 $failed=@($results|Where-Object{-not $_.passed})
 [IO.File]::WriteAllText((Join-Path $root 'results.json'),([ordered]@{kind='synthetic SDK store controls; no native SDK acceptance';cases=$results.ToArray();passed=$results.Count-$failed.Count;failed=$failed.Count}|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))

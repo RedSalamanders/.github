@@ -895,3 +895,15 @@ controlled before/after speedup or the overall 3x/2x acceptance. The original lo
 and canonical workspace/plan/decision records remain retained privately; their
 full hashes and lengths are recorded here without modifying those artifacts.
 Native selected/cold/profile/runtime and hosted acceptance remain pending.
+
+## Current Source Full closeout — 11 November
+
+[Original-result index](Root_Source_Full_2026-11-11.json) records Root Source x64
+Release Fresh Full at `03fe8ee22db0407643fb2803a1e974660ae5656d` and engine
+`0573d4f3`: 2,828 passed, zero failed, 56 skipped, all 18 entries promoted and
+controller exit zero after evidence archival. Its original summary SHA-256 is
+retained; this index itself grants no acceptance beyond that canonical record.
+The prior local-origin SDK Full failure remains failed. This result establishes
+neither SDK/hosted/ARM64 runtime qualification nor controlled 3x/2x acceleration.
+Its elapsed duration includes the observed desktop wait and is not a comparable
+performance measurement.

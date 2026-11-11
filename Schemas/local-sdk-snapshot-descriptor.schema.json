@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "role", "storeRoot", "identity", "manifestSha256", "key", "producerTooling", "toolingBootstrap"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "role": { "const": "LocalUnpinnedSdkSnapshot" },
+    "storeRoot": { "$ref": "#/$defs/path" },
+    "identity": { "type": "object" },
+    "manifestSha256": { "$ref": "#/$defs/hash" },
+    "key": { "$ref": "#/$defs/hash" },
+    "producerTooling": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "commit", "contentIdentity", "role"],
+      "properties": {
+        "repository": { "const": "RedSalamanders/DxUi" },
+        "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "contentIdentity": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "role": { "const": "LocalUnpinnedProducerTooling" }
+      }
+    },
+    "toolingBootstrap": {
+      "type": "object", "additionalProperties": false,
+      "required": ["root", "sourceBytes", "engineInputsIdentity"],
+      "properties": {
+        "root": { "$ref": "#/$defs/path" },
+        "sourceBytes": { "$ref": "#/$defs/hash" },
+        "engineInputsIdentity": { "$ref": "#/$defs/hash" }
+      }
+    }
+  },
+  "$defs": {
+    "path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}

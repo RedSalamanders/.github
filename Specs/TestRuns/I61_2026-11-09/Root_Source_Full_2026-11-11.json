@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "role": "CuratedQualificationIndex",
+  "acceptanceAuthority": "Original canonical runner evidence only",
+  "sourceCommit": "03fe8ee22db0407643fb2803a1e974660ae5656d",
+  "engineCommit": "0573d4f3b294e3c3655349eb618ec7105b3d89b2",
+  "profile": "x64 Release",
+  "recipe": "Source",
+  "gate": "Fresh Full",
+  "runId": "20261111T055824Z-95104-8cdc8accc6e84588aefb99ff6a4c1209",
+  "repositoryVerdict": "PASSED",
+  "changeVerdict": "PASSED",
+  "coverage": "complete",
+  "entries": {
+    "executed": 18,
+    "incomplete": 0,
+    "invalidated": 0,
+    "promoted": 18,
+    "provisional": 0,
+    "reused": 0
+  },
+  "cases": {
+    "failed": 0,
+    "passed": 2828,
+    "skipped": 56,
+    "total": 2884
+  },
+  "durationMs": 12095955,
+  "summarySha256": "b76aa608142dd71beaa8c1e13130bc8c4dbfe82e333f541dbf92b9b56a2e0299",
+  "summaryLength": 14005,
+  "buildReceiptId": "3961368b6b26dbd4fcab8f666262491d5f8ad867e5e7599bd64d7a1a8317a42e",
+  "snapshotId": "39a5d00f8c7473c3e2588e1f138d1ed7162e77bbbb37ddf44a57f08cf3985378",
+  "controllerExitCode": 0,
+  "hostedQualified": false,
+  "sdkQualified": false,
+  "arm64RuntimeQualified": false,
+  "controlledPerformanceQualified": false,
+  "priorSdkFailureSuperseded": false
+}

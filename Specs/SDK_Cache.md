@@ -154,6 +154,34 @@ mutation, untracked-source, changed HEAD, corruption, missing-family, role separ
 reader concurrency and close-failure controls alongside the unchanged pinned cases.
 These controls use synthetic payloads and establish storage behavior only.
 
+`Ci.LocalSdkDescriptor.psm1` provides a strict descriptor/data-reader seam before any
+producer code is imported. `Read-CiLocalSdkSnapshotDescriptor` requires an absolute
+descriptor path and the caller's independently frozen SHA-256. It reads a bounded
+nonempty file of at most eight MiB, rejects truncation/growth, unknown fields and
+input-key changes, and requires the original descriptor and store below the
+identified tooling checkout's `.build`. The canonical no-follow guard covers all
+path ancestors. It verifies the tooling's original HEAD, raw source bytes and actual
+clean pinned engine bytes using the independently executing shared reader. Pass
+the tooling's own `.ci-engine` explicitly to that reader; its default belongs to
+the calling consumer and cannot identify another checkout's engine.
+
+`Open-CiLocalSdkSnapshotDescriptor` holds the existing immutable payload reader,
+rechecks the original descriptor/bootstrap after acquisition and returns a distinct
+`LocalUnpinnedSdkSnapshotDescriptorLease`. A missing exact payload is a null miss.
+`Close-CiLocalSdkSnapshotDescriptor` rechecks descriptor/bootstrap, producer source
+and payload and always releases the underlying reader, even if descriptor validation
+fails. Double close refuses. No function imports or invokes producer code, creates
+a compiler witness, changes a pin, builds or qualifies anything. The descriptor
+hash freezes selected local data; it does not authenticate a hosted producer.
+
+Consumer adapters still must reacquire complete current producer profile/library
+provenance, admit the exact compatible API/ABI and actual linker inputs, use separate
+local-unpinned outputs/receipts and retain all authoritative refusal boundaries.
+Descriptor/data admission alone cannot enable that unfinished integration. Synthetic
+controls verify an executable producer marker remains uninvoked, raw toolkit and
+ignored actual-engine mutation, descriptor/schema/path corruption, bounded/locked
+reads and failure-close lease release.
+
 `Ci.SdkConsumer.psm1` provides one shared application seam for a deliberately selected local Release SDK.
 The strict descriptor resides below the application's `.build`, outside the store, and binds source/API,
 platform, full existing source/tooling/storage checkouts, store and independently retained manifest hash.
