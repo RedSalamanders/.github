@@ -1,0 +1,73 @@
+name: Trusted candidate native evidence reporter
+on:
+  workflow_call:
+    inputs:
+      engine_ref:
+        type: string
+        required: true
+      pull_request:
+        type: string
+        required: true
+      identity:
+        type: string
+        required: true
+      producer_run:
+        type: string
+        required: true
+      producer_attempt:
+        type: string
+        required: true
+      nonce:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  report:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      checks: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - name: Independently verify original native evidence before exact-head reporting
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_ENGINE_REF: ${{ inputs.engine_ref }}
+          CI_PULL_REQUEST: ${{ inputs.pull_request }}
+          CI_CANDIDATE_IDENTITY: ${{ inputs.identity }}
+          CI_PRODUCER_RUN: ${{ inputs.producer_run }}
+          CI_PRODUCER_ATTEMPT: ${{ inputs.producer_attempt }}
+          CI_ISOLATION_NONCE: ${{ inputs.nonce }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $manifest=Get-Content .ci/project.json -Raw|ConvertFrom-Json
+          $engine=(git -C .ci-engine rev-parse HEAD).Trim()
+          if($LASTEXITCODE -or $env:CI_ENGINE_REF -cnotmatch '^[a-f0-9]{40}$' -or
+              $engine -cne $env:CI_ENGINE_REF -or $engine -cne $manifest.engine.ref){throw 'Reporter engine pin differs.'}
+          $output=Join-Path $env:RUNNER_TEMP 'candidate-native-report'
+          [void][IO.Directory]::CreateDirectory($output)
+          & ./.ci-engine/Tools/Publish-CandidateCheck.ps1 -Root . -PullRequest $env:CI_PULL_REQUEST -ExpectedIdentity $env:CI_CANDIDATE_IDENTITY -RunId $env:CI_PRODUCER_RUN -Attempt $env:CI_PRODUCER_ATTEMPT -IsolationNonce $env:CI_ISOLATION_NONCE -OutputRoot $output
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: candidate-native-report-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/candidate-native-report
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 90

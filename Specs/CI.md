@@ -214,3 +214,10 @@ candidate, isolated trusted-main ref and exact-head readiness twice. A moved hea
 base, controller/engine or unsuccessful prerequisite fails before native execution.
 Old diagnostic evidence remains; a later request needs fresh acquisition. This guard
 supplies no native result, required merge check, local delegation or adoption authority.
+
+The optional manual native reporter runs only trusted current-main engine code on a
+compiler-free Linux runner with checks write. It directly authenticates both original
+native artifacts and updates only its owned exact-head native check. Candidate jobs
+keep read-only tokens. The manual check is not yet required; automatic invalidation,
+strict stale-base enforcement and actual hosted reporter acceptance remain separate
+gates before local delegation or main adoption. See Integration_Candidates.md.

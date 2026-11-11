@@ -282,3 +282,27 @@ and exact clean synthetic merge, then twice reacquires the complete canonical ca
 isolated ref and original required check catalog. These reads occur before native setup
 or any dependency cache restore. Changed inputs or readiness fail visibly without
 executing native code. The return value is input-only and authorizes no merge or reuse.
+
+## Optional trusted manual native reporter
+
+`integration-report.yml` is a separate manual trusted-main metadata job. Its narrow
+checks-write token never reaches candidate execution. `Publish-CandidateCheck.ps1`
+requires exact clean current main/engine, independently checks the actual reporter
+run/attempt/repository/caller/reusable-engine reference, and reacquires the current
+native candidate plus exact-head prerequisites. Branch, PR-event, dirty or stale
+controllers refuse before check writes. Prose-only input supplies no baseline pass.
+
+The reporter owns `native / candidate-integration` on that exact head, sets it pending
+before verification, and directly invokes the original byte verifier. A saved result
+file is never an input. It rechecks candidate, prerequisites, current original producer
+and artifact catalog before success publication. Missing/failed/cancelled evidence,
+changed attempts, catalog or source produce failure. An existing successful owned
+report is cleared before another verification; unrelated or ambiguous same-name checks
+refuse. Ownership is rechecked before completion so an older report cannot overwrite
+a newer owner. Original artifacts remain data and are never extracted or executed.
+
+This manual report is optional and is not installed as a required branch check.
+It does not automatically invalidate reports when a producer rerun starts, enforce
+strict stale-base merge rules, delegate local tests, adopt main results or authorize
+production. Actual hosted positive/failure acceptance, automatic admission/report
+invalidation and branch-policy enforcement remain required before any coverage moves.

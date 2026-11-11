@@ -1033,9 +1033,10 @@ Invoke-Case 'SDK conformance retains qualification and rejects every hosted publ
     $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
     Test-CiProjectConfiguration $context
     Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/qualify.yml'))
-    Assert-Equal 7 @(Get-CiProjectWorkflowTemplates $project).Count
+    Assert-Equal 8 @(Get-CiProjectWorkflowTemplates $project).Count
     Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/sdk-inputs.yml'))
     Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/integration-execution.yml'))
+    Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/integration-report.yml'))
     Write-FixtureFile $root '.github/workflows/publish.yml' 'on: workflow_dispatch'
     Assert-Refused {Test-CiProjectConfiguration $context}
     Remove-Item -LiteralPath (Join-Path $root '.github/workflows/publish.yml')
@@ -1502,8 +1503,13 @@ Invoke-Case 'Fast SDK bootstrap retains the exact ordinal raw map, missing-file 
     Assert-Refused {Get-CiSdkCheckoutContentIdentity $root}
 }
 
-function New-CandidateFixture([string]$Name,[switch]$Prose,[switch]$ShadowCaller){
+function New-CandidateFixture([string]$Name,[switch]$Prose,[switch]$ShadowCaller,[switch]$ReporterCaller,[string]$EngineRef=''){
     $root=New-Fixture $Name
+    if($ReporterCaller -or $EngineRef){
+        if($ReporterCaller){Write-FixtureFile $root '.github/workflows/integration-report.yml' '# Owned reporter controller fixture data; never executed.'}
+        if($EngineRef){$project=Read-CiProject $root;$project.engine.ref=$EngineRef;Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 10)}
+        $null=Save-Fixture $root 'Owned pinned reporter fixture'
+    }
     if($ShadowCaller){
         Write-FixtureFile $root '.github/workflows/integration-execution.yml' '# Owned controller fixture data; never executed.'
         $null=Save-Fixture $root 'Owned shadow caller fixture'
@@ -2752,6 +2758,7 @@ Invoke-Case 'Actual branch cache observer retains refusals for failed saves, for
 . (Join-Path $PSScriptRoot 'CandidateResults.Cases.ps1')
 . (Join-Path $PSScriptRoot 'CandidateArchives.Cases.ps1')
 . (Join-Path $PSScriptRoot 'CandidateReadiness.Cases.ps1')
+. (Join-Path $PSScriptRoot 'CandidateReporting.Cases.ps1')
 
 Invoke-Case 'Read-only cache syntax admits scoped capabilities and refuses write, dynamic and misplaced authority' {
     $lf=[string][char]10
