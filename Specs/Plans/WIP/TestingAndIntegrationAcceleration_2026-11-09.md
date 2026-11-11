@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 No remaining slice is waived and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 20, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 21, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -41,9 +41,13 @@ input/receipt/profile/canonical-evidence byte verification is also implemented, 
 live post-transfer reacquisition. Hosted shadow/verifier acceptance, the trusted
 required-check reporter, stale-base enforcement, local delegation and main adoption
 remain open. DxUi's four authorized foreground suites passed Debug, Release and ASan
-Debug with restoration verified. Root's active Full retains one tooling-fixture failure; a corrected
-empty-array fixture passed focused routing controls in a separate checkout. No active
-run was rewritten or cancelled, and this plan remains WIP.
+Debug with restoration verified. Root's fresh Full completed with two failures: an
+empty-array tooling fixture and missing alternate-volume test authorization. The fixture
+passed focused corrected controls; the original Full remains failed. Its focused volume
+retry is pending desktop ownership and cannot supply aggregate Full acceptance. RedTilde
+#105 merged independent tooling/format receipt retention after all three x64 native
+profiles and all three ARM64 cross-build profiles passed. No active run was rewritten
+or cancelled, and this plan remains WIP.
 
 ## 2. Why do local tests, PR checks and main seem to repeat everything?
 
@@ -807,3 +811,23 @@ Revision 20 continuation:
   original tooling-fixture failure preserved; no final Full pass is claimed. Root
   approval and Xe's original clock-memory failure remain open. No Actions were
   cancelled. Remaining slices and controlled 3x/2x acceptance keep this plan in WIP.
+
+Revision 21 continuation:
+
+- Native regression/production, manual qualification, SDK producer and installed smoke
+  share repository/platform lanes (one job per architecture per product repository).
+  No running job is cancelled; the provider queue remains bounded at 100 pending.
+  This change is not deployed until caller pins advance and actual hosted acceptance
+  is observed. Existing native coverage and local obligations remain unchanged.
+- Direct shadow workflow freeze checks readiness before emitting inputs. A queued
+  native job repeats canonical candidate, original live batch, clean checkout,
+  isolated ref and exact-head readiness checks before setup/cache restore. Stale
+  work fails visibly before compilation. Required native reporting/enforcement and
+  actual shadow acceptance remain open; input freshness is not a native verdict.
+- Tilde #105 merged independent Tooling/Format retention after full local x64
+  Debug/Release/ASan native qualification and ARM64 three-profile cross-builds.
+  Its short-checkout result does not fix or supersede the preserved long-path
+  fixture failure. No ARM64 runtime or controlled 3x/2x result is claimed.
+- Root fresh SDK Full: 2812 passed, 2 failed, 60 skipped, 16/18 entries promoted.
+  The corrected tooling fixture passes focused controls; the explicitly authorized
+  existing alternate root is being checked separately. Full remains failed.

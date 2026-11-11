@@ -779,3 +779,13 @@ apps, duplicate/truncated catalogs, unsuccessful required checks and an Actions
 imitation of Root's real Entire gate. Pending native integration does not deadlock
 its own admission. App IDs were independently inspected through the live Root
 check API. This is readiness/control evidence, not hosted native/shadow acceptance.
+
+### Native capacity and queued freshness controls
+
+[Capacity controls](Native_Capacity_Controls_2026-11-11.json): all 113 engine cases
+and 13 workflow definitions pass. Six native job roles across five reusable workflows
+use the same repository/platform lane. The public queued-start guard rejects a wrong
+or dirty synthetic merge, wrong original attempt, moved head/base/engine/ref and failed
+readiness before native setup/cache restore. Direct workflow freeze rejects pending
+readiness before writing frozen inputs. These are synthetic control results; deployment,
+actual hosted queue/shadow acceptance and the required native gate remain open.

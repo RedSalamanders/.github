@@ -46,6 +46,10 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.select-platforms.outputs.matrix) }}
     runs-on: ${{ matrix.runner }}
+    concurrency:
+      group: native-architecture-${{ github.repository }}-${{ matrix.platform }}
+      cancel-in-progress: false
+      queue: max
     timeout-minutes: 360
     steps:
       - name: Enable long Windows checkout paths

@@ -1847,18 +1847,33 @@ if($env:I61_FREEZE_CONTROL -ceq 'gateway-refusal'){throw 'Recording canonical ac
 Get-Content (Join-Path $Root 'recording-inputs.json') -Raw
 '@
     $null=Invoke-CiGit $controller @('add','Tools/Get-CandidateExecutionInputs.ps1')
+    Write-FixtureFile $controller 'Tools/Modules/Ci.CandidateReadiness.psm1' ([IO.File]::ReadAllText((Join-Path $engineRoot 'Tools/Modules/Ci.CandidateReadiness.psm1')))
+    Write-FixtureFile $controller 'Tools/Modules/Ci.GitHub.psm1' @'
+function Invoke-CiApi {
+    param([string]$Endpoint,[string]$Method)
+    if($Endpoint -cne ('repos/RedSalamanders/RedMonitor/commits/'+('d'*40)+'/check-runs?per_page=100') -or $Method -cne 'GET'){throw 'Freeze readiness read changed.'}
+    [IO.File]::WriteAllText((Join-Path $PWD 'readiness-called.txt'),'recording read boundary')
+    $rows=@();$id=1
+    foreach($name in @('checks / ci-gate','security / codeql','security / dependency-review')){
+        $rows+=@{name=$name;id=$id++;app=@{id=15368};head_sha=('d'*40);status='completed';conclusion=$(if($env:I61_FREEZE_CONTROL -ceq 'checks-pending'){'pending'}else{'success'})}
+    }
+    return @{total_count=$rows.Count;check_runs=$rows}
+}
+Export-ModuleMember -Function Invoke-CiApi
+'@
+    $null=Invoke-CiGit $controller @('add','Tools/Modules')
     $null=Invoke-CiGit $controller @('commit','-qm','Add recording canonical acquisition boundary')
     $ref=Resolve-CiCommit $controller HEAD
     $names=@('CI_ENGINE_REF','CI_PULL_REQUEST','CI_CANDIDATE_IDENTITY','CI_ISOLATION_NONCE','GITHUB_OUTPUT','I61_FREEZE_CONTROL')
     $saved=@{};foreach($name in $names){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')}
     try{
-        foreach($scenario in @('native','prose','bad-pin','gateway-refusal')){
+        foreach($scenario in @('native','prose','bad-pin','gateway-refusal','checks-pending')){
             $root=New-Fixture ('shadow-freeze-'+$scenario)
             $null=Invoke-CiProcess -FilePath git -Arguments @('clone','--no-hardlinks','--',$controller,(Join-Path $root '.ci-engine')) -WorkingDirectory $root
             $project=Read-CiProject $root;$project.engine.ref=$ref
             Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 10)
             $batch=[ordered]@{commit=('c'*40);runId='123';candidateExecution=@{recordingOnly=$true}}
-            $inputs=[ordered]@{candidate=@{identity=('a'*64);mergeCommit=('c'*40);nativeRequired=($scenario -cne 'prose')};batch=$batch}
+            $inputs=[ordered]@{candidate=@{repository='RedSalamanders/RedMonitor';headCommit=('d'*40);identity=('a'*64);mergeCommit=('c'*40);nativeRequired=($scenario -cne 'prose')};batch=$batch}
             Write-FixtureFile $root 'recording-inputs.json' ($inputs|ConvertTo-Json -Depth 10)
             $env:CI_ENGINE_REF=if($scenario -ceq 'bad-pin'){'d'*40}else{$ref}
             $env:CI_PULL_REQUEST='43';$env:CI_CANDIDATE_IDENTITY='a'*64;$env:CI_ISOLATION_NONCE='b'*32
@@ -1867,6 +1882,7 @@ Get-Content (Join-Path $Root 'recording-inputs.json') -Raw
             try{$passed=$true;try{& $body}catch{$passed=$false}}finally{Pop-Location}
             Assert-Equal ($scenario -in @('native','prose')) $passed
             Assert-Equal ($scenario -cne 'bad-pin') (Test-Path (Join-Path $root 'gateway-called.txt'))
+            Assert-Equal ($scenario -in @('native','checks-pending')) (Test-Path (Join-Path $root 'readiness-called.txt'))
             Assert-Equal $passed (Test-Path (Join-Path $root '.build/ci/batch.json'))
             Assert-Equal $passed (Test-Path $env:GITHUB_OUTPUT)
             if($passed){
@@ -2779,6 +2795,91 @@ Invoke-Case 'Cache capability refusal retains its actual early report before any
             Assert-Equal ($mode -ceq 'read') (Test-Path (Join-Path $evidence 'synthetic.txt'))
         }
     }finally{$env:RUNNER_TEMP=$oldTemp;$env:ACTIONS_CACHE_MODE=$oldMode}
+}
+
+Invoke-Case 'Shared native architecture lanes bound all actual native roles without holding a coordinating lease' {
+    $jobs=@{
+        'native.yml'=@('regression','production');'qualification.yml'=@('native');'sdk-inputs.yml'=@('sdk');
+        'integration-execution.yml'=@('regression');'publish.yml'=@('install')}
+    foreach($file in $jobs.Keys){
+        $text=[IO.File]::ReadAllText((Join-Path $engineRoot ('.github/workflows/'+$file)))
+        Assert-Equal $jobs[$file].Count ([regex]::Matches($text,'(?m)^      group: native-architecture-').Count)
+        foreach($job in $jobs[$file]){
+            $block=[regex]::Match($text,('(?ms)^  '+$job+':\r?\n(?<job>.*?)(?=^  [a-zA-Z_-]+:|\z)')).Groups['job'].Value
+            Assert-True ($block.Contains('group: native-architecture-${{ github.repository }}-${{ matrix.platform }}'))
+            Assert-True ($block -match 'cancel-in-progress: false\r?\n      queue: max')
+        }
+    }
+    $shadow=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/integration-execution.yml'))
+    Assert-True ($shadow.IndexOf('Assert-CiCandidateNativeStart') -lt $shadow.IndexOf('uses: ./.github/actions/setup-msvc'))
+    Assert-True ($shadow.IndexOf('Assert-CiCandidateNativeStart') -lt $shadow.IndexOf('uses: actions/cache/restore@'))
+    Assert-Equal 2 ([regex]::Matches($shadow,'(?m)^      checks: read\r?$').Count)
+}
+
+Invoke-Case 'Queued native start rechecks the original merge and live context, candidate, readiness and isolated ref before native side effects' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.CandidateQueue.psm1')
+    $module=Get-Module Ci.CandidateQueue
+    $original=& $module {@{Candidate=(Get-Command Get-CiIntegrationCandidate).ScriptBlock;Api=(Get-Command Invoke-CiApi).ScriptBlock}}
+    & $module {
+        function script:Get-CiIntegrationCandidate {
+            param($Root,$PullRequest)
+            if($Root -cne $script:queueControl.root -or $PullRequest -ne 43){throw 'Queued canonical acquisition arguments changed.'}
+            $script:queueControl.reads++
+            $copy=$script:queueControl.candidate|ConvertTo-Json -Depth 20|ConvertFrom-Json -AsHashtable
+            $field=switch($script:queueControl.scenario){'moved-head'{'headCommit'};'moved-base'{'baseCommit'};'moved-engine'{'controllerEngineRef'};default{''}}
+            if($field -and $script:queueControl.reads -eq 2){$copy[$field]='f'*40}
+            return $copy
+        }
+        function script:Invoke-CiApi {
+            param($Endpoint,$Method)
+            if($Method -cne 'GET'){throw 'Queued barrier attempted a write.'}
+            $script:queueControl.apiReads++
+            $candidate=$script:queueControl.candidate
+            if($Endpoint -ceq ('repos/'+$candidate.repository+'/git/ref/'+$script:queueControl.ref.Substring(5))){
+                return @{ref=$script:queueControl.ref;object=@{type='commit';sha=$(if($script:queueControl.scenario -ceq 'moved-ref'){'f'*40}else{$candidate.baseCommit})}}
+            }
+            if($Endpoint -cne ('repos/'+$candidate.repository+'/commits/'+$candidate.headCommit+'/check-runs?per_page=100')){throw 'Unexpected queued API route.'}
+            $rows=@();$id=1
+            foreach($name in @('checks / ci-gate','security / codeql','security / dependency-review')){
+                $rows+=@{name=$name;id=$id++;app=@{id=15368};head_sha=$candidate.headCommit;status='completed';conclusion=$(if($script:queueControl.scenario -ceq 'checks-failed'){'failure'}else{'success'})}
+            }
+            return @{total_count=$rows.Count;check_runs=$rows}
+        }
+    }
+    $saved=@{}
+    try{
+        foreach($scenario in @('valid','wrong-checkout','dirty-checkout','wrong-attempt','moved-head','moved-base','moved-engine','moved-ref','checks-failed')){
+            $f=New-CandidateFixture ('queued-native-'+$scenario)
+            $candidate=New-CiIntegrationCandidate -Root $f.root -Repository RedSalamanders/RedMonitor -PullRequest $f.pr -CurrentMainCommit $f.base -MergeCommit $f.merge -ControllerEngineRef ('a'*40)
+            $nonce='e'*32;$branch='refs/heads/ci-native/pr43/'+$candidate.identity+'/'+$nonce
+            $context=[ordered]@{repository=$candidate.repository;event='workflow_dispatch';ref=$branch;commit=$f.base;
+                workflowRef=($candidate.repository+'/.github/workflows/integration-execution.yml@'+$branch);runId='678';runAttempt=2}
+            $batch=(New-CiCandidateExecutionInputs -Candidate $candidate -Context $context -IsolationNonce $nonce -ControllerWorkflowBlob ('d'*40)).batch
+            $environment=@{GITHUB_ACTIONS='true';RUNNER_ENVIRONMENT='github-hosted';GITHUB_REPOSITORY=$context.repository;
+                GITHUB_EVENT_NAME=$context.event;GITHUB_REF=$context.ref;GITHUB_SHA=$context.commit;
+                GITHUB_WORKFLOW_REF=$context.workflowRef;GITHUB_RUN_ID=$context.runId;GITHUB_RUN_ATTEMPT='2'}
+            foreach($name in $environment.Keys){if(-not $saved.ContainsKey($name)){$saved[$name]=[Environment]::GetEnvironmentVariable($name,'Process')};[Environment]::SetEnvironmentVariable($name,$environment[$name],'Process')}
+            $null=Invoke-CiGit $f.root @('checkout','--detach',$(if($scenario -ceq 'wrong-checkout'){$f.head}else{$f.merge}))
+            if($scenario -ceq 'dirty-checkout'){Write-FixtureFile $f.root 'src/uncommitted.cpp' 'Do not execute this source.'}
+            if($scenario -ceq 'wrong-attempt'){$env:GITHUB_RUN_ATTEMPT='3'}
+            & $module {param($c,$s,$r,$b)$script:queueControl=@{candidate=$c;scenario=$s;root=$r;ref=$b;reads=0;apiReads=0}} $candidate $scenario $f.root $branch
+            if($scenario -ceq 'valid'){
+                $result=Assert-CiCandidateNativeStart -Root $f.root -Descriptor $batch
+                Assert-Equal 'CandidateNativeStartInputs' $result.role
+                Assert-Equal 0 $result.nativeExecutions
+                Assert-True (-not $result.suppliesNativeVerdict)
+                Assert-Equal 2 (& $module {$script:queueControl.reads})
+                Assert-Equal 4 (& $module {$script:queueControl.apiReads})
+            }else{
+                Assert-Refused {Assert-CiCandidateNativeStart -Root $f.root -Descriptor $batch}
+                Assert-Equal $(if($scenario -in @('wrong-checkout','dirty-checkout','wrong-attempt')){0}elseif($scenario -in @('moved-ref','checks-failed')){1}else{2}) (& $module {$script:queueControl.reads})
+            }
+            Assert-True (-not(Test-Path -LiteralPath (Join-Path $f.root '.build')))
+        }
+    }finally{
+        foreach($name in $saved.Keys){[Environment]::SetEnvironmentVariable($name,$saved[$name],'Process')}
+        & $module {param($s)Set-Item function:script:Get-CiIntegrationCandidate $s.Candidate;Set-Item function:script:Invoke-CiApi $s.Api;Remove-Variable queueControl -Scope Script -ErrorAction SilentlyContinue} $original
+    }
 }
 
 $failed = @($script:rows | Where-Object { -not $_.passed }).Count

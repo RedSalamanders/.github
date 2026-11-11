@@ -273,3 +273,12 @@ moving back to pending prevents the next remote write while preserving any earli
 ref/journal. Prose-only acquisition still supplies no baseline success. These cheap
 prerequisites avoid starting an expensive native campaign for an unready head; they
 provide no native pass, required native gate, capacity lease or merge authority.
+
+Workflow freeze also reads these readiness prerequisites before publishing frozen
+inputs, so directly dispatching the manual workflow cannot bypass operator readiness.
+Native jobs wait in the shared repository/platform lane described in CI.md. Once a
+lane opens, `Assert-CiCandidateNativeStart` validates the original live execution batch
+and exact clean synthetic merge, then twice reacquires the complete canonical candidate,
+isolated ref and original required check catalog. These reads occur before native setup
+or any dependency cache restore. Changed inputs or readiness fail visibly without
+executing native code. The return value is input-only and authorizes no merge or reuse.
