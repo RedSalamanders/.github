@@ -6,6 +6,7 @@ $null=Invoke-CiGit $consumerRoot @('init','--initial-branch=main')
 foreach($setting in @(@('user.name','Consumer Fixture'),@('user.email','fixture@example.invalid'),@('commit.gpgsign','false'),@('core.autocrlf','false'),@('core.hooksPath',(Join-Path $consumerRoot '.empty-hooks')))){$null=Invoke-CiGit $consumerRoot @('config',$setting[0],$setting[1])}
 $consumerProject=$project|ConvertTo-Json -Depth 8|ConvertFrom-Json -AsHashtable
 $consumerProject.repository='RedSalamanders/RedTilde';$consumerProject.kind='application'
+$consumerProject.winget=@{identifier='RedSalamanders.RedTilde';executable='RedTilde.exe';alias='redtilde';license='MIT'}
 [IO.File]::WriteAllText((Join-Path $consumerRoot '.ci/project.json'),($consumerProject|ConvertTo-Json -Depth 8))
 [IO.File]::WriteAllText((Join-Path $consumerRoot '.gitignore'),".build/`n.ci-engine/`n")
 [void][IO.Directory]::CreateDirectory((Join-Path $consumerRoot 'Dependencies'))
@@ -72,6 +73,14 @@ $fakeMSBuild=Join-Path $root 'MSBuild.exe';[IO.File]::WriteAllText($fakeMSBuild,
 $consumerArguments=@{ProjectRoot=$consumerRoot;Descriptor=$consumerDescriptor;ExpectedDescriptorSha256=$consumerHash;Platform='x64';Configuration='Release';MSBuildPath=$fakeMSBuild}
 function Open-LocalConsumerFixture {& $localConsumer {param($a) Open-CiLocalSdkConsumerInput @a} $consumerArguments}
 function Close-LocalConsumerFixture($value){& $localConsumer {param($v) Close-CiLocalSdkConsumerInput $v} $value}
+function Rejects-LocalConsumer([scriptblock]$Body,[string]$Pattern){
+    $errorText='';try{& $Body|Out-Null}catch{$errorText=$_.Exception.Message}
+    Check ($errorText -match $Pattern) ('Expected local consumer refusal '+$Pattern+'; actual: '+$errorText)
+}
+function Check-LocalConsumerWriterUnlocked {
+    $storage=Import-Module (Join-Path $consumerRoot '.ci-engine/Tools/Modules/Ci.SdkCache.psm1') -PassThru
+    & $storage {param($s,$k)$lease=Enter-CiSdkEntryLock $s $k -Writer;$lease.Dispose()} $descriptorStore $consumerEntry.Key
+}
 Case 'local consumer admission binds real immutable bytes and preserves a distinct unpinned role' {
     $value=Open-LocalConsumerFixture
     try{
@@ -80,34 +89,39 @@ Case 'local consumer admission binds real immutable bytes and preserves a distin
         Check ((Get-Content $lockFile -Raw) -ceq $lockText) 'Local admission changed the application lock.'
         Check (-not [IO.File]::Exists((Join-Path $consumerRoot '.build/build-receipt.json'))) 'Dependency admission published a build result.'
     }finally{Close-LocalConsumerFixture $value}
-    Refuses {Close-LocalConsumerFixture $value}
+    Rejects-LocalConsumer {Close-LocalConsumerFixture $value} 'already closed'
+    Check-LocalConsumerWriterUnlocked
 }
 Case 'local consumer refuses hosted or non-Release input before discovery' {
-    $saved=$env:GITHUB_ACTIONS
+    $saved=$env:GITHUB_ACTIONS;$savedRoot=$consumerArguments.ProjectRoot
     try{
-        $env:GITHUB_ACTIONS='true';Refuses {Open-LocalConsumerFixture}
-        $env:GITHUB_ACTIONS=$saved;$consumerArguments.Configuration='Debug';Refuses {Open-LocalConsumerFixture}
-    }finally{$env:GITHUB_ACTIONS=$saved;$consumerArguments.Configuration='Release'}
+        $consumerArguments.ProjectRoot=Join-Path $root 'does-not-exist'
+        $env:GITHUB_ACTIONS='true';Rejects-LocalConsumer {Open-LocalConsumerFixture} 'unavailable to hosted'
+        $env:GITHUB_ACTIONS=$saved;$consumerArguments.Configuration='Debug';Rejects-LocalConsumer {Open-LocalConsumerFixture} 'require Release'
+    }finally{$env:GITHUB_ACTIONS=$saved;$consumerArguments.Configuration='Release';$consumerArguments.ProjectRoot=$savedRoot}
 }
 Case 'local consumer refuses an API change and different actual toolchain bytes' {
-    try{[IO.File]::WriteAllText($lockFile,$lockText.Replace('"apiRevision": 4','"apiRevision": 5'));Refuses {Open-LocalConsumerFixture}}
+    try{[IO.File]::WriteAllText($lockFile,$lockText.Replace('"apiRevision": 4','"apiRevision": 5'));Rejects-LocalConsumer {Open-LocalConsumerFixture} 'cannot change the application API'}
     finally{[IO.File]::WriteAllText($lockFile,$lockText)}
-    try{& $abiModule {$script:localFixtureMismatch=$true};Refuses {Open-LocalConsumerFixture}}
+    try{& $abiModule {$script:localFixtureMismatch=$true};Rejects-LocalConsumer {Open-LocalConsumerFixture} 'ABI differs'}
     finally{& $abiModule {$script:localFixtureMismatch=$false}}
     $value=Open-LocalConsumerFixture;Close-LocalConsumerFixture $value
+    Check-LocalConsumerWriterUnlocked
 }
 Case 'local consumer rejects changed original library provenance and closes its data lease' {
     $saved=[IO.File]::ReadAllText($currentRecordFile)
-    try{[IO.File]::WriteAllText($currentRecordFile,$saved.Replace('"schemaVersion": 1','"schemaVersion": 2'));Refuses {Open-LocalConsumerFixture}}
+    try{[IO.File]::WriteAllText($currentRecordFile,$saved.Replace('"schemaVersion": 1','"schemaVersion": 2'));Rejects-LocalConsumer {Open-LocalConsumerFixture} 'build provenance changed'}
     finally{[IO.File]::WriteAllText($currentRecordFile,$saved)}
     # A fresh reader after failure must still acquire and close the exact immutable entry.
     $value=Open-LocalConsumerFixture;Close-LocalConsumerFixture $value
+    Check-LocalConsumerWriterUnlocked
 }
 Case 'local consumer close rejects application and actual engine mutations while releasing ownership' {
     foreach($file in @($lockFile,(Join-Path $consumerRoot '.ci-engine/AGENTS.md'))){
         $value=Open-LocalConsumerFixture;$saved=[IO.File]::ReadAllBytes($file)
-        try{[IO.File]::AppendAllText($file,"`nchanged during local dependency use");Refuses {Close-LocalConsumerFixture $value};Check $value.Closed 'Failed close retained consumer ownership.'}
+        try{[IO.File]::AppendAllText($file,"`nchanged during local dependency use");Rejects-LocalConsumer {Close-LocalConsumerFixture $value} 'Application or actual engine inputs changed|Local engine';Check $value.Closed 'Failed close retained consumer ownership.'}
         finally{[IO.File]::WriteAllBytes($file,$saved)}
+        Check-LocalConsumerWriterUnlocked
     }
     $value=Open-LocalConsumerFixture;Close-LocalConsumerFixture $value
 }
