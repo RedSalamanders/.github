@@ -125,3 +125,20 @@ Case 'local consumer close rejects application and actual engine mutations while
     }
     $value=Open-LocalConsumerFixture;Close-LocalConsumerFixture $value
 }
+Case 'local consumer close rechecks actual ABI and releases its immutable reader on mismatch' {
+    $value=Open-LocalConsumerFixture
+    try{
+        & $abiModule {$script:localFixtureMismatch=$true}
+        Rejects-LocalConsumer {Close-LocalConsumerFixture $value} 'ABI differs'
+        Check $value.Closed 'ABI mismatch retained consumer ownership.'
+    }finally{& $abiModule {$script:localFixtureMismatch=$false}}
+    Check-LocalConsumerWriterUnlocked
+}
+Case 'local consumer refuses changed toolkit bytes before importing original build acquisition' {
+    $file=Join-Path $moduleDirectory 'SdkLibraryInputs.psm1';$saved=[IO.File]::ReadAllBytes($file)
+    try{
+        [IO.File]::AppendAllText($file,"`nthrow 'modified acquisition must never execute'`n")
+        Rejects-LocalConsumer {Open-LocalConsumerFixture} 'producer tooling or its actual pinned engine changed before import'
+    }finally{[IO.File]::WriteAllBytes($file,$saved)}
+    Check-LocalConsumerWriterUnlocked
+}
