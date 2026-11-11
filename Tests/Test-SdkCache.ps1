@@ -394,6 +394,13 @@ Case 'descriptor bounds and exclusive ownership reject incomplete reads' {
         try{Refuses {Read-CiLocalSdkSnapshotDescriptor $descriptorPath $descriptorHash}}finally{$writer.Dispose()}
     }finally{[IO.File]::WriteAllBytes($descriptorPath,$descriptorBytes)}
 }
+$localConsumerActions=$env:GITHUB_ACTIONS
+try{
+    # Exercise explicit local requests inside synthetic fixtures on hosted Windows/Linux too.
+    # Root ownership was established above under the real hosted environment.
+    $env:GITHUB_ACTIONS=''
+    . (Join-Path $PSScriptRoot 'LocalSdkConsumer.Cases.ps1')
+}finally{$env:GITHUB_ACTIONS=$localConsumerActions}
 $failed=@($results|Where-Object{-not $_.passed})
 [IO.File]::WriteAllText((Join-Path $root 'results.json'),([ordered]@{kind='synthetic SDK store controls; no native SDK acceptance';cases=$results.ToArray();passed=$results.Count-$failed.Count;failed=$failed.Count}|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
 Write-Host "SDK store results: $root"
