@@ -194,3 +194,23 @@ engine, generated callers and independent Git/API workflow bytes, then reacquire
 candidate/main before branch creation and again before dispatch. It records completed
 remote stages in append-only request journals. Preview and prose-only cases write no
 remote branch/dispatch; an API dispatch acknowledgment is never a native verdict.
+
+Actual native regression, production, manual qualification, SDK producer and installed
+publication-smoke jobs share one repository-plus-platform concurrency group. Only the
+job holding a native runner owns this lane; coordinators and reusable-workflow callers
+must not hold it while waiting for child jobs. Each repository permits one x64 and one
+ARM64 native job concurrently across these workflows, bounding the six-product total
+to six jobs per architecture. Other GitHub/platform capacity limits still apply.
+Lanes never cancel running jobs. They use GitHub's bounded `queue: max` rather than
+replacing a previous pending execution. GitHub accepts up to 100 pending entries per
+group and cancels further entries when full; this is not an unlimited queue or a
+promise that jobs can never be cancelled by the service. See the
+[official concurrency contract](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
+
+An isolated candidate reacquires readiness at workflow freeze, including direct manual
+dispatch. After its lane opens and before native setup or cache restore, it revalidates
+the original hosted run/attempt binding, clean synthetic merge, canonical current
+candidate, isolated trusted-main ref and exact-head readiness twice. A moved head,
+base, controller/engine or unsuccessful prerequisite fails before native execution.
+Old diagnostic evidence remains; a later request needs fresh acquisition. This guard
+supplies no native result, required merge check, local delegation or adoption authority.

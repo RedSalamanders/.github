@@ -24,6 +24,7 @@ jobs:
       contents: read
       actions: read
       pull-requests: read
+      checks: read
     outputs:
       commit: ${{ steps.freeze.outputs.commit }}
       native_required: ${{ steps.freeze.outputs.native_required }}
@@ -56,6 +57,12 @@ jobs:
               $engine -cne $env:CI_ENGINE_REF -or $engine -cne $manifest.engine.ref){throw 'Controller engine pin differs.'}
           $json=& ./.ci-engine/Tools/Get-CandidateExecutionInputs.ps1 -Root . -PullRequest $env:CI_PULL_REQUEST -ExpectedIdentity $env:CI_CANDIDATE_IDENTITY -IsolationNonce $env:CI_ISOLATION_NONCE
           $inputs=$json|ConvertFrom-Json -AsHashtable
+          if($inputs.candidate.nativeRequired){
+            Import-Module ./.ci-engine/Tools/Modules/Ci.GitHub.psm1
+            Import-Module ./.ci-engine/Tools/Modules/Ci.CandidateReadiness.psm1
+            $catalog=Invoke-CiApi ('repos/'+$inputs.candidate.repository+'/commits/'+$inputs.candidate.headCommit+'/check-runs?per_page=100') -Method GET
+            $null=Test-CiCandidateReadinessCatalog -Candidate $inputs.candidate -Catalog $catalog
+          }
           [void][IO.Directory]::CreateDirectory((Join-Path $PWD '.build/ci'))
           [IO.File]::WriteAllText((Join-Path $PWD '.build/ci/candidate-inputs.json'),($inputs|ConvertTo-Json -Depth 20))
           [IO.File]::WriteAllText((Join-Path $PWD '.build/ci/batch.json'),($inputs.batch|ConvertTo-Json -Depth 20))
@@ -83,10 +90,16 @@ jobs:
           - platform: ARM64
             runner: windows-11-vs2026-arm
     runs-on: ${{ matrix.runner }}
+    concurrency:
+      group: native-architecture-${{ github.repository }}-${{ matrix.platform }}
+      cancel-in-progress: false
+      queue: max
     timeout-minutes: 360
     permissions:
       contents: read
       actions: read
+      pull-requests: read
+      checks: read
     steps:
       - name: Enable long Windows checkout paths
         shell: pwsh
@@ -106,6 +119,15 @@ jobs:
         with:
           name: candidate-inputs-${{ github.run_attempt }}
           path: .build/ci
+      - name: Recheck frozen candidate after waiting for native capacity
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference='Stop'
+          Import-Module ./.ci-engine/Tools/Modules/Ci.CandidateQueue.psm1
+          $batch=Get-Content .build/ci/batch.json -Raw|ConvertFrom-Json -AsHashtable
+          $null=Assert-CiCandidateNativeStart -Root $PWD -Descriptor $batch
       - uses: ./.github/actions/setup-msvc
         with:
           platform: ${{ matrix.platform }}

@@ -59,6 +59,10 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.resolve.outputs.matrix) }}
     runs-on: ${{ matrix.runner }}
+    concurrency:
+      group: native-architecture-${{ github.repository }}-${{ matrix.platform }}
+      cancel-in-progress: false
+      queue: max
     timeout-minutes: 90
     steps:
       - name: Select canonical Windows SDK checkout bytes
