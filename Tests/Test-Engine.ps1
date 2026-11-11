@@ -2936,6 +2936,7 @@ while(-not(Test-Path -LiteralPath $env:I61_NATIVE_STREAM_MARKER)){
     Start-Sleep -Milliseconds 50
 }
 [ordered]@{tokens=@($args);directory=$PWD.Path;endpoint=$env:_MSPDBSRV_ENDPOINT_}|ConvertTo-Json -Compress
+[Console]::Error.WriteLine('native-bridge-stderr')
 exit 7
 '@
     $names=@('CI_NATIVE_BUILDS_DISABLED','_MSPDBSRV_ENDPOINT_','I61_NATIVE_STREAM_MARKER');$saved=@{}
@@ -2943,15 +2944,19 @@ exit 7
     try{
         $env:CI_NATIVE_BUILDS_DISABLED='false';$env:_MSPDBSRV_ENDPOINT_='must-not-reuse-caller-service'
         $env:I61_NATIVE_STREAM_MARKER=Join-Path $root 'stream-was-live.txt'
+        $directoryBefore=$PWD.Path;$errors=[Collections.Generic.List[string]]::new()
         $tokens=@('','spaces and Unicode 日',"quotes ' and `" and backslash\",'$(throw "must stay data")','semi; amp& pipe| percent%','--a-switch','line'+[char]10+'break')
-        $output=@(Invoke-CiNativeCommand -FilePath (Get-Process -Id $PID).Path -WorkingDirectory $root -Arguments (@('-NoProfile','-File',(Join-Path $root $relative))+$tokens)|ForEach-Object {
-            if($_ -ceq 'native-bridge-ready'){[IO.File]::WriteAllText($env:I61_NATIVE_STREAM_MARKER,'consumer observed output before child exit')}else{$_}
+        $output=@(Invoke-CiNativeCommand -FilePath (Get-Process -Id $PID).Path -WorkingDirectory $root -Arguments (@('-NoProfile','-File',(Join-Path $root $relative))+$tokens) 2>&1|ForEach-Object {
+            if($_ -is [Management.Automation.ErrorRecord]){$errors.Add($_.ToString())}
+            elseif($_ -ceq 'native-bridge-ready'){[IO.File]::WriteAllText($env:I61_NATIVE_STREAM_MARKER,'consumer observed output before child exit')}else{$_}
         })
         Assert-Equal 7 $LASTEXITCODE
         Assert-True (Test-Path -LiteralPath $env:I61_NATIVE_STREAM_MARKER)
         $record=($output -join [Environment]::NewLine)|ConvertFrom-Json
         Assert-Equal ($tokens|ConvertTo-Json -Compress) ($record.tokens|ConvertTo-Json -Compress)
         Assert-Equal $root $record.directory
+        Assert-Equal $directoryBefore $PWD.Path
+        Assert-True (($errors -join [Environment]::NewLine).Contains('native-bridge-stderr'))
         Assert-Equal 'must-not-reuse-caller-service' $env:_MSPDBSRV_ENDPOINT_
         if($IsWindows){Assert-True ($record.endpoint -cmatch '^red-ci-[a-f0-9]{32}$')}else{Assert-Equal 'must-not-reuse-caller-service' $record.endpoint}
         $env:CI_NATIVE_BUILDS_DISABLED='true'
