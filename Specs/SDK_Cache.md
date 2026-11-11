@@ -112,6 +112,32 @@ Callers must close every acquired entry in finally and keep the lease through al
 
 ### Local unpinned snapshot data foundation
 
+`Ci.LocalSdkConsumer.psm1` adds an explicit local dependency-admission reader.
+It refuses hosted use and non-Release profiles before discovery, verifies the
+application's unchanged API lock and actual clean pinned engine, then opens the
+independently frozen descriptor and immutable data lease. Only after toolkit
+authentication may it import the producer's original library-provenance reader.
+The captured library/PDB must match that original current build record; the
+canonical public interface and integration files must be present. The captured
+portable ABI reference must equal the actual application-selected MSBuild/tool,
+header and library reference. A mismatch refuses this explicit local request.
+
+The reader's role is `LocalUnpinnedSdkConsumerInput` and its evidence recipe is
+`LocalUnpinnedReleaseSdk`. Neither is accepted as a pinned build or a test result.
+It does not create a compiler witness, link an application, choose output paths
+or publish a build receipt. Those consumer build adapters remain unfinished.
+Acquire this dependency reader before the consumer write lease; no producer
+profile lease is held. Retain its immutable data lease through every future
+compile/link use. Close rechecks application/actual-engine bytes, the frozen
+toolkit/descriptor, original library provenance, ABI and complete snapshot, and
+releases ownership even when verification fails. Failed close cannot authorize
+a successful local build. Ordinary qualification, PrePush and package routes
+continue to refuse local unpinned inputs.
+
+Synthetic reader controls execute the actual storage/descriptor/Git/engine/file
+binding and failure cleanup. Only original native-build acquisition and Windows
+ABI metadata evaluation use recording boundaries; they grant no native verdict.
+
 `Ci.LocalSdkSnapshot.psm1` exposes a separate data-only `LocalUnpinnedSdkSnapshot`
 role. It is not accepted by the pinned SDK reader, importer, application build,
 qualification or publication routes. Producer capture and consumer/linker integration
