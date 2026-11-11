@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "role": "I61ExecutedCompilerFreeControls",
+  "sourceRepository": "RedSalamanders/RedSalamander",
+  "sourceCommit": "51501104b9bbe4d365e747920b2517d65d9cf5c9",
+  "engineCommit": "0573d4f3b294e3c3655349eb618ec7105b3d89b2",
+  "fixture": "Independent fresh checkout inside the existing marked sandbox; no compiled profile",
+  "nativeBuildsDisabled": true,
+  "controls": [
+    {
+      "nativeProfileCreated": false,
+      "expectedExitCode": 2,
+      "nativeBuildsDisabled": true,
+      "elapsedMs": 84809,
+      "exitCode": 2,
+      "case": "prose"
+    },
+    {
+      "nativeProfileCreated": false,
+      "expectedExitCode": 1,
+      "nativeBuildsDisabled": true,
+      "elapsedMs": 14992,
+      "exitCode": 1,
+      "case": "malformed"
+    }
+  ],
+  "fullQualified": false,
+  "nativeQualified": false,
+  "hostedQualified": false,
+  "controlledSpeedTargetQualified": false,
+  "repositoryVerdict": "NOT_EVALUATED",
+  "artifacts": [
+    {
+      "sha256": "a49fb9d6b321bb3c8613e2cfa06c7f52c9c4b794dbab0a6bcb0618bf7cd5b3b1",
+      "name": "prose.log",
+      "bytes": 317102
+    },
+    {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "prose.err.log",
+      "bytes": 0
+    },
+    {
+      "sha256": "67e612a400cad4038bb635427772a6908e90f7484760a6f19b7be83683cd1fc5",
+      "name": "malformed.log",
+      "bytes": 129
+    },
+    {
+      "sha256": "ab43e6537570204c3b0acf95a3c22ac7d082518281ec536b2388fdb7368cdcb6",
+      "name": "malformed.err.log",
+      "bytes": 493
+    },
+    {
+      "sha256": "0c729796a6e544255fd5be5930dc0ef37da6e218f711b8436cb8cb2532c42dd3",
+      "name": "workspace-prebuild.json",
+      "bytes": 1087
+    },
+    {
+      "sha256": "8b5976124af9e535fdf35116ee5785cedee50700ae7427760d0ab978b265b19f",
+      "name": "affected-prebuild-plan.json",
+      "bytes": 17807
+    },
+    {
+      "sha256": "6cbe94dc34dff47b40b8cf945d477d51a14e7916c6a5f206f360cc4870dd9019",
+      "name": "affected-prebuild-decision.json",
+      "bytes": 4881
+    }
+  ]
+}

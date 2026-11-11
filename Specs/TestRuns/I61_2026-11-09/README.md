@@ -875,3 +875,23 @@ The included crash-probe dumps are expected probe artifacts, not a dump of the h
 application. No root cause or successful ARM64 runtime result is inferred, and
 production was correctly skipped. Local paths and process IDs remain in the private
 handoff, with the public run retaining the original artifacts.
+
+### Executed Root affected-build and compiler-free controls
+
+Root draft [#219](https://github.com/RedSalamanders/RedSalamander/pull/219) at
+`51501104b9bbe4d365e747920b2517d65d9cf5c9` passed 262 integration controls with
+zero failures/skips, including the actual runner's prebuild selection/source barrier
+and all six native-profile preflight controls. Static/spec/inventory/changelog checks
+and canonical formatting passed. The public empty-change route returned the expected
+NOT_EVALUATED exit 2 with native builds disabled and no build receipt/Full seal.
+
+[Executed compiler-free control scope](Root_Affected_CompilerFree_2026-11-11.json)
+records the subsequent independent fresh checkout, with no compiled profile:
+valid prose completed its real changelog/tool/spec checks in 84,809 ms and returned
+exit 2; the malformed-fragment negative control failed its actual changelog check
+in 14,992 ms with exit 1. Both controls had native builds disabled. These elapsed
+times are one diagnostic observation under the current machine load, not a
+controlled before/after speedup or the overall 3x/2x acceptance. The original logs
+and canonical workspace/plan/decision records remain retained privately; their
+full hashes and lengths are recorded here without modifying those artifacts.
+Native selected/cold/profile/runtime and hosted acceptance remain pending.
