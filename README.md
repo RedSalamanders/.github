@@ -10,6 +10,17 @@ as the mode/cache-catalog report; a service failure is inconclusive. It runs no 
 or product code and grants no native, merge or delegated-coverage verdict.
 
 Long benchmarks, repeated stress, Debug and ASan qualification are explicit manual actions. Dependency and security monitoring remain automated without native builds.
+
+The optional `integration-execution.yml` caller runs a frozen candidate as a manual
+native shadow campaign under its own trusted-main isolated branch. It supplies no
+required merge check, local delegation or main adoption. Operator admission, project
+rollout and hosted acceptance remain open; see [the candidate contract](Specs/Integration_Candidates.md).
+After rollout, `Tools/Start-CandidateShadow.ps1 -Root <clean current main> -PullRequest <PR>
+-ExpectedIdentity <independently frozen identity> -WhatIf` previews operator admission.
+Its append-only request journal and dispatch acknowledgment supply no execution verdict.
+The optional trusted-main `integration-report.yml` manually verifies original native
+artifact bytes and reports them on the exact PR head. It accepts no saved verification
+JSON and grants no required-check enforcement, local delegation or main adoption.
 Manual diagnostic qualification accepts `platform=x64`, `platform=ARM64` or the compatibility default `platform=All`.
 The chosen architecture is recorded by its native evidence; single-architecture diagnostics do not advance Release publication.
 Normal and manual native jobs reuse repository-scoped vcpkg package archives, including compatible fallback caches after engine/tooling changes. The pinned package manager still checks package ABI identity; product builds and test evidence remain independently required.
@@ -49,7 +60,9 @@ The normative contract is [Specs/CI.md](Specs/CI.md). Engine behavior tests use 
 
 `Tools/Get-IntegrationCandidate.ps1` freezes exact PR/main/synthetic-merge inputs through read-only API and
 Git acquisition. Its [strict input-only contract](Specs/Integration_Candidates.md) grants no native result,
-merge gate, local delegation or main adoption; those remain under implementation.
+merge gate, local delegation or main adoption. Replacement/delegation/adoption are
+deferred by the 2026-11-11 decision to retain current local/main gates; optional
+manual tools do not introduce another required pre-merge native campaign.
 
 ```powershell
 ./Tests/Test-Engine.ps1 -TestRoot Z:/RedSalamander.Perf
@@ -99,3 +112,28 @@ Tools/Get-CandidateExecutionInputs.ps1 freezes only future manual shadow-run inp
 under an exact hosted isolated-controller context. Its canonical batch and original
 candidate snapshot supply no native verdict, merge check or adoption permission.
 The required native execution and trusted result/reporting path remain under development.
+
+`Tools/Get-CandidateRunEnvelope.ps1 -Root <project> -PullRequest <number>
+-ExpectedIdentity <canonical identity> -RunId <run> -Attempt <attempt>
+-IsolationNonce <original nonce>` independently authenticates the successful isolated
+producer metadata and original artifact digests. It reacquires current candidate and
+attempt state, runs no product code and supplies no native/merge/adoption verdict.
+Use `Tools/Get-CandidateNativeResult.ps1` with the same inputs and `-OutputRoot <existing
+owned evidence directory>` to download and independently verify original archive,
+receipt, tested profile and canonical evidence bytes. It retains failures and refuses
+post-transfer candidate/attempt/catalog movement. It executes no downloaded code and
+does not grant merge, local delegation, adoption or production permission. Actual
+hosted verifier acceptance and required merge enforcement remain open.
+
+Shadow admission waits for the exact candidate head's cheap CI/security prerequisites;
+Root also retains its existing Entire approval. Missing/pending/failed/stale or
+wrong-app checks stop admission before the next remote write. Original successful
+check identities are retained in the frozen journal. These prerequisites supply no
+native or merge verdict and do not replace the still-open capacity/enforcement gates.
+
+Owned Windows engine children get private compiler metadata endpoints. Product
+contained launchers can reuse Set-CiNativeProcessEnvironment at their own launch
+boundary. The manual native component control is Tests/Test-NativePdbIsolation.ps1;
+pass explicit reviewed HarnessRoot, EngineRoot, existing marked TestRoot and discovered
+x64 CompilerPath. It compiles only owned fixtures, refuses compiler-free calls and
+retains provenance. Passing it grants no product/platform/native merge verdict.

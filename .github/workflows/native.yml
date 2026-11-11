@@ -77,6 +77,10 @@ jobs:
           - platform: ARM64
             runner: windows-11-vs2026-arm
     runs-on: ${{ matrix.runner }}
+    concurrency:
+      group: native-architecture-${{ github.repository }}-${{ matrix.platform }}
+      cancel-in-progress: false
+      queue: max
     timeout-minutes: 360
     permissions:
       contents: read
@@ -244,6 +248,10 @@ jobs:
           - platform: ARM64
             runner: windows-11-vs2026-arm
     runs-on: ${{ matrix.runner }}
+    concurrency:
+      group: native-architecture-${{ github.repository }}-${{ matrix.platform }}
+      cancel-in-progress: false
+      queue: max
     timeout-minutes: 180
     steps:
       - name: Enable long Windows checkout paths

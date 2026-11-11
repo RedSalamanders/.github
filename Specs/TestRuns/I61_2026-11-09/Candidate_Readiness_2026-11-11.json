@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "role": "CandidateReadinessControls",
+  "sourceCommit": "1bae826fee0c82310f8921d0d2f5a3fcc58e07ae",
+  "executed": 111,
+  "failed": 0,
+  "engineResultSha256": "f4c1e2a17c56960e7c5e47da713c9c918cdc0240740e91fad98ba9519706494d",
+  "workflowDefinitions": 13,
+  "reviewedApps": {
+    "githubActions": 15368,
+    "entire": 2626939
+  },
+  "actualHostedShadowAccepted": false,
+  "nativeGateEnabled": false,
+  "localDelegationEnabled": false
+}

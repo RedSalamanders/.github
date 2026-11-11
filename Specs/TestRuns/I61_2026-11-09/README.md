@@ -698,3 +698,139 @@ downloaded canonical native evidence, production receipts and actual ZIP hashes 
 checked. Both campaigns passed every job. These are live hosted consumer results,
 separate from earlier controlled local origin substitutions. They do not establish
 the organization's controlled 3x/2x targets or change local obligations.
+
+### Manual native shadow workflow controls
+
+The committed caller/workflow passes all 102 engine cases and syntax validation of
+13 workflows. Controls retain exact manual-only/read-only roles, literal native hosts,
+original attempt-qualified inputs/profile/receipt/evidence artifacts and absence of
+production, cache saves or check/state writers. The actual freeze script executes
+against a real Git controller with a recording canonical-acquisition boundary. Native
+and prose snapshots retain identical original data; another engine or refused
+acquisition creates no output. The underlying canonical acquisition/API race controls
+remain separate and continue passing.
+
+The initial uncommitted-template test correctly found only committed templates; new
+callers were committed before conformance qualification. The first recording fixture
+used a relative marker path. Its two exact markers were preserved beneath the governed
+sandbox, removed from their accidental locations, and the fixture now resolves its
+owned root first. Failed runs remain retained. No hosted native shadow, project rollout,
+required merge gate, local delegation or main adoption is established by these controls.
+
+### Trusted operator shadow admission controls
+
+All 103 engine cases and syntax checks for 13 workflows pass. The new admission
+case executes the actual controller against real Git main/head/merge/caller objects
+with recording canonical-acquisition and remote-write boundaries. Native admission
+creates only its exact trusted-main ref and dispatch inputs. Preview/prose cases
+write no remote state; wrong identity/caller bytes and changed main/candidate/ref
+refuse at the proper boundary. A refused dispatch preserves its earlier ref-created
+journal without a false acknowledgment. Product adapter code is an execution sentinel
+and is never invoked. Tests create no live remote ref/run and no native verdict.
+
+### Candidate producer and original byte-verification controls
+
+The committed metadata slice passed all 106 engine cases and syntax checks for 13
+workflows. The byte-verification extension adds real ZIP fixtures for the original
+inputs, both receipts, complete native profiles and canonical evidence, including
+hostile catalogs, duplicate JSON properties, missing/extra/changed binary or evidence
+bytes, self-rehashed input changes and failed/zero/stale native metadata. The public
+recording transfer checks retain failures and refuse post-download candidate/attempt
+or catalog changes before publishing a result. These are synthetic controls; hosted
+shadow/verifier acceptance and merge enforcement remain separate open gates.
+
+The first metadata test run correctly refused an uncommitted controller in the
+existing admission case; committing the controller satisfied that prerequisite
+without weakening it. The first archive controls exposed a reserved PowerShell
+argument variable in the new negative recording fixture. It was replaced with a
+named request, and negative controls now assert the actual API/transfer boundary
+was reached. Failed results remain preserved. Use the final executed result below
+before claiming complete validation of the extension.
+
+### RedPrism live SDK2 consumer qualification
+
+[Original campaign evidence](SDK2_LivePrism_2026-11-10.json) records main run
+42885249187: both native Release regressions (seven suites each), both production
+packages and all seven jobs passed. All four roles selected the exact qualified SDK2
+inputs from producer 42866937316. Downloaded original receipt, canonical native
+evidence and production ZIP hashes agree. This is live native/package acceptance;
+the controlled 3x/2x acceleration targets remain unproved.
+
+Final byte-verifier qualification: all **110 engine behavior cases** pass, including
+the corrected public negative boundary controls; all **13 workflow definitions** pass
+syntax checks. Original result: engine-20261110T231231306Z-0b182e7ed3a4484c8506c1234443562a/results.json.
+This proves the executed synthetic controls, not actual hosted shadow acceptance.
+
+[DxUi foreground qualification](DxUi_ForegroundProfiles_2026-11-11.json) records
+all four real foreground suites passing on x64 Debug, Release and ASan Debug at
+source 8fb488e94cff64f6da3a5fe5b561ac315f195f62. Every suite recorded zero capability
+skips; all three canonical prerequisite builds had zero warnings/errors, and all
+leases verified foreground/focus preservation and pointer restoration. This closes
+these local foreground profiles only, not native ARM64 or whole-repository qualification.
+
+### Native admission readiness
+
+[Readiness controls](Candidate_Readiness_2026-11-11.json): all 111 engine behavior
+cases and all 13 workflow syntax checks pass. The actual admission fixture now
+covers missing/pending cheap checks and readiness returning to pending immediately
+before ref creation or dispatch. No later remote stage proceeds; original journals
+and any earlier created ref remain. Pure catalog controls reject stale heads, wrong
+apps, duplicate/truncated catalogs, unsuccessful required checks and an Actions
+imitation of Root's real Entire gate. Pending native integration does not deadlock
+its own admission. App IDs were independently inspected through the live Root
+check API. This is readiness/control evidence, not hosted native/shadow acceptance.
+
+### Native capacity and queued freshness controls
+
+[Capacity controls](Native_Capacity_Controls_2026-11-11.json): all 113 engine cases
+and 13 workflow definitions pass. Six native job roles across five reusable workflows
+use the same repository/platform lane. The public queued-start guard rejects a wrong
+or dirty synthetic merge, wrong original attempt, moved head/base/engine/ref and failed
+readiness before native setup/cache restore. Direct workflow freeze rejects pending
+readiness before writing frozen inputs. These are synthetic control results; deployment,
+actual hosted queue/shadow acceptance and the required native gate remain open.
+
+### Trusted manual native reporter controls
+
+[Reporter controls](Native_Reporter_Controls_2026-11-11.json): all 115 engine cases
+and 14 workflow definitions pass. Twenty recording scenarios exercise the public
+reporter with real Git controller/candidate fixtures and recording API/verifier
+boundaries. Original artifact verification has its separate actual archive controls.
+The reporter clears an earlier owned success before directly invoking the verifier,
+then binds success to current source/readiness/original producer bytes. Missing,
+failed, cancelled, stale or ambiguous evidence refuses; another owner is not overwritten.
+These controls establish no hosted reporter pass or required-check enforcement.
+
+### Native compiler metadata isolation
+
+[Metadata controls](Native_Metadata_Isolation_2026-11-11.json): all117engine cases
+pass. The manual [native lifetime control](../../../Tests/Test-NativePdbIsolation.ps1)
+passed four actual x64 MSVC /Zi and /ZI controls with zero warnings/errors. Each shared
+negative gives only the two owned fixture jobs one fresh endpoint and observes their
+coupled native service lifetime. Each isolated positive observes separate services,
+retires A, proves B survives and actually compiles in B again. Ownership uses the
+canonical harness's exact job-membership predicate; no foreign service is stopped.
+Compiler/helper hashes are retained. This qualifies the component boundary, not a
+product, ARM64, ASan runtime or reproduction/repair of every historical C1090 failure.
+Product contained launchers still need to adopt the shared helper. Earlier failed
+export, attribution and Windows case-collision controls remain preserved locally.
+
+### Direct native command bridge
+
+[Bridge controls](Native_Command_Bridge_2026-11-11.json): all118engine cases passed;
+final focused controls also pass after literal executable-path handling was refined.
+A two-way handshake proves output reaches the caller before child completion. Real
+child processes preserve exit7/exit9, both streams, caller location/environment and
+literal empty, Unicode, quote, trailing-backslash, metacharacter, switch and newline
+arguments. A copied system executable exercises a bracketed Unicode path. Compiler-free
+calls refuse before launch. Product launcher migration remains separate.
+
+### Retained-gates decision, 2026-11-11
+
+The user chose to keep current local/main gates. Candidate-gate replacement,
+automatic shadow admission/reporting, local delegation and cross-run adoption are
+deferred; no second pre-merge native campaign is required. See plan revision25 for
+the latest exact rollout and failed/pending local qualification identities.
+RedMonitor main42950834765 passed both native and both production roles. Tilde
+main42952565762 passed both native roles and was still in production. DxUi
+main42954632514 was running. These are ordinary main results, not shadow acceptance.

@@ -1,6 +1,41 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function Set-CiNativeProcessEnvironment {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][Diagnostics.ProcessStartInfo]$ProcessStartInfo)
+    if($ProcessStartInfo.UseShellExecute -or [string]::IsNullOrWhiteSpace($ProcessStartInfo.FileName)){
+        throw 'Native process isolation requires a direct owned process launch.'
+    }
+    if(-not $IsWindows){return}
+    # MSVC otherwise shares a user-wide PDB RPC server. Another operation's
+    # owned cleanup can retire that server while this one still uses it.
+    # Mutate only this child; descendants inherit the private namespace.
+    # https://github.com/microsoft/BuildXL/blob/main/Public/Sdk/Experimental/Msvc/Native/Tools/Link/Link.dsc
+    foreach($name in @($ProcessStartInfo.Environment.Keys)){
+        if($name -ieq '_MSPDBSRV_ENDPOINT_'){[void]$ProcessStartInfo.Environment.Remove($name)}
+    }
+    $endpoint='red-ci-'+[guid]::NewGuid().ToString('N')
+    $ProcessStartInfo.Environment['_MSPDBSRV_ENDPOINT_']=$endpoint
+    return $endpoint
+}
+
+function Invoke-CiNativeCommand {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$FilePath,[AllowEmptyCollection()][string[]]$Arguments=@(),
+        [Parameter(Mandatory)][string]$WorkingDirectory)
+    if($env:CI_NATIVE_BUILDS_DISABLED -ceq 'true'){throw 'Native tool invocation is forbidden in compiler-free execution.'}
+    $json=ConvertTo-Json -InputObject @($Arguments) -Compress
+    if($json.Length -gt 12000){throw 'Native argument payload exceeds the supported direct command-line size.'}
+    $hostPath=(Get-Process -Id $PID).Path
+    # The bridge receives JSON data as one argument, never interpolated shell or
+    # PowerShell source. Its environment belongs only to the new child, including
+    # when independent runspaces call this helper concurrently.
+    & $hostPath -NoProfile -NonInteractive -InputFormat Text -OutputFormat Text -File (Join-Path $PSScriptRoot '../Invoke-NativeTool.ps1') `
+        -FilePath $FilePath -WorkingDirectory $WorkingDirectory -ArgumentsJson $json
+    $global:LASTEXITCODE=$LASTEXITCODE
+}
+
 function Protect-CiDiagnostic {
     param([AllowEmptyString()][string]$Text)
     foreach($secret in @($env:GH_TOKEN,$env:WINGET_TOKEN)){if($secret){$Text=$Text.Replace($secret,'<credential>')}}
@@ -23,6 +58,7 @@ function Invoke-CiProcess {
     $start.StandardOutputEncoding = [Text.UTF8Encoding]::new($false)
     $start.StandardErrorEncoding = [Text.UTF8Encoding]::new($false)
     foreach ($argument in $Arguments) { [void]$start.ArgumentList.Add($argument) }
+    $null=Set-CiNativeProcessEnvironment -ProcessStartInfo $start
     $child = [Diagnostics.Process]::new()
     $child.StartInfo = $start
     try {
@@ -323,4 +359,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
+Export-ModuleMember -Function Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes

@@ -2,6 +2,23 @@
 
 Policy version: 1. Implementation and hosted acceptance are tracked separately in the organization rollout record.
 
+Candidate producer metadata is acquired by `Tools/Get-CandidateRunEnvelope.ps1` under
+[the integration candidate contract](Integration_Candidates.md). It independently
+checks the current candidate, original/latest run attempt, trusted caller/engine,
+both hosted native jobs and original artifact catalog/digests. This metadata role
+leaves downloaded bytes and native evidence unverified. `Get-CandidateNativeResult.ps1`
+additionally downloads bounded original archives, verifies their independent server
+digests and original input/receipt/profile/canonical-evidence bytes, then reacquires
+current producer/candidate/catalog state before publishing a verification record.
+Neither command writes a required check, delegates local coverage, adopts a main
+result or authorizes production. Hosted acceptance and enforcement remain open.
+
+Trusted shadow admission requires current-head successful cheap CI/security checks
+and Root's existing Entire review gate, with original app identities. It rechecks
+them before each remote stage and preserves partial journals/refs on refusal. Readiness
+metadata supplies no native verdict; integration enforcement and capacity control
+remain separate requirements under the candidate contract.
+
 Organization-owned implementation work is indexed in [Plans/WIP](Plans/WIP/README.md); completed work is indexed in [Plans/Done](Plans/Done/README.md). The canonical [plan lifecycle rule](../AGENTS.md#plan-lifecycle) governs implementation/validation closeout and migration of durable requirements into this contract or the other owning specifications. WIP proposals do not change active CI policy.
 
 ## Source and input identity
@@ -156,6 +173,13 @@ rollout repairs its missing required-status rule while preserving existing revie
 merge-method, bypass, strict-update and create semantics. This static policy supplies
 no native verdict and does not enable candidate delegation or cross-run adoption.
 
+The accepted I61 scope decision on 2026-11-11 retains current local and main
+qualification gates and compiler-free PR checks. Candidate-gate replacement,
+automatic shadow admission/reporting, local delegation and candidate-to-main
+cross-run adoption are deferred. Optional manual diagnostic tools do not add a
+required pre-merge native campaign or authorize reduced coverage. Continue exact
+SDK/build reuse, selection and scheduling under the existing acceptance contracts.
+
 Isolated candidate batches retain their original canonical candidate and complete
 live controller/run/attempt binding. Native contexts rederive every batch field and
 admit only Release test-build/test roles. Pinned SDK preparation supports the bound
@@ -163,3 +187,67 @@ isolated test-build role without forging main or authorizing production. This da
 binding is a prerequisite described in [Integration candidates](Integration_Candidates.md);
 native workflow deployment, authenticated results, required gate enforcement and main
 adoption remain unfinished and do not reduce existing local or main coverage.
+
+The optional manual candidate shadow caller uses a precreated unique isolated branch
+at exact trusted main, read-only freeze/native jobs and the existing Release test roles.
+It retains attempt-bound inputs, original receipts, tested profile bytes and separate
+diagnostics. It cannot run production, update qualification state, write a merge check,
+save shared caches or cancel another execution. Project rollout and authenticated
+hosted shadow acceptance remain open. See Integration_Candidates.md for the full
+controller/cache boundary and the further gates required before delegation/adoption.
+
+Operator shadow admission validates a clean exact main checkout, exact reviewed clean
+engine, generated callers and independent Git/API workflow bytes, then reacquires the
+candidate/main before branch creation and again before dispatch. It records completed
+remote stages in append-only request journals. Preview and prose-only cases write no
+remote branch/dispatch; an API dispatch acknowledgment is never a native verdict.
+
+Actual native regression, production, manual qualification, SDK producer and installed
+publication-smoke jobs share one repository-plus-platform concurrency group. Only the
+job holding a native runner owns this lane; coordinators and reusable-workflow callers
+must not hold it while waiting for child jobs. Each repository permits one x64 and one
+ARM64 native job concurrently across these workflows, bounding the six-product total
+to six jobs per architecture. Other GitHub/platform capacity limits still apply.
+Lanes never cancel running jobs. They use GitHub's bounded `queue: max` rather than
+replacing a previous pending execution. GitHub accepts up to 100 pending entries per
+group and cancels further entries when full; this is not an unlimited queue or a
+promise that jobs can never be cancelled by the service. See the
+[official concurrency contract](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
+
+An isolated candidate reacquires readiness at workflow freeze, including direct manual
+dispatch. After its lane opens and before native setup or cache restore, it revalidates
+the original hosted run/attempt binding, clean synthetic merge, canonical current
+candidate, isolated trusted-main ref and exact-head readiness twice. A moved head,
+base, controller/engine or unsuccessful prerequisite fails before native execution.
+Old diagnostic evidence remains; a later request needs fresh acquisition. This guard
+supplies no native result, required merge check, local delegation or adoption authority.
+
+The optional manual native reporter runs only trusted current-main engine code on a
+compiler-free Linux runner with checks write. It directly authenticates both original
+native artifacts and updates only its owned exact-head native check. Candidate jobs
+keep read-only tokens. The manual check is not yet required; automatic invalidation,
+strict stale-base enforcement and actual hosted reporter acceptance remain separate
+gates before local delegation or main adoption. See Integration_Candidates.md.
+
+Owned Windows engine process launches use a fresh private _MSPDBSRV_ENDPOINT_
+in their child environment. MSVC descendants inherit that operation's PDB RPC
+namespace instead of sharing a user-wide metadata server with another operation.
+Nested owned launchers obtain their own namespace. The parent environment and all
+compiler/linker flags remain unchanged; no foreign server is stopped or searched
+by name. Product contained launchers reuse Set-CiNativeProcessEnvironment at
+their actual launch boundary when adopting this policy. This coordination value
+is not an ABI/compiler input or reusable receipt identity; the launcher's reviewed
+implementation remains in the normal behavioral dependency closure.
+The boundary follows [Microsoft BuildXL's MSVC endpoint use](https://github.com/microsoft/BuildXL/blob/main/Public/Sdk/Experimental/Msvc/Native/Tools/Link/Link.dsc).
+Environment controls alone do not qualify actual concurrent MSVC lifetimes; retain
+separate native acceptance before claiming the observed C1090 failures repaired.
+
+Direct native command callers use Invoke-CiNativeCommand when they need to preserve
+live console output and ordinary native exit handling. Its small child bridge accepts
+a bounded JSON array of literal string arguments, sets a private metadata endpoint
+inside only that child and executes the native application without evaluating command
+text. Parent environment/current directory stay unchanged, including concurrent
+runspace callers. Native failures keep their exact exit code; compiler-free calls
+refuse before launch. The bridge supports up to12000JSON characters and rejects
+larger payloads visibly rather than truncating arguments. Existing contained-process
+launchers instead apply Set-CiNativeProcessEnvironment to their own ProcessStartInfo.

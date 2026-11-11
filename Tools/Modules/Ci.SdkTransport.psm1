@@ -84,41 +84,9 @@ function Assert-CiSdkArchiveBytes {
 
 function Receive-CiSdkArchive {
     param([Collections.IDictionary]$Envelope,[string]$Destination)
-    if(-not $env:GH_TOKEN){throw 'Repository-read authentication is required for SDK transport.'}
-    $handler=[Net.Http.HttpClientHandler]::new();$handler.AllowAutoRedirect=$false
-    $api=[Net.Http.HttpClient]::new($handler);$download=[Net.Http.HttpClient]::new()
-    $response=$null;$stream=$null;$target=$null;$deadline=[Threading.CancellationTokenSource]::new([TimeSpan]::FromMinutes(10))
-    try{
-        $api.DefaultRequestHeaders.UserAgent.ParseAdd('RedSalamanders-SdkTransport/1')
-        $api.DefaultRequestHeaders.Authorization=[Net.Http.Headers.AuthenticationHeaderValue]::new('Bearer',$env:GH_TOKEN)
-        $api.DefaultRequestHeaders.Add('X-GitHub-Api-Version','2026-03-10')
-        $url="https://api.github.com/repos/RedSalamanders/DxUi/actions/artifacts/$($Envelope.artifactId)/zip"
-        $response=$api.GetAsync($url,[Net.Http.HttpCompletionOption]::ResponseHeadersRead).GetAwaiter().GetResult()
-        if([int]$response.StatusCode -ne 302){throw 'GitHub refused the SDK artifact download.'}
-        $location=$response.Headers.Location
-        if($null -eq $location -or -not $location.IsAbsoluteUri -or $location.Scheme -cne 'https' -or $location.UserInfo){throw 'GitHub returned an invalid SDK artifact redirect.'}
-        $response.Dispose();$response=$null
-        # The separate client has no API authentication headers; the signed redirect never receives GH_TOKEN.
-        $download.Timeout=[TimeSpan]::FromMinutes(10)
-        $response=$download.GetAsync($location,[Net.Http.HttpCompletionOption]::ResponseHeadersRead).GetAwaiter().GetResult()
-        if(-not $response.IsSuccessStatusCode){throw 'SDK artifact storage refused the download.'}
-        $stream=$response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
-        $target=[IO.File]::Open($Destination,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
-        $buffer=[byte[]]::new(1MB);$total=0L
-        while(($count=$stream.ReadAsync($buffer,0,$buffer.Length,$deadline.Token).GetAwaiter().GetResult()) -gt 0){
-            $total+=$count
-            if($total -gt $Envelope.archiveBytes){throw 'SDK artifact exceeds the authenticated byte count.'}
-            $target.Write($buffer,0,$count)
-        }
-        if($total -ne $Envelope.archiveBytes){throw 'SDK artifact download is incomplete.'}
-        $target.Dispose();$target=$null
-        Assert-CiSdkArchiveBytes $Envelope $Destination
-    }finally{
-        if($null -ne $target){$target.Dispose()};if($null -ne $stream){$stream.Dispose()};if($null -ne $response){$response.Dispose()}
-        $api.Dispose();$download.Dispose();$deadline.Dispose()
-    }
+    Import-Module (Join-Path $PSScriptRoot 'Ci.ArtifactTransport.psm1')
+    Receive-CiHostedArtifactArchive -Repository 'RedSalamanders/DxUi' -Artifact $Envelope -Destination $Destination
 }
-
 function Assert-CiSdkZipCatalog {
     param([IO.Compression.ZipArchive]$Zip)
     $cache=Import-Module (Join-Path $PSScriptRoot 'Ci.SdkCache.psm1') -PassThru

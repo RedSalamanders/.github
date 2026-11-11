@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "role": "SyntheticNativeCapacityControls",
+  "sourceCommit": "772ee83ee79dd8327243ad542c618af8195b70b7",
+  "executed": 113,
+  "failed": 0,
+  "originalResultId": "engine-20261111T003704129Z-98056f7798fb4ccd98f399cb922b74f5/results.json",
+  "originalResultSha256": "92079b9e7c0843e0d04a1a05a213726d7ac7cf7d43ff4209d98cdd6a8db33e12",
+  "workflowDefinitions": 13,
+  "scenarios": [
+    "All six native job roles share repository/platform lanes",
+    "No coordinator holds a child native lane",
+    "Direct manual freeze readiness refusal before outputs",
+    "Wrong/dirty synthetic merge refused",
+    "Changed live attempt refused before API",
+    "Head/base/engine movement on repeated queue acquisition refused",
+    "Moved isolated controller ref refused",
+    "Failed original readiness refused before native setup or cache restore"
+  ],
+  "executionVerdict": "Synthetic controls passed",
+  "actualHostedCapacityAcceptance": false,
+  "actualHostedShadowAcceptance": false,
+  "requiredNativeGate": false,
+  "localDelegation": false,
+  "mainAdoption": false
+}

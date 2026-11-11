@@ -1,0 +1,216 @@
+name: Isolated native candidate shadow
+on:
+  workflow_call:
+    inputs:
+      engine_ref:
+        type: string
+        required: true
+      pull_request:
+        type: string
+        required: true
+      identity:
+        type: string
+        required: true
+      nonce:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      checks: read
+    outputs:
+      commit: ${{ steps.freeze.outputs.commit }}
+      native_required: ${{ steps.freeze.outputs.native_required }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - name: Reacquire exact candidate from the trusted isolated controller
+        id: freeze
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_ENGINE_REF: ${{ inputs.engine_ref }}
+          CI_PULL_REQUEST: ${{ inputs.pull_request }}
+          CI_CANDIDATE_IDENTITY: ${{ inputs.identity }}
+          CI_ISOLATION_NONCE: ${{ inputs.nonce }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $manifest=Get-Content .ci/project.json -Raw|ConvertFrom-Json
+          $engine=(git -C .ci-engine rev-parse HEAD).Trim()
+          if($LASTEXITCODE -or $env:CI_ENGINE_REF -cnotmatch '^[a-f0-9]{40}$' -or
+              $engine -cne $env:CI_ENGINE_REF -or $engine -cne $manifest.engine.ref){throw 'Controller engine pin differs.'}
+          $json=& ./.ci-engine/Tools/Get-CandidateExecutionInputs.ps1 -Root . -PullRequest $env:CI_PULL_REQUEST -ExpectedIdentity $env:CI_CANDIDATE_IDENTITY -IsolationNonce $env:CI_ISOLATION_NONCE
+          $inputs=$json|ConvertFrom-Json -AsHashtable
+          if($inputs.candidate.nativeRequired){
+            Import-Module ./.ci-engine/Tools/Modules/Ci.GitHub.psm1
+            Import-Module ./.ci-engine/Tools/Modules/Ci.CandidateReadiness.psm1
+            $catalog=Invoke-CiApi ('repos/'+$inputs.candidate.repository+'/commits/'+$inputs.candidate.headCommit+'/check-runs?per_page=100') -Method GET
+            $null=Test-CiCandidateReadinessCatalog -Candidate $inputs.candidate -Catalog $catalog
+          }
+          [void][IO.Directory]::CreateDirectory((Join-Path $PWD '.build/ci'))
+          [IO.File]::WriteAllText((Join-Path $PWD '.build/ci/candidate-inputs.json'),($inputs|ConvertTo-Json -Depth 20))
+          [IO.File]::WriteAllText((Join-Path $PWD '.build/ci/batch.json'),($inputs.batch|ConvertTo-Json -Depth 20))
+          Add-Content $env:GITHUB_OUTPUT ('commit='+$inputs.candidate.mergeCommit)
+          Add-Content $env:GITHUB_OUTPUT ('native_required='+$inputs.candidate.nativeRequired.ToString().ToLowerInvariant())
+          Write-Host ('Frozen shadow input identity '+$inputs.candidate.identity+'; no required-check or adoption verdict.')
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: candidate-inputs-${{ github.run_attempt }}
+          path: |
+            .build/ci/candidate-inputs.json
+            .build/ci/batch.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90
+  regression:
+    needs: freeze
+    if: needs.freeze.outputs.native_required == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            runner: windows-2025-vs2026
+          - platform: ARM64
+            runner: windows-11-vs2026-arm
+    runs-on: ${{ matrix.runner }}
+    concurrency:
+      group: native-architecture-${{ github.repository }}-${{ matrix.platform }}
+      cancel-in-progress: false
+      queue: max
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      checks: read
+    steps:
+      - name: Enable long Windows checkout paths
+        shell: pwsh
+        run: git config --global core.longpaths true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.freeze.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: RedSalamanders/.github
+          ref: ${{ inputs.engine_ref }}
+          path: .ci-engine
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: candidate-inputs-${{ github.run_attempt }}
+          path: .build/ci
+      - name: Recheck frozen candidate after waiting for native capacity
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference='Stop'
+          Import-Module ./.ci-engine/Tools/Modules/Ci.CandidateQueue.psm1
+          $batch=Get-Content .build/ci/batch.json -Raw|ConvertFrom-Json -AsHashtable
+          $null=Assert-CiCandidateNativeStart -Root $PWD -Descriptor $batch
+      - uses: ./.github/actions/setup-msvc
+        with:
+          platform: ${{ matrix.platform }}
+      - name: Resolve canonical Terminal dependency toolchain identity
+        if: github.repository == 'RedSalamanders/RedSalamander'
+        id: terminal-toolchain
+        shell: pwsh
+        env:
+          CI_PLATFORM: ${{ matrix.platform }}
+        run: |
+          Import-Module ./Tools/Modules/Build/BuildEvidence.psm1
+          $identity=Get-RSBuildToolchainIdentity -RepoRoot $PWD -MSBuildPath $env:MSBUILD_EXE_PATH -Platform $env:CI_PLATFORM -Configuration Release
+          Add-Content $env:GITHUB_OUTPUT ('digest='+$identity.Digest)
+      - name: Restore verified Terminal dependency products
+        if: github.repository == 'RedSalamanders/RedSalamander'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/TerminalEngine
+          key: ci-terminal-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ inputs.engine_ref }}-${{ steps.terminal-toolchain.outputs.digest }}-${{ hashFiles('Tools/**', 'Build/**', 'External/TerminalEngine/**', 'Specs/Terminal/GhosttyRuntimeLock.schema.json', 'RuntimeDependencies.props', '.github/actions/setup-msvc/**') }}
+      - name: Restore dependency binary cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .build/ci/vcpkg-cache
+          key: ci-deps-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-${{ inputs.engine_ref }}-${{ hashFiles('.ci/project.json', 'Build/**', 'Tools/**', '*.ps1', '**/*.props', '**/*.targets', '**/vcpkg*.json', '**/*lock.json', '.github/actions/setup-msvc/**') }}
+          restore-keys: |
+            ci-deps-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}-
+      - name: Build the frozen test-enabled Release profile
+        id: build
+        shell: pwsh
+        env:
+          CI_PLATFORM: ${{ matrix.platform }}
+          GH_TOKEN: ${{ github.token }}
+          VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.build/ci/vcpkg-cache,read
+        run: |
+          $manifest=Get-Content .ci/project.json -Raw|ConvertFrom-Json
+          & (Join-Path $PWD $manifest.adapter) -Phase ReleaseTestBuild -Platform $env:CI_PLATFORM -EngineRoot (Join-Path $PWD '.ci-engine') -Descriptor .build/ci/batch.json
+      - name: Run actual regression tests and the Release assertion probe
+        id: tests
+        shell: pwsh
+        env:
+          CI_PLATFORM: ${{ matrix.platform }}
+          GH_TOKEN: ${{ github.token }}
+          CI: 'true'
+        run: |
+          $manifest=Get-Content .ci/project.json -Raw|ConvertFrom-Json
+          & (Join-Path $PWD $manifest.adapter) -Phase ReleaseTest -Platform $env:CI_PLATFORM -EngineRoot (Join-Path $PWD '.ci-engine') -Descriptor .build/ci/batch.json
+      - if: steps.tests.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: candidate-regression-${{ matrix.platform }}-${{ github.run_attempt }}
+          path: ${{ steps.tests.outputs.receipt_path }}
+          if-no-files-found: error
+          retention-days: 90
+      - name: Retain original tested profile bytes for independent verification
+        if: steps.tests.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: candidate-profile-${{ matrix.platform }}-${{ github.run_attempt }}
+          path: |
+            .build/${{ matrix.platform }}/Release/**/*.exe
+            .build/${{ matrix.platform }}/Release/**/*.dll
+            .build/${{ matrix.platform }}/Release/**/*.lib
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90
+      - if: always() && steps.tests.outputs.evidence_directory != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: candidate-evidence-${{ matrix.platform }}-${{ github.run_attempt }}
+          path: ${{ steps.tests.outputs.evidence_directory }}
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 90
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: candidate-workspace-evidence-${{ matrix.platform }}-${{ github.run_attempt }}
+          path: |
+            .build/logs/**
+            .build/evidence/**
+            .build/test-runs/**
+            .build/reports/**
+            .build/test-artifacts/**
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 90
