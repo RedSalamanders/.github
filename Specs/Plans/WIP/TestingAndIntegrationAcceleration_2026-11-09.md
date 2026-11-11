@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 The 2026-11-11 scope decision below defers gate replacement and cross-run adoption; accepted acceleration work remains open and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 29, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 30, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -61,14 +61,18 @@ cycles with verified restoration. Those passes neither repair nor supersede the
 original Full. Root #215 reduces repeated unsafe-archive inspection; #216 permits
 exact verified entry continuation from a closed failed/interrupted Full. Both are
 drafts with focused integration controls, not complete native acceptance. Entire
-approval for #211 remains absent. A new Source Release Fresh Full is running
-at `03fe8ee22db0407643fb2803a1e974660ae5656d` with engine `0573d4f3`; it has no
-overall result yet. Its Source build has zero warnings/errors, ViewerPE noninteractive
-and all 1,265 tooling assertions, Commands, File Operations, Product UI, both ViewerPE
-groups and SQLite noninteractive passed (15 of 18 promoted entries). SQLite interactive
-is pending execution; Curl and performance remain pending. This remains
-separate from SDK and hosted acceptance. The four ready sibling native matrices are
-queued serially behind its owned process drain; queued work is not a passed result.
+approval for #211 remains absent. Source Release Fresh Full at
+`03fe8ee22db0407643fb2803a1e974660ae5656d` with engine `0573d4f3` completed with
+exit zero, **2,828 passed, zero failed, 56 skipped**, all 18 entries promoted and a
+stable passed evidence seal. The Source build has zero warnings/errors. The
+[curated original-result index](../../TestRuns/I61_2026-11-09/Root_Source_Full_2026-11-11.json)
+binds its original summary hash and scope. This is local x64 Source acceptance;
+the prior SDK failure, hosted qualification, ARM64 runtime and controlled overall
+targets remain separate. After its actual process drain, the serial sibling queue
+started. Monitor's canonical local Full passed at `3d47b6fc`; #52 merged as
+`7a9b64e067331f371b1abf780bc73b9de942383e` and main qualification 42998339563
+is running. Tilde is executing next; Prism and DxUi remain queued. Queued or running
+work is not a passed result.
 
 Xe #83/#84/#86 remain drafts: measurement input closure, contained metadata transport
 and independent-tooling retention are included in #87 and focused checks pass. The
@@ -430,8 +434,19 @@ the canonical immutable writer/reader leases. Twenty synthetic storage cases pas
 including all original pinned cases, dirty-source/timestamp-preserved mutation,
 artifact-family completeness, corruption, role rejection and source invalidation.
 See [the owning contract](../../SDK_Cache.md#local-unpinned-snapshot-data-foundation).
-Producer capture and isolated consumer/linker admission are still unfinished; no
-application override, native SDK result or local-candidate qualification is claimed.
+Producer capture is now implemented in DxUi draft #249 at
+`06c83402c983f82c1fe559cb1f1cdd6885855c1f`, using merged storage engine
+`ca91aa8c4ca540c50606efa769c94a8508a1f541`. Four byte-staging and five capture
+controls pass with real copying/storage/leases and explicitly synthetic native
+metadata; original SDK props are byte-identical on both platform substitutions.
+Two older source-location guards were updated to follow the shared staging helper
+and both existing notice-verification phases; their focused reruns pass. Actual
+native producer capture/package acceptance remains open. A shared strict descriptor
+reader now verifies the independently frozen descriptor, raw tooling bootstrap and
+that tooling's actual engine before any producer import, with failure-close cleanup.
+Twenty-six synthetic storage/descriptor controls pass. Isolated consumer/linker
+admission is still unfinished; no application override, native SDK result or
+local-candidate qualification is claimed.
 
 - [ ] Owner: DxUi producer integration plus all five consumers; RedMonitor SDK owner for its distinct producer path. Dependencies: S0 and S2 closure model.
 - [ ] Implement section 6.4 through the existing full consumer fingerprint, with verified headers/imports/libraries/symbols/licenses and actual linker provenance. Define the organization artifact distribution mechanism and access before claiming cross-repository CI sharing.
