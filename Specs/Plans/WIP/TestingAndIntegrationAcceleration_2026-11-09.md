@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 The 2026-11-11 scope decision below defers gate replacement and cross-run adoption; accepted acceleration work remains open and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 32, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 33, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -31,7 +31,7 @@ Current authority remains:
 
 **User decision, 2026-11-11: keep the current local and main gates.** Native candidate-gate replacement, local-to-hosted delegation, automatic shadow admission/reporting and cross-run candidate-to-main adoption are deferred, not implementation prerequisites for this accepted scope. Do not add a second pre-merge native campaign, dispatch a shadow pilot, change billing, deploy a GitHub App or replace branch enforcement to pursue those deferred items. Existing optional manual shadow/report tools remain diagnostic and grant no acceptance authority. Continue SDK/build reuse, precise selection, independent obligation retention, bounded scheduling and measured acceleration within the existing local/main obligations. Current compiler-free PR checks remain.
 
-### Current execution checkpoint, 2026-11-11, 14:55 Paris
+### Current execution checkpoint, 2026-11-11, 16:38 Paris
 
 The accepted scope is **not complete**. The [current evidence index](../../TestRuns/I61_2026-11-09/ExecutionCheckpoint_2026-11-11.json)
 retains exact sources, original records and their limits. The [previous checkpoint](../../TestRuns/I61_2026-11-09/ExecutionCheckpoint_Revision31.md)
@@ -39,13 +39,13 @@ is preserved as history; its queued/running statements are superseded by this ta
 
 | Repository | Current acceptance and remaining work |
 |---|---|
-| `.github` | Local SDK admission #72 and compiler/output guard #73 are merged. The isolated local application build broker #74 merged at `34906afc663b6d17ea66f1133a0e9283f476a8b9` after all five hosted checks passed. Its 42 local SDK/actual-MSBuild controls pass; 123 local engine cases passed on the earlier frozen source and both hosted engine suites pass after the portability correction. Actual application linking and adapter rollout remain open. |
+| `.github` | Local SDK admission #72, compiler/output guard #73 and isolated application build broker #74 are merged. Physical producer-path spelling repair #76 merged at `fab850af2ba1722f47fa178efa69209b791c25b9` after 43 SDK/actual-MSBuild controls, 123 local engine cases and all five hosted checks passed. Actual RedTilde application linking now passes; other adapter rollout and measured acceleration remain open. |
 | RedMonitor | #52 merged at `7a9b64e067331f371b1abf780bc73b9de942383e`. Main [42998339563](https://github.com/RedSalamanders/RedMonitor/actions/runs/42998339563) passed all seven jobs, including native x64/ARM64 regressions and production/smoke. Local Full passed. |
-| RedTilde | #108 merged at `59c84b88d24681e0470728be7a359aa738406841`. Main [43020185097](https://github.com/RedSalamanders/RedTilde/actions/runs/43020185097) passed all seven jobs. All three local x64 Full/foreground profiles and three ARM64 cross-builds passed on its qualified source. A separate local SDK adapter is in implementation; it has no application build result yet. |
-| RedXe | #87 merged at `a9f9c445bddfb28f3491e20229539ee935cb244c`. Main [43020225097](https://github.com/RedSalamanders/RedXe/actions/runs/43020225097) passed both native regression branches and compiled production without warnings/errors, then both package jobs failed because nested module reload removed `Find-RedXeMSBuild`. Draft #88 retains the selected command across that reload. Its actual-call regression, complete independent tooling, changelog and PR checks pass; real SDK packaging acceptance remains open. |
-| RedPrism | #21 merged at `706bd01b3fab2eb3f126cf428060c4954896751d`. Main [43020208606](https://github.com/RedSalamanders/RedPrism/actions/runs/43020208606) has passed x64 regression; native ARM64 remains running at this checkpoint. All three local x64 Full profiles and ARM64 cross-builds passed. Earlier ARM clipboard/watchdog failure remains retained and unattributed. |
-| DxUi | #249 source `1d2fcb5d709c29d671a19aa0760d63ed8ec72bba`, engine `766fd7e01aeef2e77ba18df83b9928516155014e`: a fresh canonical Debug build passed and the remaining local native/foreground matrix is running. An earlier resumed SkipBuild attempt refused its stale benchmark attestation; it remains failed. The fresh run reuses the independently matching successful tooling obligation. |
-| RedSalamander | #219 source `444d6a28e95222c3c431d59d137dce33e821a6e2`: the corrected cold selected runtime union builds without warnings/errors, and ProductUiTests passes. ViewerPETests fails in `TestViewerSpaceAnalysisAllowsAmbientDesktopChanges` with child exit `0xC0000005`; PluginContractTests was not reached. Five separate exact no-activation debugger attempts produced no dump and do not replace that failure. Native acceptance and Entire approval remain open. |
+| RedTilde | #108/main [43020185097](https://github.com/RedSalamanders/RedTilde/actions/runs/43020185097) passed all seven jobs. Separate draft #109 has an actual local SDK application compile/link pass on `043ae06d222b2052acf023a7287fa62ef22c9ca8`. Default Debug/Release Full then passed, but ASan failed the hidden zoom modifier fixture. Current repair `fd2dca0e711b5a6136d77a40ca2f4c1a23564574` passes an ASan build and all 95 Editor cases; its complete default matrix is running. Original failure retained; no current-source native ARM64/runtime/production claim. |
+| RedXe | Package-command lifetime repair #88 merged at `2168d1073b825ff9a283b00f157b30b0d75f33fa`. Complete independent tooling, real local SDK production build/package/clean-extraction smoke and canonical Debug PrePush pass. Main [43043007856](https://github.com/RedSalamanders/RedXe/actions/runs/43043007856) passed both native regressions and the test gate; both production branches are running. Earlier main package failures remain retained. |
+| RedPrism | #21 merged at `706bd01b3fab2eb3f126cf428060c4954896751d`. Main [43020208606](https://github.com/RedSalamanders/RedPrism/actions/runs/43020208606) passed all seven jobs, including native x64/ARM64 regressions and production. All three local x64 Full profiles and ARM64 cross-builds passed. Earlier ARM clipboard/watchdog failure remains retained and unattributed. |
+| DxUi | Producer `1d2fcb5d709c29d671a19aa0760d63ed8ec72bba` passed Debug Full/four foreground suites and Release Full; Release Menu failed during fresh retry initialization. Other three Release foreground suites passed; ASan/ARM tail was not reached. Native SDK host selection draft #252 (`53155238b3ded1d1a9a5737360159032674ca61b`) passes complete tooling/format and actual consumer linking. Separate menu pointer fixture `011ac741abf7ad62f76c95b8b3db0d6b49665b50` passes a zero-warning Release build and three focused Menu cases with verified desktop restoration; broader qualification is running. Original failures remain failed. |
+| RedSalamander | #219 source `444d6a28e95222c3c431d59d137dce33e821a6e2`: corrected cold selected runtime union builds without warnings/errors; ProductUiTests passes. ViewerPETests fails in `TestViewerSpaceAnalysisAllowsAmbientDesktopChanges` with child exit `0xC0000005`. A separate exact-receipt PluginContract follow-up passes; it does not replace the failed original group. Five focused debugger attempts produced no dump. Native acceptance and Entire approval remain open. |
 
 Root's earlier unfiltered Source Fresh Full at
 `03fe8ee22db0407643fb2803a1e974660ae5656d` passed **2,828 cases, zero failed,
@@ -68,11 +68,20 @@ Actual x64 SDK producer qualification at the DxUi source above passed all nine
 stages: clean library, ordinary extracted SDK gates, clean and dirty local
 captures, changed-producer invalidation, pinned packaging dirty-source refusal,
 and exact clean restoration/rebuild/capture. This establishes those SDK/capture
-contracts. It does **not** establish application linking, runtime, ARM64 or speed.
-The ready immutable API-5 descriptor remains separate from managed consumer pins.
+contracts. A subsequent native-host capture on toolkit `53155238b3ded1d1a9a5737360159032674ca61b`
+and a real RedTilde local SDK build establish actual application compilation/linking against the held
+immutable archive. Neither establishes runtime, ARM64, production or controlled speed acceptance.
+The API-5 local snapshot remains separate from managed consumer pins.
 Explicit dirty separate API-4 source support and application build adapters are
 being implemented; their source/API, output ownership and pinned refusal checks
 must remain intact.
+
+The real local application compile took **25,265 ms**, while process start through receipt write took
+**242,171.5712 ms**. The latter is reconstructed from the independent live owner record and receipt write,
+not a controlled comparison. Never report compiler time as total iteration time. Instrument admission,
+byte verification, ABI evaluation, native compilation and close separately before optimizing the remaining
+cost; preserve byte verification, producer provenance and live ownership checks. The current build-only
+receipt explicitly records `testsExecuted=false`, `repositoryQualified=false`, and `productionQualified=false`.
 
 Keep the existing local and main gates. No Action was cancelled. S7/S8 remain
 user-deferred. Controlled 3x warm-iteration / 2x end-to-end objectives, remaining

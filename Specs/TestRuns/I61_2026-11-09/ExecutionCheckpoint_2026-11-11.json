@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "role": "ExecutionEvidenceIndex",
-  "recordedAt": "2026-11-11T14:55:00+01:00",
+  "recordedAt": "2026-11-11T16:38:00+01:00",
   "organization": "RedSalamanders",
   "acceptedScopeComplete": false,
   "controlledSpeedTargetQualified": false,
@@ -358,5 +358,118 @@
     "Cross-builds do not establish native ARM64 execution.",
     "Focused debugger attempts do not replace the failed viewer group.",
     "No controlled speed or final organization acceptance is claimed."
-  ]
+  ],
+  "localSdkApplicationBuild": {
+    "record": {
+      "role": "LocalSdkApplicationBuildEvidenceIndex",
+      "source": "043ae06d222b2052acf023a7287fa62ef22c9ca8",
+      "engine": "fab850af2ba1722f47fa178efa69209b791c25b9",
+      "receipt": "Z:\\src\\.worktrees\\RT-i61-local-sdk\\.build\\local-unpinned\\dcf0f8ee19004a51b32b5f3b3fb8fc52\\local-unpinned-build.json",
+      "receiptSha256": "5b573ff4253b53f949c0ca047b2e248a185175f74ecd3acb54f539b4c6d3582a",
+      "record": {
+        "schemaVersion": 1,
+        "role": "LocalUnpinnedApplicationBuild",
+        "recipe": "LocalUnpinnedReleaseSdk",
+        "projectRoot": "Z:\\src\\.worktrees\\RT-i61-local-sdk",
+        "sourceBytes": "7aa4e7962f8dcebc47f6305525493d7f2e7b28ac0d6437f8150eacafbfa6de38",
+        "engineInputs": "1ce4d7dd691545a6da3c37a458a58f9b70b4d9c38b5544b7c168c2edbcf61a13",
+        "dependency": {
+          "recipe": "LocalUnpinnedReleaseSdk",
+          "inputKey": "0077f26beb3a9f01ac1fb1ec35b1c9843bb203e59dd8ae3d82336061fd6e8dbb",
+          "manifestSha256": "26494618893190f7a5d68da6aa551d80e6431555da3f5078cc10086d1e9551ac",
+          "descriptorSha256": "6ee2ccf1ba2d45478d1299e3213f351c935bedcb230a01214de6510e25e11cb5",
+          "sourceCommit": "1d2fcb5d709c29d671a19aa0760d63ed8ec72bba",
+          "apiRevision": 5,
+          "platform": "x64",
+          "configuration": "Release",
+          "toolchainReference": "a46852d85f7f4b35fbc9514b1a0c97483e8e20751a05dd97867db5e3a0578c92"
+        },
+        "platform": "x64",
+        "configuration": "Release",
+        "outputRoot": "Z:\\src\\.worktrees\\RT-i61-local-sdk\\.build\\local-unpinned\\dcf0f8ee19004a51b32b5f3b3fb8fc52",
+        "executable": "Z:\\src\\.worktrees\\RT-i61-local-sdk\\.build\\local-unpinned\\dcf0f8ee19004a51b32b5f3b3fb8fc52\\x64\\Release\\RedTilde.exe",
+        "executableSha256": "a9abc046bf465f7ed646e388f9f2059478afe3b3859e2ecdb50cb995850df1ff",
+        "actualLinkInput": {
+          "library": "Z:\\src\\.worktrees\\DX-i61-native-sdk-host\\.build\\local-sdk-snapshots\\entries\\0077f26beb3a9f01\\26494618893190f7\\payload\\lib\\x64\\Release\\DxUi.lib",
+          "librarySha256": "c0ad2dc8033d9329d62c5026660e8582a198ba19d737438cf9781036e1f10093",
+          "tracking": [
+            {
+              "path": "RedTilde.tlog/link.read.1.tlog",
+              "sha256": "a169ccdf08df1158a3740252fc81b9f5f4bb4a940b25966dcab34bdeb374a395"
+            }
+          ]
+        },
+        "buildElapsedMs": 25265,
+        "testsExecuted": false,
+        "repositoryQualified": false,
+        "productionQualified": false
+      },
+      "ownerProcessStartUtc": "2026-11-11T14:58:00.8916544Z",
+      "receiptWriteUtc": "2026-11-11T15:02:03.0632256Z",
+      "elapsedProcessStartToReceiptWriteMs": 242171.5712,
+      "nativeBuildElapsedMs": 25265,
+      "controlledSpeedQualified": false,
+      "limits": [
+        "Elapsed reconstructed from independent live-witness process start and receipt file write; not a controlled performance comparison.",
+        "Native compile time is not total SDK admission/build/close time.",
+        "No tests, runtime, repository or production qualification claimed."
+      ]
+    },
+    "path": "Z:/RedSalamander.Perf/evidence/i61-resume-20261110/tilde-local-sdk-native-build-index.json",
+    "sha256": "eeb728cc73e3dcfb95c7796c68dcacebcf614287422acc16485e1b16a6291c5e"
+  },
+  "selectedPluginContractFollowup": {
+    "record": {
+      "role": "SelectedPluginContractFollowup",
+      "source": "444d6a28e95222c3c431d59d137dce33e821a6e2",
+      "receipt": "daf051ae39271b97fd7b2e5c1f2de5997865d640e977101b480662ae54a4a319",
+      "platform": "x64",
+      "configuration": "Release",
+      "exitCode": 0,
+      "passed": true,
+      "originalViewerFailureSuperseded": false,
+      "repositoryQualified": false,
+      "controlledSpeedQualified": false
+    },
+    "path": "Z:/RedSalamander.Perf/evidence/i61-resume-20261110/selected-plugin-contract-20261111T143159Z-91252-b123c600c6e54aaaba1eeb2a77799fa6/scope.json",
+    "sha256": "09cd93b27d246a77c4692acbee9c6eaefabd8fedd5eb70e6b069887bff80ebb1"
+  },
+  "latestNativeQualification": {
+    "originalFailuresRetained": true,
+    "redPrism": {
+      "merge": "706bd01b3fab2eb3f126cf428060c4954896751d",
+      "status": "PASSED_ALL_SEVEN_JOBS",
+      "run": 43020208606
+    },
+    "redXe": {
+      "nativeRegressionARM64": "PASSED",
+      "nativeRegressionX64": "PASSED",
+      "production": "IN_PROGRESS",
+      "run": 43043007856,
+      "merge": "2168d1073b825ff9a283b00f157b30b0d75f33fa"
+    },
+    "redTilde": {
+      "arm64Tail": "NOT_RUN",
+      "repairSource": "fd2dca0e711b5a6136d77a40ca2f4c1a23564574",
+      "repairAsanEditor95Cases": "PASSED",
+      "releaseFull": "PASSED",
+      "debugFull": "PASSED",
+      "asanFull": "FAILED_ZOOM_MODIFIER_FIXTURE",
+      "repairCompleteMatrix": "IN_PROGRESS",
+      "originalSource": "043ae06d222b2052acf023a7287fa62ef22c9ca8"
+    },
+    "dxUi": {
+      "releaseFull": "PASSED",
+      "repairReleaseBuild": "PASSED_ZERO_WARNINGS_ERRORS",
+      "releaseMenu": "FAILED",
+      "asanAndArm64Tail": "NOT_RUN",
+      "repairBroaderQualification": "IN_PROGRESS",
+      "originalSource": "1d2fcb5d709c29d671a19aa0760d63ed8ec72bba",
+      "repairThreeFocusedMenuCases": "PASSED",
+      "repairSource": "011ac741abf7ad62f76c95b8b3db0d6b49665b50",
+      "debugFullAndFourForegroundSuites": "PASSED",
+      "otherThreeReleaseForegroundSuites": "PASSED"
+    },
+    "scopeComplete": false
+  }
 }
