@@ -1,0 +1,362 @@
+{
+  "schemaVersion": 1,
+  "role": "ExecutionEvidenceIndex",
+  "recordedAt": "2026-11-11T14:55:00+01:00",
+  "organization": "RedSalamanders",
+  "acceptedScopeComplete": false,
+  "controlledSpeedTargetQualified": false,
+  "sourceFull": "Root_Source_Full_2026-11-11.json",
+  "publicAffected": {
+    "path": "Z:\\RedSalamander.Perf\\evidence\\af-6e139818\\scope.json",
+    "sha256": "e8307462df322660c3db274f716f381013c2d5d8601e72b1659f5c3705b5f512",
+    "record": {
+      "source": "51501104b9bbe4d365e747920b2517d65d9cf5c9",
+      "engine": "0573d4f3b294e3c3655349eb618ec7105b3d89b2",
+      "recipe": "Source",
+      "platform": "x64",
+      "configuration": "Release",
+      "fixtureOnly": true,
+      "elapsedMs": 362357,
+      "exitCode": 2,
+      "selectedEntry": "standalone.product-ui",
+      "cases": {
+        "failed": 0,
+        "passed": 1,
+        "skipped": 0,
+        "total": 1
+      },
+      "receipt": "05bf140eda248e62c55825a9933939f2f38bbe8648fc2030b31d29bd4da36d51",
+      "fullQualified": false,
+      "arm64RuntimeQualified": false,
+      "controlledSpeedTargetQualified": false
+    }
+  },
+  "selectedColdFailed": {
+    "path": "Z:\\RedSalamander.Perf\\evidence\\i61-resume-20261110\\root-selected-cold-20261111T132412Z-8272-742ec3953f254742980c078ef61cb9bc\\failed-scope.json",
+    "sha256": "49579ebf7dc869468aa90a3aa4fbebe2867cc5aeab7969f6bcb280a849d5ec86",
+    "record": {
+      "role": "SelectedColdBuildRuntimeQualification",
+      "source": "444d6a28e95222c3c431d59d137dce33e821a6e2",
+      "platform": "x64",
+      "configuration": "Release",
+      "recipe": "Source",
+      "build": "PASSED",
+      "receipt": "daf051ae39271b97fd7b2e5c1f2de5997865d640e977101b480662ae54a4a319",
+      "tests": [
+        {
+          "name": "ProductUiTests",
+          "status": "PASSED"
+        },
+        {
+          "exit": "0xC0000005",
+          "name": "ViewerPETests",
+          "status": "FAILED",
+          "case": "TestViewerSpaceAnalysisAllowsAmbientDesktopChanges"
+        },
+        {
+          "name": "PluginContractTests",
+          "status": "NOT_RUN"
+        }
+      ],
+      "originalFailureRetained": true,
+      "focusedDebuggerAttempts": 5,
+      "focusedDebuggerDumps": 0,
+      "repositoryVerdict": "NOT_EVALUATED",
+      "fullQualified": false,
+      "arm64RuntimeQualified": false,
+      "controlledSpeedQualified": false
+    }
+  },
+  "sdkProducer": {
+    "path": "Z:\\RedSalamander.Perf\\evidence\\sdk-04e98c46\\scope.json",
+    "sha256": "d332d63cac2f106250765afd79bfad75fb6cd3dc9bf0abcbe01a504a0e87e3f2",
+    "record": {
+      "source": "1d2fcb5d709c29d671a19aa0760d63ed8ec72bba",
+      "platform": "x64",
+      "configuration": "Release",
+      "apiRevision": 5,
+      "ordinaryExtractedSdkQualified": true,
+      "cleanArchiveSha256": "88b63e21f5e2883685948f5b7e7ebe037d1e41a4b7d2bb2c5b1c9dd8032dba68",
+      "cleanSnapshotKey": "3a737c53129f0cc1f64c58687b6adf317a54d1e166b6b9545106bde6d3881dbd",
+      "dirtySnapshotKey": "86a11d5cd1e6757d5dfa51153cc43de95b3438b145fcc94854908e6ba3b2bf52",
+      "producerEditInvalidates": true,
+      "pinnedPackagingRefusesDirty": true,
+      "applicationLinked": false,
+      "applicationQualified": false,
+      "arm64RuntimeQualified": false,
+      "controlledSpeedTargetQualified": false,
+      "stages": [
+        {
+          "name": "restore",
+          "engineInputs": "aa77aa32aaabc6d9d4b0ecf6101c7cff5d91f6085550d9fa5d5274c7f2f5632f",
+          "sourceBytes": "127a35951da8b988f8780fbb78d7a327c7c4b553732b7c3f50a3a131faea7d69",
+          "inputsStable": true,
+          "passed": true,
+          "exitCode": 0,
+          "expectedRefusal": false
+        },
+        {
+          "name": "clean-library",
+          "engineInputs": "aa77aa32aaabc6d9d4b0ecf6101c7cff5d91f6085550d9fa5d5274c7f2f5632f",
+          "sourceBytes": "127a35951da8b988f8780fbb78d7a327c7c4b553732b7c3f50a3a131faea7d69",
+          "inputsStable": true,
+          "passed": true,
+          "exitCode": 0,
+          "expectedRefusal": false
+        },
+        {
+          "name": "ordinary-sdk",
+          "engineInputs": "aa77aa32aaabc6d9d4b0ecf6101c7cff5d91f6085550d9fa5d5274c7f2f5632f",
+          "sourceBytes": "127a35951da8b988f8780fbb78d7a327c7c4b553732b7c3f50a3a131faea7d69",
+          "inputsStable": true,
+          "passed": true,
+          "exitCode": 0,
+          "expectedRefusal": false
+        },
+        {
+          "name": "clean-local-capture",
+          "engineInputs": "aa77aa32aaabc6d9d4b0ecf6101c7cff5d91f6085550d9fa5d5274c7f2f5632f",
+          "sourceBytes": "127a35951da8b988f8780fbb78d7a327c7c4b553732b7c3f50a3a131faea7d69",
+          "inputsStable": true,
+          "passed": true,
+          "exitCode": 0,
+          "expectedRefusal": false
+        },
+        {
+          "name": "dirty-library",
+          "engineInputs": "aa77aa32aaabc6d9d4b0ecf6101c7cff5d91f6085550d9fa5d5274c7f2f5632f",
+          "sourceBytes": "6aa574ad483ef4ef59a94b2ec0a11a29f68b38e99ec3be636cc99e0f6fb8a7ab",
+          "inputsStable": true,
+          "passed": true,
+          "exitCode": 0,
+          "expectedRefusal": false
+        },
+        {
+          "name": "dirty-local-capture",
+          "engineInputs": "aa77aa32aaabc6d9d4b0ecf6101c7cff5d91f6085550d9fa5d5274c7f2f5632f",
+          "sourceBytes": "6aa574ad483ef4ef59a94b2ec0a11a29f68b38e99ec3be636cc99e0f6fb8a7ab",
+          "inputsStable": true,
+          "passed": true,
+          "exitCode": 0,
+          "expectedRefusal": false
+        },
+        {
+          "name": "pinned-package-refuses-dirty",
+          "engineInputs": "aa77aa32aaabc6d9d4b0ecf6101c7cff5d91f6085550d9fa5d5274c7f2f5632f",
+          "sourceBytes": "6aa574ad483ef4ef59a94b2ec0a11a29f68b38e99ec3be636cc99e0f6fb8a7ab",
+          "inputsStable": true,
+          "passed": true,
+          "exitCode": 1,
+          "expectedRefusal": true
+        },
+        {
+          "name": "restored-clean-library",
+          "engineInputs": "aa77aa32aaabc6d9d4b0ecf6101c7cff5d91f6085550d9fa5d5274c7f2f5632f",
+          "sourceBytes": "127a35951da8b988f8780fbb78d7a327c7c4b553732b7c3f50a3a131faea7d69",
+          "inputsStable": true,
+          "passed": true,
+          "exitCode": 0,
+          "expectedRefusal": false
+        },
+        {
+          "name": "restored-clean-local-capture",
+          "engineInputs": "aa77aa32aaabc6d9d4b0ecf6101c7cff5d91f6085550d9fa5d5274c7f2f5632f",
+          "sourceBytes": "127a35951da8b988f8780fbb78d7a327c7c4b553732b7c3f50a3a131faea7d69",
+          "inputsStable": true,
+          "passed": true,
+          "exitCode": 0,
+          "expectedRefusal": false
+        }
+      ],
+      "restoredCurrentDescriptor": "Z:\\src\\.worktrees\\DX-i61-sdk-q\\.build\\local-sdk-capture\\52fff239be68446aab84cb6e447e7045\\local-unpinned-snapshot.json",
+      "restoredCurrentDescriptorSha256": "2e58f9f414375cd24ef7f1e50d2ef58cf0c443cd98c2537c29c982d1841af37b",
+      "restoredCurrentSnapshotKey": "3a737c53129f0cc1f64c58687b6adf317a54d1e166b6b9545106bde6d3881dbd"
+    }
+  },
+  "sharedSdkControls": {
+    "path": "Z:\\RedSalamander.Perf\\unified-ci\\sdk-store-20261111T135019013Z-ec595ccd1fb84424b27d28a541e31587\\results.json",
+    "sha256": "7fde25d1ba79932c80c7625f9be53a21237c26e8ec9cfb33c5ac11311c469739",
+    "record": {
+      "kind": "synthetic SDK store controls; no native SDK acceptance",
+      "cases": [
+        {
+          "passed": true,
+          "name": "key ordering is stable and every input family invalidates"
+        },
+        {
+          "passed": true,
+          "name": "owned initialization refuses foreign roots and nonempty data"
+        },
+        {
+          "passed": true,
+          "name": "publish, explicit digest admission and multiple readers preserve bytes"
+        },
+        {
+          "passed": true,
+          "name": "different outputs for equal inputs remain separate immutable versions"
+        },
+        {
+          "passed": true,
+          "name": "short input locators verify the full identity before accepting a hit"
+        },
+        {
+          "passed": true,
+          "name": "separate processes share readers but cannot evict an active reader"
+        },
+        {
+          "passed": true,
+          "name": "source mutation during publish preserves staging and exposes no complete entry"
+        },
+        {
+          "passed": true,
+          "name": "changed, extra and missing files fail integrity without timestamp shortcuts"
+        },
+        {
+          "passed": true,
+          "name": "coherently rewritten manifest cannot replace an independently retained digest"
+        },
+        {
+          "passed": true,
+          "name": "mutation during a reader lease is detected on close and releases the lease"
+        },
+        {
+          "passed": true,
+          "name": "import preserves the exact original manifest and independent identity across stores"
+        },
+        {
+          "passed": true,
+          "name": "quarantine retains original bytes and a missing entry is a cache miss"
+        },
+        {
+          "passed": true,
+          "name": "portable path grammar refuses traversal, streams and device names"
+        },
+        {
+          "passed": true,
+          "name": "local dirty-source snapshot is separate from every pinned SDK route"
+        },
+        {
+          "passed": true,
+          "name": "local snapshots require every declared artifact family and reject verdict fields"
+        },
+        {
+          "passed": true,
+          "name": "local snapshot keys canonicalize record order and Windows path aliases"
+        },
+        {
+          "passed": true,
+          "name": "local readers hold the real immutable entry lease and close once"
+        },
+        {
+          "passed": true,
+          "name": "same-size timestamp-preserved producer edit invalidates local acquisition and close"
+        },
+        {
+          "passed": true,
+          "name": "untracked dirty producer files and a different HEAD also invalidate local snapshots"
+        },
+        {
+          "passed": true,
+          "name": "local corruption fails both acquisition and close while retaining original evidence"
+        },
+        {
+          "passed": true,
+          "name": "frozen descriptor bootstrap and real snapshot lease do not import producer code"
+        },
+        {
+          "passed": true,
+          "name": "descriptor hash, schema, original key and ownership changes fail before use"
+        },
+        {
+          "passed": true,
+          "name": "same-size timestamp-preserved toolkit edits invalidate independently frozen bootstrap"
+        },
+        {
+          "passed": true,
+          "name": "ignored actual toolkit engine edits invalidate bootstrap separately from product source"
+        },
+        {
+          "passed": true,
+          "name": "descriptor mutation on close fails and releases the actual snapshot reader"
+        },
+        {
+          "passed": true,
+          "name": "descriptor bounds and exclusive ownership reject incomplete reads"
+        },
+        {
+          "passed": true,
+          "name": "local consumer admission binds real immutable bytes and preserves a distinct unpinned role"
+        },
+        {
+          "passed": true,
+          "name": "local consumer refuses hosted or non-Release input before discovery"
+        },
+        {
+          "passed": true,
+          "name": "local consumer refuses an API change and different actual toolchain bytes"
+        },
+        {
+          "passed": true,
+          "name": "local consumer rejects changed original library provenance and closes its data lease"
+        },
+        {
+          "passed": true,
+          "name": "local consumer close rejects application and actual engine mutations while releasing ownership"
+        },
+        {
+          "passed": true,
+          "name": "local consumer close rechecks actual ABI and releases its immutable reader on mismatch"
+        },
+        {
+          "passed": true,
+          "name": "local consumer refuses changed toolkit bytes before importing original build acquisition"
+        },
+        {
+          "passed": true,
+          "name": "local SDK compiler lifecycle retains data ownership and rejects duplicate or misordered close"
+        },
+        {
+          "passed": true,
+          "name": "local SDK compiler lifecycle refuses policy and source races before publishing a witness"
+        },
+        {
+          "passed": true,
+          "name": "local compiler preflight verifies a held owner across processes without creating output directories"
+        },
+        {
+          "passed": true,
+          "name": "local compiler outputs refuse canonical, source and parent roots before any artifact write"
+        },
+        {
+          "passed": true,
+          "name": "local compiler witnesses refuse pinned downgrade and require actual tool metadata after preflight"
+        },
+        {
+          "passed": true,
+          "name": "real MSBuild preserves spaced trailing paths and rejects escaped outputs, ABI changes and downgrade"
+        },
+        {
+          "passed": true,
+          "name": "local application contract rejects property collisions, target injection and foreign build inputs"
+        },
+        {
+          "passed": true,
+          "name": "local application linker evidence requires the exact held archive and refuses any foreign occurrence"
+        },
+        {
+          "passed": true,
+          "name": "local application entrypoint refuses hosted and compiler-free requests before dependency or output discovery"
+        }
+      ],
+      "passed": 42,
+      "failed": 0
+    }
+  },
+  "limits": [
+    "Curated index only; original failures remain retained.",
+    "SDK storage and metadata controls do not establish application compilation or qualification.",
+    "Cross-builds do not establish native ARM64 execution.",
+    "Focused debugger attempts do not replace the failed viewer group.",
+    "No controlled speed or final organization acceptance is claimed."
+  ]
+}
