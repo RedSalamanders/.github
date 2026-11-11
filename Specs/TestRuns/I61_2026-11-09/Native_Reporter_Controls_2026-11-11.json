@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "role": "SyntheticTrustedNativeReporterControls",
+  "sourceCommit": "e30fdd1168b30a9795e29fb170761dc5eefd4d1b",
+  "executed": 115,
+  "failed": 0,
+  "originalResultId": "engine-20261111T005634690Z-eaafb28f0fec4aba9bfdc4966cb95ec0/results.json",
+  "originalResultSha256": "4e2fb7b0cb3d2522c5676a0c6c5c024ee54712b2b77652e76fb1cdbb1e7005fa",
+  "workflowDefinitions": 14,
+  "reporterRecordingScenarios": 20,
+  "controls": [
+    "Trusted current-main run and caller/engine proof",
+    "Exact-head pending check before direct byte verifier",
+    "Owned prior success cleared",
+    "Wrong event/source/identity and prose refuse without writes",
+    "Foreign/duplicate check refuses",
+    "Missing/failed/cancelled native evidence and changed attempts produce failure",
+    "Typed verifier binding and final candidate/readiness/catalog recheck",
+    "New owner is never overwritten"
+  ],
+  "actualHostedReporterAcceptance": false,
+  "requiredNativeGateInstalled": false,
+  "automaticAdmissionInvalidation": false,
+  "strictStaleBaseEnforced": false,
+  "localDelegation": false,
+  "mainAdoption": false
+}

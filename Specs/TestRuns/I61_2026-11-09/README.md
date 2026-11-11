@@ -789,3 +789,14 @@ or dirty synthetic merge, wrong original attempt, moved head/base/engine/ref and
 readiness before native setup/cache restore. Direct workflow freeze rejects pending
 readiness before writing frozen inputs. These are synthetic control results; deployment,
 actual hosted queue/shadow acceptance and the required native gate remain open.
+
+### Trusted manual native reporter controls
+
+[Reporter controls](Native_Reporter_Controls_2026-11-11.json): all 115 engine cases
+and 14 workflow definitions pass. Twenty recording scenarios exercise the public
+reporter with real Git controller/candidate fixtures and recording API/verifier
+boundaries. Original artifact verification has its separate actual archive controls.
+The reporter clears an earlier owned success before directly invoking the verifier,
+then binds success to current source/readiness/original producer bytes. Missing,
+failed, cancelled, stale or ambiguous evidence refuses; another owner is not overwritten.
+These controls establish no hosted reporter pass or required-check enforcement.
