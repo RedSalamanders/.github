@@ -110,6 +110,50 @@ Callers must close every acquired entry in finally and keep the lease through al
 
 ## Explicit local pinned application input
 
+### Local unpinned snapshot data foundation
+
+`Ci.LocalSdkSnapshot.psm1` exposes a separate data-only `LocalUnpinnedSdkSnapshot`
+role. It is not accepted by the pinned SDK reader, importer, application build,
+qualification or publication routes. Producer capture and consumer/linker integration
+remain unfinished; this primitive alone does not enable a local override.
+
+`Get-CiLocalSdkSnapshotKey` validates a strict identity and returns its disjoint key.
+It binds the absolute producer checkout, original HEAD, complete raw dirty-source
+identity, the existing Release SDK input families and nonempty portable path bindings
+for headers, libraries, symbols, integration files, licenses and build provenance.
+Missing families, unsupported profiles and verdict fields refuse. The nested SDK
+input record retains all existing Release/MD/annotation/toolchain requirements;
+this initial foundation adds no Debug, ASan or annotation variant.
+
+`Publish-CiLocalSdkSnapshot` requires an already initialized owned store. It verifies
+the current producer HEAD/raw bytes, checks every bound file, then uses the canonical
+SDK storage writer for complete inventory/hash verification, unique preserved
+staging and atomic immutable publication. It rechecks source after publication and
+returns no usable acquisition on mutation. Immutable diagnostic bytes may remain.
+`Open-CiLocalSdkSnapshot` checks the independently retained identity and manifest
+hash, every stored byte, declared artifact bindings and current producer again,
+holding the existing shared entry lease. An absent exact locator returns null;
+malformed or corrupt data fail. `Close-CiLocalSdkSnapshot` verifies producer and
+payload again and always releases the lease, including on failure. Double close
+refuses. Editing the producer invalidates acquisition/use without deleting the
+captured evidence. No function compiles, restores, invokes producer code or changes
+a pin, source file or consumer output. Store initialization remains explicit.
+
+The future producer adapter must capture/build under its canonical operation lease
+and independently acquire actual source/profile/toolchain/dependency identities
+and library/PDB/header provenance. Declared bindings and synthetic storage fixtures
+do not prove ABI compatibility, native library validity or a producer build. The
+future consumer adapter must independently admit these inputs, bind actual linker
+inputs and isolated local-unpinned outputs/receipts, and reject them in PrePush,
+authoritative qualification, package and publication. Never relabel this role or
+copy its bytes into a managed pin. Acquire/release producer capture before entering
+the consumer write lease to avoid a cross-repository lease cycle.
+
+The existing `Test-SdkCache.ps1` owner executes local dirty-source, retained-timestamp
+mutation, untracked-source, changed HEAD, corruption, missing-family, role separation,
+reader concurrency and close-failure controls alongside the unchanged pinned cases.
+These controls use synthetic payloads and establish storage behavior only.
+
 `Ci.SdkConsumer.psm1` provides one shared application seam for a deliberately selected local Release SDK.
 The strict descriptor resides below the application's `.build`, outside the store, and binds source/API,
 platform, full existing source/tooling/storage checkouts, store and independently retained manifest hash.

@@ -202,6 +202,108 @@ Case 'portable path grammar refuses traversal, streams and device names' {
         Refuses {& $module {param($p) Test-CiSdkRelativePath $p} $path}
     }
 }
+
+# Local snapshots reuse the same immutable storage/lease engine under a disjoint data-only role.
+Import-Module (Join-Path $engine 'Tools/Modules/Ci.LocalSdkSnapshot.psm1') -Force
+Import-Module (Join-Path $engine 'Tools/Modules/Ci.SourceInputs.psm1')
+Import-Module (Join-Path $engine 'Tools/Modules/Ci.Policy.psm1')
+$producer=Join-Path $root '.build/local-producer'
+[void][IO.Directory]::CreateDirectory($producer)
+$null=Invoke-CiGit $producer @('init','--initial-branch=main')
+foreach($setting in @(@('user.name','Snapshot Fixture'),@('user.email','fixture@example.invalid'),@('commit.gpgsign','false'),@('core.autocrlf','false'),@('core.hooksPath',(Join-Path $producer '.empty-hooks')))){$null=Invoke-CiGit $producer @('config',$setting[0],$setting[1])}
+[IO.File]::WriteAllText((Join-Path $producer '.gitignore'),'.build/')
+[IO.File]::WriteAllText((Join-Path $producer 'source.cpp'),'int dirty = 0;')
+$null=Invoke-CiGit $producer @('add','--all');$null=Invoke-CiGit $producer @('commit','-m','Snapshot baseline')
+[IO.File]::WriteAllText((Join-Path $producer 'source.cpp'),'int dirty = 1;')
+$localPayload=Join-Path $root 'local-payload'
+$roles=[ordered]@{headers=@('include/DxUi/DxUi.h');libraries=@('lib/DxUi.lib');symbols=@('lib/DxUi.pdb');integration=@('DxUi.Sdk.props');licenses=@('licenses/LICENSE.txt');buildProvenance=@('build-inputs.json')}
+foreach($role in $roles.Keys){foreach($path in $roles[$role]){
+    $file=Join-Path $localPayload $path;[void][IO.Directory]::CreateDirectory((Split-Path $file));[IO.File]::WriteAllText($file,"synthetic $role; no native artifact acceptance")
+}}
+$localInputs=$identity|ConvertTo-Json|ConvertFrom-Json -AsHashtable
+$localInputs.sourceCommit=Resolve-CiCommit $producer HEAD
+$localInputs.sourceBytes=Get-CiCheckoutContentIdentity $producer
+$localIdentity=[ordered]@{schemaVersion=1;role='LocalUnpinnedSdkSnapshot';producerRoot=[IO.Path]::GetFullPath($producer);inputs=$localInputs;bindings=$roles}
+$localEntry=$null
+Case 'local dirty-source snapshot is separate from every pinned SDK route' {
+    $key=Get-CiLocalSdkSnapshotKey $localIdentity
+    Check ($key -cne (Get-CiSdkCacheKey $localInputs)) 'Local and pinned identity domains collided.'
+    $script:localEntry=Publish-CiLocalSdkSnapshot $store $localIdentity $localPayload
+    Check ($localEntry.Manifest.role -ceq 'LocalUnpinnedSdkSnapshot') 'Snapshot lost its explicit local role.'
+    Refuses {Get-CiSdkCacheKey $localIdentity}
+    Refuses {Publish-CiSdkCacheEntry $store $localIdentity $localPayload}
+    Refuses {Open-CiSdkCacheEntry $store $localIdentity $localEntry.ManifestSha256}
+    Refuses {Import-CiSdkCacheEntry $store $localInputs $localEntry.Path $localEntry.ManifestSha256}
+    $reader=Open-CiLocalSdkSnapshot $store $localIdentity $localEntry.ManifestSha256
+    try{Check ($reader.Payload -ceq $localEntry.Payload) 'Exact local bytes were not reused.'}finally{Close-CiLocalSdkSnapshot $reader}
+}
+Case 'local snapshots require every declared artifact family and reject verdict fields' {
+    foreach($role in $roles.Keys){
+        $bad=$localIdentity|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable
+        $bad.bindings[$role]=@('absent/'+$role)
+        Refuses {Publish-CiLocalSdkSnapshot $store $bad $localPayload}
+        $bad.bindings.Remove($role)
+        Refuses {Get-CiLocalSdkSnapshotKey $bad}
+    }
+    $bad=$localIdentity|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable;$bad.passed=$true
+    Refuses {Get-CiLocalSdkSnapshotKey $bad}
+    foreach($pair in @(@('configuration','Debug'),@('annotationPolicy','disabled'),@('runtimeFamily','MT'))){
+        $bad=$localIdentity|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable;$bad.inputs[$pair[0]]=$pair[1]
+        Refuses {Get-CiLocalSdkSnapshotKey $bad}
+    }
+}
+Case 'local snapshot keys canonicalize record order and Windows path aliases' {
+    $key=Get-CiLocalSdkSnapshotKey $localIdentity
+    $reordered=[ordered]@{};foreach($name in @($localIdentity.Keys)[($localIdentity.Count-1)..0]){$reordered[$name]=$localIdentity[$name]}
+    Check ((Get-CiLocalSdkSnapshotKey $reordered) -ceq $key) 'Top-level field order changed the local snapshot key.'
+    if($IsWindows){
+        $alias=$localIdentity|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable;$alias.producerRoot=$alias.producerRoot.ToLowerInvariant()
+        Check ((Get-CiLocalSdkSnapshotKey $alias) -ceq $key) 'Windows producer path casing changed the local snapshot key.'
+    }
+    $changed=$localIdentity|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable;$changed.inputs.compilerProfileIdentity='1'*64
+    Check ((Get-CiLocalSdkSnapshotKey $changed) -cne $key) 'A different actual compiler profile preserved the local key.'
+}
+Case 'local readers hold the real immutable entry lease and close once' {
+    $a=Open-CiLocalSdkSnapshot $store $localIdentity $localEntry.ManifestSha256
+    $b=Open-CiLocalSdkSnapshot $store $localIdentity $localEntry.ManifestSha256
+    try{
+        $storage=Get-Module Ci.SdkCache
+        Refuses {& $storage {param($s,$k)$lease=Enter-CiSdkEntryLock $s $k -Writer;$lease.Dispose()} $store $a.Key}
+        Check (-not $a.Closed -and -not $b.Closed) 'Concurrent local readers did not retain their leases.'
+    }finally{Close-CiLocalSdkSnapshot $a;Close-CiLocalSdkSnapshot $b}
+    Refuses {Close-CiLocalSdkSnapshot $a}
+}
+Case 'same-size timestamp-preserved producer edit invalidates local acquisition and close' {
+    $reader=Open-CiLocalSdkSnapshot $store $localIdentity $localEntry.ManifestSha256
+    $file=Join-Path $producer 'source.cpp';$before=[IO.File]::ReadAllBytes($file);$time=[IO.File]::GetLastWriteTimeUtc($file)
+    try{
+        [IO.File]::WriteAllText($file,'int dirty = 2;');[IO.File]::SetLastWriteTimeUtc($file,$time)
+        Refuses {Open-CiLocalSdkSnapshot $store $localIdentity $localEntry.ManifestSha256}
+        Refuses {Publish-CiLocalSdkSnapshot $store $localIdentity $localPayload}
+        Refuses {Close-CiLocalSdkSnapshot $reader}
+        Check $reader.Closed 'Failed source close retained its reader lease.'
+        Check (Test-Path -LiteralPath $localEntry.Payload) 'Invalidation destroyed immutable evidence.'
+    }finally{[IO.File]::WriteAllBytes($file,$before);[IO.File]::SetLastWriteTimeUtc($file,$time)}
+}
+Case 'untracked dirty producer files and a different HEAD also invalidate local snapshots' {
+    $file=Join-Path $producer 'new-source.cpp';[IO.File]::WriteAllText($file,'new raw input')
+    try{Refuses {Open-CiLocalSdkSnapshot $store $localIdentity $localEntry.ManifestSha256}}finally{[IO.File]::Delete($file)}
+    $bad=$localIdentity|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable;$bad.inputs.sourceCommit='0'*40
+    Refuses {Open-CiLocalSdkSnapshot $store $bad $localEntry.ManifestSha256}
+}
+Case 'local corruption fails both acquisition and close while retaining original evidence' {
+    $reader=Open-CiLocalSdkSnapshot $store $localIdentity $localEntry.ManifestSha256
+    $file=Join-Path $localEntry.Payload 'lib/DxUi.lib';$before=[IO.File]::ReadAllBytes($file)
+    try{
+        [IO.File]::WriteAllText($file,'corrupt')
+        Refuses {Open-CiLocalSdkSnapshot $store $localIdentity $localEntry.ManifestSha256}
+        Refuses {Close-CiLocalSdkSnapshot $reader}
+        Check $reader.Closed 'Corrupt payload close retained its reader lease.'
+    }finally{[IO.File]::WriteAllBytes($file,$before)}
+    Check ($null -eq (Open-CiLocalSdkSnapshot $store $localIdentity ('0'*64))) 'An absent exact manifest locator was not a cache miss.'
+    $reader=Open-CiLocalSdkSnapshot $store $localIdentity $localEntry.ManifestSha256
+    Close-CiLocalSdkSnapshot $reader
+}
 $failed=@($results|Where-Object{-not $_.passed})
 [IO.File]::WriteAllText((Join-Path $root 'results.json'),([ordered]@{kind='synthetic SDK store controls; no native SDK acceptance';cases=$results.ToArray();passed=$results.Count-$failed.Count;failed=$failed.Count}|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
 Write-Host "SDK store results: $root"

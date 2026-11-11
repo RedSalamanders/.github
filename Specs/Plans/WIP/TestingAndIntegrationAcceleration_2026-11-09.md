@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 The 2026-11-11 scope decision below defers gate replacement and cross-run adoption; accepted acceleration work remains open and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 28, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 29, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -64,7 +64,9 @@ drafts with focused integration controls, not complete native acceptance. Entire
 approval for #211 remains absent. A new Source Release Fresh Full is running
 at `03fe8ee22db0407643fb2803a1e974660ae5656d` with engine `0573d4f3`; it has no
 overall result yet. Its Source build has zero warnings/errors, ViewerPE noninteractive
-and all 1,265 tooling assertions and Commands passed; File Operations is executing. This remains
+and all 1,265 tooling assertions, Commands, File Operations, Product UI, both ViewerPE
+groups and SQLite noninteractive passed (15 of 18 promoted entries). SQLite interactive
+is pending execution; Curl and performance remain pending. This remains
 separate from SDK and hosted acceptance. The four ready sibling native matrices are
 queued serially behind its owned process drain; queued work is not a passed result.
 
@@ -422,6 +424,14 @@ Execution order follows the dependencies, not a requirement to finish every numb
 - [ ] Rollback: select the existing full build; invalidate partial receipts rather than relabeling them.
 
 ### S3 — Reuse immutable SDK/dependency builds and support isolated local candidates
+
+The shared local snapshot data foundation now has a separate strict role and reuses
+the canonical immutable writer/reader leases. Twenty synthetic storage cases pass,
+including all original pinned cases, dirty-source/timestamp-preserved mutation,
+artifact-family completeness, corruption, role rejection and source invalidation.
+See [the owning contract](../../SDK_Cache.md#local-unpinned-snapshot-data-foundation).
+Producer capture and isolated consumer/linker admission are still unfinished; no
+application override, native SDK result or local-candidate qualification is claimed.
 
 - [ ] Owner: DxUi producer integration plus all five consumers; RedMonitor SDK owner for its distinct producer path. Dependencies: S0 and S2 closure model.
 - [ ] Implement section 6.4 through the existing full consumer fingerprint, with verified headers/imports/libraries/symbols/licenses and actual linker provenance. Define the organization artifact distribution mechanism and access before claiming cross-repository CI sharing.

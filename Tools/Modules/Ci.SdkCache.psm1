@@ -22,6 +22,32 @@ function Get-CiSdkCacheKey {
     return Get-CiSha256 ('sdk-cache-inputs-v1'+"`n"+($ordered|ConvertTo-Json -Depth 10 -Compress))
 }
 
+# Separate data-only role for local dirty-source snapshots. Public pinned SDK entrypoints
+# never select this branch; their strict v1 identity/key/schema remain unchanged.
+function ConvertTo-CiStoredSdkIdentity {
+    param([Collections.IDictionary]$Identity,[switch]$LocalSnapshot)
+    if(-not $LocalSnapshot){return ConvertTo-CiSdkIdentity $Identity}
+    if(-not(Test-Json -Json ($Identity|ConvertTo-Json -Depth 12 -Compress) -SchemaFile (Join-Path $PSScriptRoot '../../Schemas/local-sdk-snapshot-identity.schema.json') -ErrorAction Stop)){throw 'Invalid local SDK snapshot identity.'}
+    $root=[string]$Identity.producerRoot
+    if(-not [IO.Path]::IsPathFullyQualified($root) -or $root -cne [IO.Path]::GetFullPath($root).TrimEnd('\','/')){throw 'A local snapshot requires its exact absolute producer root.'}
+    if([OperatingSystem]::IsWindows()){$root=$root.ToUpperInvariant()}
+    $inputs=ConvertTo-CiSdkIdentity $Identity.inputs
+    $bindings=[ordered]@{}
+    foreach($name in @('headers','libraries','symbols','integration','licenses','buildProvenance')){
+        $paths=[Collections.Generic.SortedSet[string]]::new([StringComparer]::Ordinal)
+        foreach($path in $Identity.bindings[$name]){Test-CiSdkRelativePath $path;if(-not $paths.Add($path)){throw 'Duplicate local SDK role binding.'}}
+        $bindings[$name]=@($paths)
+    }
+    return [ordered]@{schemaVersion=1;role='LocalUnpinnedSdkSnapshot';producerRoot=$root;inputs=$inputs;bindings=$bindings}
+}
+
+function Get-CiStoredSdkKey {
+    param([Collections.IDictionary]$Identity,[switch]$LocalSnapshot)
+    if(-not $LocalSnapshot){return Get-CiSdkCacheKey $Identity}
+    $ordered=ConvertTo-CiStoredSdkIdentity $Identity -LocalSnapshot
+    return Get-CiSha256 ('local-unpinned-sdk-snapshot-v1'+"`n"+($ordered|ConvertTo-Json -Depth 12 -Compress))
+}
+
 function Initialize-CiSdkStore {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$RepositoryRoot,[Parameter(Mandatory)][string]$StoreRoot)
@@ -101,16 +127,17 @@ function Get-CiSdkEntryPath {
 }
 
 function Read-CiSdkEntryData {
-    param([string]$Root,[string]$Key,[Collections.IDictionary]$Identity,[string]$ManifestSha256)
+    param([string]$Root,[string]$Key,[Collections.IDictionary]$Identity,[string]$ManifestSha256,[switch]$LocalSnapshot)
     $entry=Get-CiSdkEntryPath $Root $Key $ManifestSha256
     if(-not(Test-Path -LiteralPath $entry -PathType Container)){return $null}
     $path=Assert-CiContainedPath $Root (Join-Path $entry 'entry.json')
     if(-not(Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Item -LiteralPath $path).Length -gt 8MB){throw 'Incomplete SDK cache entry.'}
     if((Get-FileHash -LiteralPath $path).Hash.ToLowerInvariant() -cne $ManifestSha256){throw 'SDK manifest differs from its independently retained digest.'}
     $json=Get-Content -LiteralPath $path -Raw
-    if(-not(Test-Json -Json $json -SchemaFile (Join-Path $PSScriptRoot '../../Schemas/sdk-cache-entry.schema.json') -ErrorAction Stop)){throw 'Invalid SDK cache entry.'}
+    $schema=if($LocalSnapshot){'local-sdk-snapshot-entry.schema.json'}else{'sdk-cache-entry.schema.json'}
+    if(-not(Test-Json -Json $json -SchemaFile (Join-Path $PSScriptRoot "../../Schemas/$schema") -ErrorAction Stop)){throw 'Invalid SDK cache entry.'}
     $manifest=$json|ConvertFrom-Json -AsHashtable
-    if($manifest.key -cne $Key -or (Get-CiSdkCacheKey $manifest.identity) -cne $Key -or (Get-CiSdkCacheKey $Identity) -cne $Key){throw 'SDK shortened locator has a different complete identity.'}
+    if($manifest.key -cne $Key -or (Get-CiStoredSdkKey $manifest.identity -LocalSnapshot:$LocalSnapshot) -cne $Key -or (Get-CiStoredSdkKey $Identity -LocalSnapshot:$LocalSnapshot) -cne $Key){throw 'SDK shortened locator has a different complete identity.'}
     $actual=@(Get-CiSdkPayloadFiles (Assert-CiContainedPath $Root (Join-Path $entry 'payload')))
     if(($actual|ConvertTo-Json -Depth 5 -Compress) -cne ($manifest.files|ConvertTo-Json -Depth 5 -Compress)){throw 'SDK payload inventory or bytes changed.'}
     return [pscustomobject]@{Path=$entry;Payload=(Join-Path $entry 'payload');Manifest=$manifest;ManifestSha256=$ManifestSha256;Key=$Key}
@@ -149,13 +176,13 @@ function Import-CiSdkCacheEntry {
 }
 
 function Publish-CiSdkEntryData {
-    param([string]$StoreRoot,[Collections.IDictionary]$Identity,[string]$PayloadRoot,[object[]]$Files,[string]$ManifestJson)
+    param([string]$StoreRoot,[Collections.IDictionary]$Identity,[string]$PayloadRoot,[object[]]$Files,[string]$ManifestJson,[switch]$LocalSnapshot)
     $root=Read-CiSdkStore $StoreRoot
-    $key=Get-CiSdkCacheKey $Identity
+    $key=Get-CiStoredSdkKey $Identity -LocalSnapshot:$LocalSnapshot
     $manifestSha=Get-CiSha256 $manifestJson
     $lease=Enter-CiSdkEntryLock $root $key -Writer
     try{
-        $existing=Read-CiSdkEntryData $root $key $Identity $manifestSha
+        $existing=Read-CiSdkEntryData $root $key $Identity $manifestSha -LocalSnapshot:$LocalSnapshot
         if($existing){return $existing}
         $staging=Assert-CiContainedPath $root (Join-Path $root ('staging/'+$key.Substring(0,16)+'-'+[guid]::NewGuid().ToString('N')))
         $payload=Join-Path $staging 'payload'
@@ -179,7 +206,7 @@ function Publish-CiSdkEntryData {
         $destination=Get-CiSdkEntryPath $root $key $manifestSha
         [void](Assert-CiContainedPath $root $staging)
         [IO.Directory]::Move($staging,$destination)
-        return Read-CiSdkEntryData $root $key $Identity $manifestSha
+        return Read-CiSdkEntryData $root $key $Identity $manifestSha -LocalSnapshot:$LocalSnapshot
     }finally{$lease.Dispose()}
 }
 
