@@ -45,6 +45,15 @@ function Resolve-CiLocalSdkOutputRoot {
     return $resolved
 }
 
+function Get-CiSdkToolBinding {
+    param([Parameter(Mandatory)]$AbiState,[Parameter(Mandatory)][string]$MSBuildPath)
+    $binding=[ordered]@{}
+    foreach($name in @('PlatformToolset','VCToolsInstallDir','VCToolsVersion','WindowsSdkDir','WindowsTargetPlatformVersion','PreferredToolArchitecture','VCTargetsPath','VCToolArchitecture','WindowsSDKToolArchitecture','IncludePath','LibraryPath','ReferencePath')){$binding[$name]=[string]$AbiState.Properties[$name]}
+    $binding.MSBuildBinPath=[IO.Path]::GetDirectoryName($MSBuildPath)
+    foreach($name in @('CL','Link','Lib','FXC')){$binding[$name]=[string]$AbiState.SelectedTools[$name]}
+    return $binding
+}
+
 function New-CiSdkConsumerWitness {
     param([string]$ProjectRoot,[string]$SdkRoot,[string]$Platform,[Collections.IDictionary]$ToolBinding=$null,
         [ValidateSet('QualifiedAbiV2','LocalUnpinnedAbiV1')][string]$Contract='QualifiedAbiV2',[string]$OutputRoot='')
@@ -257,10 +266,7 @@ function Open-CiQualifiedPinnedSdkInput {
     try{
         $payload=Import-Module (Join-Path $d.toolingRoot 'Tools/SdkInputStore.psm1') -PassThru
         & $payload {param($p,$i,$e) Assert-DxUiSdkInputPayload $p $i $e} $entry.Payload $binding.Identity $cache
-        $toolBinding=[ordered]@{}
-        foreach($name in @('PlatformToolset','VCToolsInstallDir','VCToolsVersion','WindowsSdkDir','WindowsTargetPlatformVersion','PreferredToolArchitecture','VCTargetsPath','VCToolArchitecture','WindowsSDKToolArchitecture','IncludePath','LibraryPath','ReferencePath')){$toolBinding[$name]=[string]$state.Properties[$name]}
-        $toolBinding.MSBuildBinPath=[IO.Path]::GetDirectoryName($MSBuildPath)
-        foreach($name in @('CL','Link','Lib','FXC')){$toolBinding[$name]=[string]$state.SelectedTools[$name]}
+        $toolBinding=Get-CiSdkToolBinding -AbiState $state -MSBuildPath $MSBuildPath
         $witness=New-CiSdkConsumerWitness $ProjectRoot $entry.Payload $d.platform $toolBinding
         $controller=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
         $controllerBytes=Get-CiSdkCheckoutContentIdentity $controller

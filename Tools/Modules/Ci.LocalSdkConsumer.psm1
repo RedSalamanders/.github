@@ -55,6 +55,7 @@ function Open-CiLocalSdkConsumerInput {
         [Parameter(Mandatory)][ValidateSet('x64','ARM64')][string]$Platform,
         [Parameter(Mandatory)][string]$Configuration,[Parameter(Mandatory)][string]$MSBuildPath)
     if($env:GITHUB_ACTIONS -ceq 'true'){throw 'Local unpinned SDK consumer inputs are unavailable to hosted qualification and publication.'}
+    if($env:CI_NATIVE_BUILDS_DISABLED -ceq 'true'){throw 'Local SDK ABI admission is forbidden in compiler-free execution.'}
     if($Configuration -cne 'Release'){throw 'Local unpinned SDK consumer inputs require Release; other profiles retain source.'}
     if(-not [IO.Path]::IsPathFullyQualified($MSBuildPath) -or -not [IO.File]::Exists($MSBuildPath)){throw 'Select an actual local MSBuild executable before SDK admission.'}
     $root=[IO.Path]::GetFullPath($ProjectRoot)
@@ -74,16 +75,62 @@ function Open-CiLocalSdkConsumerInput {
         $abi=Get-CiLocalConsumerAbi $handle $MSBuildPath
         if((Get-CiCheckoutContentIdentity $root) -cne $source -or
             (Get-CiPinnedEngineInputsIdentity -Root $root -EngineRoot $controller) -cne $engineIdentity){throw 'Application or actual engine inputs changed during local SDK admission.'}
-        return [pscustomobject]@{Role='LocalUnpinnedSdkConsumerInput';ProjectRoot=$root;SourceBytes=$source;EngineInputs=$engineIdentity;
-            Descriptor=$handle;SdkRoot=$handle.Snapshot.Payload;MSBuildPath=$MSBuildPath;Abi=$abi;Closed=$false;
+        $inputRecord=[pscustomobject]@{Role='LocalUnpinnedSdkConsumerInput';ProjectRoot=$root;SourceBytes=$source;EngineInputs=$engineIdentity;
+            Descriptor=$handle;SdkRoot=$handle.Snapshot.Payload;MSBuildPath=$MSBuildPath;Abi=$abi;Closed=$false;CompilerLease=$null;
             Evidence=[ordered]@{recipe='LocalUnpinnedReleaseSdk';inputKey=$handle.Record.key;manifestSha256=$handle.Record.manifestSha256;
                 descriptorSha256=$ExpectedDescriptorSha256;sourceCommit=$inputs.sourceCommit;apiRevision=$inputs.apiRevision;
                 platform=$Platform;configuration='Release';toolchainReference=$abi.Reference.digest}}
+        Assert-CiLocalSdkConsumerSourcesCurrent $inputRecord
+        Assert-CiLocalConsumerProducer $handle
+        return $inputRecord
     }catch{
         $primary=$_
         try{& $script:descriptors {param($h) Close-CiLocalSdkSnapshotDescriptor $h} $handle}catch{Write-Warning ('Local SDK close also failed: '+$_.Exception.Message)}
         throw $primary
     }
+}
+
+function Assert-CiLocalSdkConsumerSourcesCurrent {
+    param([Parameter(Mandatory)][object]$SdkInput)
+    if($SdkInput.Role -cne 'LocalUnpinnedSdkConsumerInput' -or $SdkInput.Closed -or $SdkInput.Descriptor.Closed){throw 'An active local SDK dependency reader is required.'}
+    if((Get-CiCheckoutContentIdentity $SdkInput.ProjectRoot) -cne $SdkInput.SourceBytes -or
+        (Get-CiPinnedEngineInputsIdentity -Root $SdkInput.ProjectRoot -EngineRoot ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..')))) -cne $SdkInput.EngineInputs){throw 'Application or actual engine inputs changed during local SDK use.'}
+    $null=& $script:descriptors {param($h) Read-CiLocalSdkSnapshotDescriptor $h.Path $h.Sha256} $SdkInput.Descriptor
+    $identity=$SdkInput.Descriptor.Record.identity
+    if((Resolve-CiCommit $identity.producerRoot HEAD) -cne $identity.inputs.sourceCommit -or
+        (Get-CiCheckoutContentIdentity $identity.producerRoot) -cne $identity.inputs.sourceBytes){throw 'Local SDK producer source changed during consumer admission.'}
+}
+
+function Assert-CiLocalSdkConsumerInputCurrent {
+    param([Parameter(Mandatory)][object]$SdkInput)
+    Assert-CiLocalSdkConsumerSourcesCurrent $SdkInput
+    Assert-CiLocalConsumerProducer $SdkInput.Descriptor
+    $state=Get-CiLocalConsumerAbi $SdkInput.Descriptor $SdkInput.MSBuildPath
+    Assert-CiLocalSdkConsumerSourcesCurrent $SdkInput
+    Assert-CiLocalConsumerProducer $SdkInput.Descriptor
+    return $state
+}
+
+function Start-CiLocalSdkCompilerLease {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][object]$SdkInput,[Parameter(Mandatory)][string]$OutputRoot)
+    if($env:GITHUB_ACTIONS -ceq 'true' -or $env:CI_NATIVE_BUILDS_DISABLED -ceq 'true'){throw 'Local SDK compiler leases are unavailable to hosted or compiler-free execution.'}
+    if($SdkInput.CompilerLease -and -not $SdkInput.CompilerLease.Closed){throw 'The local SDK reader already has a live compiler lease.'}
+    $state=Assert-CiLocalSdkConsumerInputCurrent $SdkInput
+    $binding=& $script:consumer {param($s,$m)Get-CiSdkToolBinding -AbiState $s -MSBuildPath $m} $state $SdkInput.MSBuildPath
+    $witness=& $script:consumer {param($r,$s,$p,$b,$o)
+        New-CiSdkConsumerWitness -ProjectRoot $r -SdkRoot $s -Platform $p -ToolBinding $b -Contract LocalUnpinnedAbiV1 -OutputRoot $o
+    } $SdkInput.ProjectRoot $SdkInput.SdkRoot $SdkInput.Evidence.platform $binding $OutputRoot
+    $SdkInput.CompilerLease=[pscustomobject]@{Role='LocalUnpinnedSdkCompilerLease';Path=$witness.Path;Witness=$witness;OutputRoot=[IO.Path]::GetFullPath($OutputRoot);
+        Contract='LocalUnpinnedAbiV1';Closed=$false}
+    return $SdkInput.CompilerLease
+}
+
+function Stop-CiLocalSdkCompilerLease {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][object]$SdkInput)
+    if(-not $SdkInput.CompilerLease -or $SdkInput.CompilerLease.Closed){throw 'The local SDK reader has no active compiler lease.'}
+    try{$SdkInput.CompilerLease.Witness.Stream.Dispose()}finally{$SdkInput.CompilerLease.Closed=$true}
 }
 
 function Close-CiLocalSdkConsumerInput {
@@ -92,16 +139,16 @@ function Close-CiLocalSdkConsumerInput {
     if($SdkInput.Closed){throw 'Local SDK consumer input is already closed.'}
     $failure=$null
     try{
-        if((Get-CiCheckoutContentIdentity $SdkInput.ProjectRoot) -cne $SdkInput.SourceBytes -or
-            (Get-CiPinnedEngineInputsIdentity -Root $SdkInput.ProjectRoot -EngineRoot ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..')))) -cne $SdkInput.EngineInputs){throw 'Application or actual engine inputs changed during local SDK use.'}
-        $null=& $script:descriptors {param($h) Read-CiLocalSdkSnapshotDescriptor $h.Path $h.Sha256} $SdkInput.Descriptor
-        Assert-CiLocalConsumerProducer $SdkInput.Descriptor
-        $null=Get-CiLocalConsumerAbi $SdkInput.Descriptor $SdkInput.MSBuildPath
+        if($SdkInput.CompilerLease -and -not $SdkInput.CompilerLease.Closed){throw 'Stop the local compiler lease after owned child drain before closing dependency input.'}
+        $null=Assert-CiLocalSdkConsumerInputCurrent $SdkInput
     }catch{$failure=$_}
+    if($SdkInput.CompilerLease -and -not $SdkInput.CompilerLease.Closed){
+        try{Stop-CiLocalSdkCompilerLease $SdkInput}catch{if($null -eq $failure){$failure=$_}else{Write-Warning ('Local compiler lease close also failed: '+$_.Exception.Message)}}
+    }
     try{& $script:descriptors {param($h) Close-CiLocalSdkSnapshotDescriptor $h} $SdkInput.Descriptor}
     catch{if($null -eq $failure){$failure=$_}else{Write-Warning ('Local SDK data close also failed: '+$_.Exception.Message)}}
     finally{$SdkInput.Closed=$true}
     if($null -ne $failure){throw $failure}
 }
 
-Export-ModuleMember -Function Open-CiLocalSdkConsumerInput,Close-CiLocalSdkConsumerInput
+Export-ModuleMember -Function Open-CiLocalSdkConsumerInput,Close-CiLocalSdkConsumerInput,Start-CiLocalSdkCompilerLease,Stop-CiLocalSdkCompilerLease
