@@ -824,3 +824,13 @@ child processes preserve exit7/exit9, both streams, caller location/environment 
 literal empty, Unicode, quote, trailing-backslash, metacharacter, switch and newline
 arguments. A copied system executable exercises a bracketed Unicode path. Compiler-free
 calls refuse before launch. Product launcher migration remains separate.
+
+### Retained-gates decision, 2026-11-11
+
+The user chose to keep current local/main gates. Candidate-gate replacement,
+automatic shadow admission/reporting, local delegation and cross-run adoption are
+deferred; no second pre-merge native campaign is required. See plan revision25 for
+the latest exact rollout and failed/pending local qualification identities.
+RedMonitor main42950834765 passed both native and both production roles. Tilde
+main42952565762 passed both native roles and was still in production. DxUi
+main42954632514 was running. These are ordinary main results, not shadow acceptance.
