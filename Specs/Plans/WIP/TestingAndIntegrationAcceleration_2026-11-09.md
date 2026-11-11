@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 The 2026-11-11 scope decision below defers gate replacement and cross-run adoption; accepted acceleration work remains open and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 30, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 31, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -30,6 +30,44 @@ Current authority remains:
 - The shared engine's `AGENTS.md` and `Specs/CI.md`.
 
 **User decision, 2026-11-11: keep the current local and main gates.** Native candidate-gate replacement, local-to-hosted delegation, automatic shadow admission/reporting and cross-run candidate-to-main adoption are deferred, not implementation prerequisites for this accepted scope. Do not add a second pre-merge native campaign, dispatch a shadow pilot, change billing, deploy a GitHub App or replace branch enforcement to pursue those deferred items. Existing optional manual shadow/report tools remain diagnostic and grant no acceptance authority. Continue SDK/build reuse, precise selection, independent obligation retention, bounded scheduling and measured acceleration within the existing local/main obligations. Current compiler-free PR checks remain.
+
+### Current execution checkpoint, 2026-11-11
+
+Monitor #52 is merged as `7a9b64e067331f371b1abf780bc73b9de942383e`.
+[Main run 42998339563](https://github.com/RedSalamanders/RedMonitor/actions/runs/42998339563)
+passed all seven jobs, including actual x64/ARM64 Release regressions and both
+production build/smoke branches. Its original local Full also passed. This is
+delivered acceptance for those changes, without a controlled speedup claim.
+
+Shared #70 merged as `766fd7e01aeef2e77ba18df83b9928516155014e` after all five
+hosted checks passed. It adds the bounded, independently frozen local SDK data
+descriptor reader and shared desktop admission. Root and native DxUi previously
+used different mutex names. The new outer admission takes Root's existing mutex
+before invoking the unchanged native DxUi lease, only for explicit interactive
+entries. The vanished-foreground restoration failure remains a failure. Tilde
+#108 at `438ee7fd8aa7a473a25755ae9e5e3e1c68d51149` uses the merged engine and
+passed complete compiler-free validation; fresh native qualification is running.
+DxUi #249's corresponding adapter is in validation. Producer capture/data readers
+do not establish application linker admission, SDK qualification or a test pass.
+
+The Root selected cold experiment at `1c17edc3` built without warnings/errors and
+passed ProductUiTests, but ViewerPETests failed because its runtime ViewerVLC
+producer was absent. Further inspection found six viewer plugins plus the
+application/Common PE fixtures and the plugin contract roster needed explicit
+project dependencies. Root #219 at `444d6a28e` declares those runtime inputs,
+with nine focused project-selection controls and final ownership/format checks
+passing. Corrected cold native acceptance remains open. An actual viewer union
+includes the application when its tests inspect that PE input; the earlier
+assumption that the application must be absent was wrong. Do not weaken existing
+fixture assertions or count the failed experiment as a selective-build pass.
+
+A separate ProductUi-only public affected run at `51501104b` stopped during pinned
+DxUi restore before native test execution: vcpkg could not read a versioned helper
+at a 260-character path. A shorter isolated fixture is prepared as a diagnostic;
+path length is not yet a confirmed cause. Preserve this failure independently.
+
+The following rollout paragraphs retain earlier checkpoints; newer source-bound
+facts above take precedence over their pending statuses.
 
 Current rollout: Monitor #50, Tilde #106, Prism #18 and DxUi #246 are merged.
 Monitor main42950834765, Tilde main42952565762 and DxUi main42954632514 passed
