@@ -8,7 +8,7 @@ RedSalamander 42703183362 failed validation on both architectures and its eviden
 No remaining slice is waived and this plan stays WIP.
 Priority: P0 developer feedback and integration throughput.
 Owner: one organization integration owner, supported by each project's build/test owner.
-Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 21, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
+Prepared: 2026-11-09. Relocated to `RedSalamanders/.github` on 2026-11-09. Revision: 22, organization implementation authorized on 2026-11-09; resumed 2026-11-10.
 Scope: `RedSalamander`, `DxUi`, `RedPrism`, `RedTilde`, `RedXe`, `RedMonitor`, and the shared `RedSalamanders/.github` CI repository.
 
 ## 1. Outcome, authority and execution boundary
@@ -831,3 +831,23 @@ Revision 21 continuation:
 - Root fresh SDK Full: 2812 passed, 2 failed, 60 skipped, 16/18 entries promoted.
   The corrected tooling fixture passes focused controls; the explicitly authorized
   existing alternate root is being checked separately. Full remains failed.
+
+Revision 22 continuation:
+
+- Shared #57 merged repository/architecture native capacity lanes and queued input
+  freshness. Monitor #49 merged the pilot caller at engine318eaebe. Actual hosted
+  shadow acceptance remains open; an existing Monitor PR42 acquisition refused
+  because it was not currently mergeable. No unready candidate was dispatched.
+- Optional trusted-main manual native reporting directly invokes original artifact
+  verification and publishes an owned exact-head check. All115engine controls and
+  14workflow syntax checks pass, including20recording reporter scenarios. No saved
+  result JSON is accepted. Actual hosted reporter acceptance, automatic admission
+  invalidation and strict required/stale-base enforcement remain open. No local
+  obligation or post-merge qualification is removed.
+- Root's focused independent-volume control passed using the already initialized
+  exact C test root. The original failed Full is preserved. A separate fresh Full
+  now includes the corrected fixture and preexisting alternate-root preflight.
+  Physical alternate acquisition no longer initializes a root during discovery.
+- DxUi main42919694632 completed both native and production architectures. These
+  hosted results and the local foreground profile evidence retain distinct scope.
+  S2/S4/S5/S6B/S7 enforcement/S8/S9/S10 and controlled3x/2x remain unfinished.

@@ -18,6 +18,9 @@ rollout and hosted acceptance remain open; see [the candidate contract](Specs/In
 After rollout, `Tools/Start-CandidateShadow.ps1 -Root <clean current main> -PullRequest <PR>
 -ExpectedIdentity <independently frozen identity> -WhatIf` previews operator admission.
 Its append-only request journal and dispatch acknowledgment supply no execution verdict.
+The optional trusted-main `integration-report.yml` manually verifies original native
+artifact bytes and reports them on the exact PR head. It accepts no saved verification
+JSON and grants no required-check enforcement, local delegation or main adoption.
 Manual diagnostic qualification accepts `platform=x64`, `platform=ARM64` or the compatibility default `platform=All`.
 The chosen architecture is recorded by its native evidence; single-architecture diagnostics do not advance Release publication.
 Normal and manual native jobs reuse repository-scoped vcpkg package archives, including compatible fallback caches after engine/tooling changes. The pinned package manager still checks package ABI identity; product builds and test evidence remain independently required.
