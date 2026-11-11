@@ -149,6 +149,11 @@ paths and bounded actual tool properties again. A local owner cannot downgrade
 to a pinned contract or skip actual metadata verification. Closed owners refuse.
 This guard does not create an application build adapter, accept a local test
 verdict or allow canonical qualification/package routes to consume local outputs.
+Explicit `Tests/Test-SdkCache.ps1 -NativeMsBuildPath <application-selected MSBuild.exe>`
+also exercises the actual MSBuild target with spaced, trailing output paths,
+escaped output/intermediate refusals, per-file CRT rejection and contract downgrade.
+It compiles no product and refuses compiler-free/non-Windows execution before
+discovery or fixture creation. Ordinary hosted storage tests omit that option.
 
 `Ci.LocalSdkSnapshot.psm1` exposes a separate data-only `LocalUnpinnedSdkSnapshot`
 role. It is not accepted by the pinned SDK reader, importer, application build,
