@@ -9,8 +9,10 @@ Invoke-Case 'Shared desktop admission preserves ordinary noninteractive output a
         & $desktop {
             $script:recorded=@{}
             $script:originalCore=${function:Invoke-CiDesktopLeaseCore}
+            $script:fixtureMutex='Local\I61.DesktopPublicFixture.'+[guid]::NewGuid().ToString('N')
             function script:Invoke-CiDesktopLeaseCore {param($MutexName,$Operation,$TimeoutMilliseconds)
-                $script:recorded.name=$MutexName;& $Operation
+                $script:recorded.name=$MutexName
+                & $script:originalCore -MutexName $script:fixtureMutex -Operation $Operation
             }
         }
         try{
