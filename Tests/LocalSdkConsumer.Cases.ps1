@@ -28,9 +28,10 @@ $fileReference=& $abiModule {param($r) Get-CiPortableSdkFileReference $r} $toolR
 $compiler=[ordered]@{platform='x64';configuration='Release';toolset='v145';vcToolsVersion='14.52.37025';windowsSdkVersion='10.0.26100.0';preferredToolArchitecture='x64';vcToolArchitecture='Native64Bit';windowsSdkToolArchitecture='Native64Bit'}
 $reference=& $abiModule {param($c,$f) New-CiSdkAbiReference $c $f} $compiler $fileReference
 & $abiModule {param($r)
-    $script:localFixtureReference=$r;$script:localFixtureMismatch=$false
+    $script:localFixtureReference=$r;$script:localFixtureMismatch=$false;$script:localFixtureHook=$null
     function script:Get-CiSdkAbiReference {
         param($ToolingRoot,$MSBuildPath,$ProjectPath,$Platform,$PreferredToolArchitecture,[switch]$PassThruBinding)
+        if($script:localFixtureHook){& $script:localFixtureHook}
         $ref=$script:localFixtureReference|ConvertTo-Json -Depth 12|ConvertFrom-Json -AsHashtable
         if($script:localFixtureMismatch){$ref.digest='0'*64}
         return [pscustomobject]@{Reference=$ref;Properties=@{};SelectedTools=@{};Roots=@{}}
@@ -93,12 +94,13 @@ Case 'local consumer admission binds real immutable bytes and preserves a distin
     Check-LocalConsumerWriterUnlocked
 }
 Case 'local consumer refuses hosted or non-Release input before discovery' {
-    $saved=$env:GITHUB_ACTIONS;$savedRoot=$consumerArguments.ProjectRoot
+    $saved=$env:GITHUB_ACTIONS;$savedNative=$env:CI_NATIVE_BUILDS_DISABLED;$savedRoot=$consumerArguments.ProjectRoot
     try{
         $consumerArguments.ProjectRoot=Join-Path $root 'does-not-exist'
         $env:GITHUB_ACTIONS='true';Rejects-LocalConsumer {Open-LocalConsumerFixture} 'unavailable to hosted'
-        $env:GITHUB_ACTIONS=$saved;$consumerArguments.Configuration='Debug';Rejects-LocalConsumer {Open-LocalConsumerFixture} 'require Release'
-    }finally{$env:GITHUB_ACTIONS=$saved;$consumerArguments.Configuration='Release';$consumerArguments.ProjectRoot=$savedRoot}
+        $env:GITHUB_ACTIONS=$saved;$env:CI_NATIVE_BUILDS_DISABLED='true';Rejects-LocalConsumer {Open-LocalConsumerFixture} 'forbidden in compiler-free'
+        $env:CI_NATIVE_BUILDS_DISABLED=$savedNative;$consumerArguments.Configuration='Debug';Rejects-LocalConsumer {Open-LocalConsumerFixture} 'require Release'
+    }finally{$env:GITHUB_ACTIONS=$saved;$env:CI_NATIVE_BUILDS_DISABLED=$savedNative;$consumerArguments.Configuration='Release';$consumerArguments.ProjectRoot=$savedRoot}
 }
 Case 'local consumer refuses an API change and different actual toolchain bytes' {
     try{[IO.File]::WriteAllText($lockFile,$lockText.Replace('"apiRevision": 4','"apiRevision": 5'));Rejects-LocalConsumer {Open-LocalConsumerFixture} 'cannot change the application API'}
@@ -140,6 +142,45 @@ Case 'local consumer refuses changed toolkit bytes before importing original bui
         [IO.File]::AppendAllText($file,"`nthrow 'modified acquisition must never execute'`n")
         Rejects-LocalConsumer {Open-LocalConsumerFixture} 'producer tooling or its actual pinned engine changed before import'
     }finally{[IO.File]::WriteAllBytes($file,$saved)}
+    Check-LocalConsumerWriterUnlocked
+}
+Case 'local SDK compiler lifecycle retains data ownership and rejects duplicate or misordered close' {
+    $value=Open-LocalConsumerFixture
+    $output=Join-Path $consumerRoot '.build/local-unpinned/broker-lifecycle'
+    try{
+        $lease=& $localConsumer {param($v,$o)Start-CiLocalSdkCompilerLease -SdkInput $v -OutputRoot $o} $value $output
+        Check ($lease.Contract -ceq 'LocalUnpinnedAbiV1' -and -not $lease.Closed -and -not $value.Descriptor.Closed) 'Compiler lifecycle did not retain its dependency reader.'
+        Check (-not(Test-Path -LiteralPath $output)) 'Starting the compiler witness wrote application artifacts.'
+        Rejects-LocalConsumer {& $localConsumer {param($v,$o)Start-CiLocalSdkCompilerLease -SdkInput $v -OutputRoot $o} $value $output} 'already has a live compiler lease'
+        & $localConsumer {param($v)Stop-CiLocalSdkCompilerLease $v} $value
+        Check ($lease.Closed -and -not $value.Descriptor.Closed) 'Compiler close released data before the consumer finished.'
+        Rejects-LocalConsumer {& $localConsumer {param($v)Stop-CiLocalSdkCompilerLease $v} $value} 'no active compiler lease'
+    }finally{Close-LocalConsumerFixture $value}
+    Check-LocalConsumerWriterUnlocked
+    $value=Open-LocalConsumerFixture
+    $lease=& $localConsumer {param($v,$o)Start-CiLocalSdkCompilerLease -SdkInput $v -OutputRoot $o} $value $output
+    Rejects-LocalConsumer {Close-LocalConsumerFixture $value} 'Stop the local compiler lease'
+    Check ($value.Closed -and $lease.Closed) 'Misordered close leaked compiler or data ownership.'
+    Check-LocalConsumerWriterUnlocked
+}
+Case 'local SDK compiler lifecycle refuses policy and source races before publishing a witness' {
+    $value=Open-LocalConsumerFixture;$output=Join-Path $consumerRoot '.build/local-unpinned/broker-refusals'
+    $savedNative=$env:CI_NATIVE_BUILDS_DISABLED;$savedActions=$env:GITHUB_ACTIONS;$savedSource=[IO.File]::ReadAllBytes($lockFile)
+    try{
+        $env:CI_NATIVE_BUILDS_DISABLED='true'
+        Rejects-LocalConsumer {& $localConsumer {param($v,$o)Start-CiLocalSdkCompilerLease -SdkInput $v -OutputRoot $o} $value $output} 'unavailable to hosted or compiler-free'
+        $env:CI_NATIVE_BUILDS_DISABLED=$savedNative;$env:GITHUB_ACTIONS='true'
+        Rejects-LocalConsumer {& $localConsumer {param($v,$o)Start-CiLocalSdkCompilerLease -SdkInput $v -OutputRoot $o} $value $output} 'unavailable to hosted or compiler-free'
+        $env:GITHUB_ACTIONS=$savedActions
+        & $abiModule {param($p)$script:localFixtureHook={ [IO.File]::AppendAllText($p,"`nchanged during metadata") }.GetNewClosure()} $lockFile
+        Rejects-LocalConsumer {& $localConsumer {param($v,$o)Start-CiLocalSdkCompilerLease -SdkInput $v -OutputRoot $o} $value $output} 'Application or actual engine inputs changed'
+        Check ($null -eq $value.CompilerLease) 'A source race published a compiler witness.'
+    }finally{
+        $env:CI_NATIVE_BUILDS_DISABLED=$savedNative;$env:GITHUB_ACTIONS=$savedActions
+        & $abiModule {$script:localFixtureHook=$null}
+        [IO.File]::WriteAllBytes($lockFile,$savedSource)
+        Close-LocalConsumerFixture $value
+    }
     Check-LocalConsumerWriterUnlocked
 }
 Case 'local compiler preflight verifies a held owner across processes without creating output directories' {

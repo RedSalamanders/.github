@@ -124,8 +124,9 @@ header and library reference. A mismatch refuses this explicit local request.
 
 The reader's role is `LocalUnpinnedSdkConsumerInput` and its evidence recipe is
 `LocalUnpinnedReleaseSdk`. Neither is accepted as a pinned build or a test result.
-It does not create a compiler witness, link an application, choose output paths
-or publish a build receipt. Those consumer build adapters remain unfinished.
+Opening the reader does not create a compiler witness, link an application,
+choose output paths or publish a build receipt. Consumer build adapters remain
+unfinished.
 Acquire this dependency reader before the consumer write lease; no producer
 profile lease is held. Retain its immutable data lease through every future
 compile/link use. Close rechecks application/actual-engine bytes, the frozen
@@ -137,6 +138,18 @@ continue to refuse local unpinned inputs.
 Synthetic reader controls execute the actual storage/descriptor/Git/engine/file
 binding and failure cleanup. Only original native-build acquisition and Windows
 ABI metadata evaluation use recording boundaries; they grant no native verdict.
+
+`Start-CiLocalSdkCompilerLease` explicitly binds an active dependency reader to
+its separate local output operation. Acquire the consumer output write lease
+after opening dependency input and before starting compilation. Starting the
+compiler frame rechecks consumer/engine/toolkit/producer source and original
+library provenance before and after ABI evaluation, then uses the canonical
+shared tool-binding projection and schema-3 witness factory. Hosted and
+compiler-free execution refuse before discovery; duplicate live frames refuse.
+Drain owned children, stop the compiler frame with `Stop-CiLocalSdkCompilerLease`,
+then close dependency input. Misordered close fails and releases both handles;
+it cannot authorize a local build receipt. These APIs perform no application
+build, linker-input verification or build-result publication by themselves.
 
 The shared MSBuild guard has a separate `LocalUnpinnedAbiV1` compiler-lease
 contract (witness schema 3). It retains the live process/handle check and every
