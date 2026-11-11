@@ -266,3 +266,34 @@ runspace callers. Native failures keep their exact exit code; compiler-free call
 refuse before launch. The bridge supports up to12000JSON characters and rejects
 larger payloads visibly rather than truncating arguments. Existing contained-process
 launchers instead apply Set-CiNativeProcessEnvironment to their own ProcessStartInfo.
+
+## Shared local desktop admission
+
+`Ci.DesktopLease.psm1` owns additive admission for operations already classified
+`RequiresInteractiveDesktop` or explicitly invoked as interactive. Its
+`Invoke-CiInteractiveDesktopOperation` passes noninteractive operations through
+without a lock. Interactive admission requires Windows and takes the existing
+session-local `Local\RedSalamander.InteractiveTestRun.v1` mutex before invoking the
+operation. The unchanged native DxUi lease may then take
+`Local\DxUi.InteractiveTestRun.v1`. This order is mandatory; never acquire these
+in reverse or add the Root lock inside a child while its parent holds it.
+
+The compatibility name permits current Root runners and updated consumer wrappers
+to cooperate without editing a managed dependency pin. Before this bridge, Root
+and DxUi-derived consumers used different names and could overlap. Tilde's retained
+11 November failure records nine passed child checks but a vanished
+`RedSalamander.FindFilesWindow` as its saved foreground/focus target. That failure
+remains failed; naming compatibility is an admission repair, not a retroactive pass.
+
+Admission has a finite three-hour failure bound, reports its wait, handles abandoned
+ownership explicitly and releases after success or exception. It changes no desktop,
+focus, pointer, clipboard or process itself. The original harness still requires its
+consent/warning, owned targets, watchdog and verified restoration; no missing/gone
+restoration becomes success. Hold this session lock only around the classified
+entry, including its applicable repair attempt, never an unrelated build or batch.
+Local session admission grants no hosted, native, performance or test verdict.
+
+The engine behavior roster exercises public routing at a recording boundary and
+real uniquely named fixture mutexes for separate-process contention, timeout without
+entry, nesting, disjoint names, failure release and abandoned recovery. It never
+takes a production desktop mutex or performs foreground input for these controls.
