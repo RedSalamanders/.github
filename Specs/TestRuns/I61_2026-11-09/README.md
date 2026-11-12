@@ -2,7 +2,16 @@
 
 This is a partial implementation record for the [active organization plan](../../Plans/WIP/TestingAndIntegrationAcceleration_2026-11-09.md). Overall speed targets and remaining hosted acceptance stay open. No release, publication, account or billing operation was performed.
 
-## Integrated changes and hosted acceptance
+## Current execution checkpoint - 12 November 2026
+
+[ExecutionCheckpoint_2026-11-12.json](ExecutionCheckpoint_2026-11-12.json) records the current source-bound
+local results and hosted observations. Shared engine #78 and Monitor #53 are merged; Monitor's native main
+qualification is running. Xe's SDK application/plugin build passes and its full entry/compile times are
+recorded separately. Prism's ASan copy warning, Root's latest failures and broader DxUi/native matrices
+remain open. Controlled 3x/2x targets remain unproved. Keep the current local/main gates and let running
+Actions finish. Earlier sections below retain historical observations with their original scope.
+
+## Initial integrated changes and hosted acceptance
 
 The reviewed engine source `fbe6a707eb5d11847ac1a982d1c3851ea32b2baf` was integrated in
 [engine PR #19](https://github.com/RedSalamanders/.github/pull/19). All six client pins and generated callers
@@ -10,8 +19,8 @@ match that source. Normal integration completed for [RedPrism #10](https://githu
 [RedTilde #99](https://github.com/RedSalamanders/RedTilde/pull/99), [RedXe #77](https://github.com/RedSalamanders/RedXe/pull/77),
 [RedMonitor #39](https://github.com/RedSalamanders/RedMonitor/pull/39) and [DxUi #229](https://github.com/RedSalamanders/DxUi/pull/229)
 after their applicable hosted checks passed. No branch-protection bypass was used.
-[RedSalamander #209](https://github.com/RedSalamanders/RedSalamander/pull/209) has passing required compiler-free
-checks and remains open for Entire reviewer approval; its new runner handoff has no final hosted native acceptance yet.
+[RedSalamander #209](https://github.com/RedSalamanders/RedSalamander/pull/209) initially had passing required compiler-free
+checks and awaited Entire reviewer approval. It subsequently merged; current native acceptance and failures are recorded in the latest checkpoint.
 
 [hosted-rollout.json](hosted-rollout.json) freezes the observed run/source/job/phase snapshot with direct run links.
 RedMonitor run 42626422908 passed both native Release regression branches, the AND test gate, both production
