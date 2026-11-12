@@ -71,3 +71,25 @@ Case 'local application entrypoint refuses hosted and compiler-free requests bef
     }finally{$env:CI_NATIVE_BUILDS_DISABLED=$native;$env:GITHUB_ACTIONS=$actions}
     Check (-not(Test-Path (Join-Path $buildRoot 'missing'))) 'Early refusal wrote candidate state.'
 }
+Case 'broker timing covers contiguous invocation phases and distinguishes a failed build from successful cleanup' {
+    foreach($failureMode in @('none','nativeBuild','ownedCleanup')){
+        $report=& $localBuild {
+            param($failure)
+            $t=New-CiLocalSdkBuildTiming
+            Set-CiLocalSdkBuildPhase $t 'sdkAdmission'
+            Set-CiLocalSdkBuildPhase $t 'nativeBuild'
+            Set-CiLocalSdkBuildPhase $t 'ownedCleanup' -Outcome $(if($failure -ceq 'nativeBuild'){'failed'}else{'completed'})
+            Complete-CiLocalSdkBuildTiming $t ($failure -cne 'none') ($failure -ceq 'ownedCleanup')
+        } $failureMode
+        $end=0.0
+        foreach($phase in $report.phases){
+            Check ($phase.elapsedMs -ge 0 -and [Math]::Abs($phase.startMs-$end) -lt 0.001) 'Broker phase timing lost or counted a time interval twice.'
+            $end=$phase.startMs+$phase.elapsedMs
+        }
+        Check ([Math]::Abs($end-$report.totalElapsedMs) -lt 0.001 -and $report.scope -ceq 'BrokerInvocation') 'Compile-only timing was presented as the broker total.'
+        Check ($report.passed -eq ($failureMode -ceq 'none')) 'Timing diagnostics changed the observed verdict.'
+        Check (($report.phases|Where-Object name -CEQ nativeBuild).outcome -ceq $(if($failureMode -ceq 'nativeBuild'){'failed'}else{'completed'})) 'The failed native phase was hidden.'
+        Check (($report.phases|Where-Object name -CEQ ownedCleanup).outcome -ceq $(if($failureMode -ceq 'ownedCleanup'){'failed'}else{'completed'})) 'A primary native failure was incorrectly attributed to cleanup.'
+        Check (-not $report.testsExecuted -and -not $report.repositoryQualified -and -not $report.productionQualified) 'Timing granted qualification.'
+    }
+}

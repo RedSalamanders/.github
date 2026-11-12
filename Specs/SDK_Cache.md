@@ -187,6 +187,22 @@ qualification, packaging and publication remain separate gates. The broker
 refuses hosted and compiler-free invocation before discovery. Synthetic contract
 and linker-file controls do not establish application build acceptance.
 
+Each operation with an acquired output directory also attempts to retain
+`operation-timing.json`, including failed operations. It uses one monotonic
+clock and contiguous, non-overlapping phases for request checks, SDK admission,
+dependency preparation/output acquisition, compiler lease, project metadata,
+native compilation, output verification, dependency close, result publication
+and owned cleanup. SDK admission and close include their byte, producer and ABI
+checks; those aggregate phases do not claim separate per-check timings.
+The total is explicitly scoped to the broker invocation: adapter bootstrap and
+locks before entry, timing-file serialization and return are excluded. Public
+entry latency needs a separate outer measurement. `buildElapsedMs` remains the
+native-build observation and must never be presented as the end-to-end total.
+Primary failure and cleanup failure retain distinct phase outcomes. Timing
+diagnostics supply no test/qualification result, mask no original failure and
+change no local, main, packaging or publication gate. Failure to write this
+diagnostic emits a warning; it cannot turn a failed operation into a pass.
+
 The shared MSBuild guard has a separate `LocalUnpinnedAbiV1` compiler-lease
 contract (witness schema 3). It retains the live process/handle check and every
 actual-tool/search-path/per-translation-unit ABI restriction of v2. Local output
