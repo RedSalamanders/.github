@@ -14,6 +14,13 @@ Raw checkout acquisition is centralized in `Ci.SourceInputs.psm1`'s
 ordinal path/raw SHA-256 projection, including fresh no-follow and missing-file
 checks. Moving the implementation grants no new SDK admission or producer trust.
 
+Contained input/output paths read fresh native file attributes for the target and
+every existing ancestor on each call. Missing descendants still require checking
+their ancestors; live and dangling reparse components refuse. Only file/directory
+absence permits continuing. Access denial and other I/O errors propagate. This
+avoids repeated PowerShell provider setup without caching ancestor authority,
+skipping byte identity, or claiming atomic protection against concurrent mutation.
+
 The qualified producer's final ABI metadata query must select the same native compiler host as its
 library build: x64 on x64 and arm64 on ARM64. Pass that property explicitly because historical source
 props can override an environment default. Resolve the corresponding native MSBuild executable

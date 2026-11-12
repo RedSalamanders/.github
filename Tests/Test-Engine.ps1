@@ -365,6 +365,29 @@ if ([OperatingSystem]::IsWindows()) {
     }
 }
 
+Invoke-Case 'Contained paths read fresh attributes, preserve missing descendants and reject live or dangling replacements' {
+    $root=New-Fixture 'contained-attributes'
+    $owned=Join-Path $root '.build/owned';$target=Join-Path $root '.build/link-target'
+    [void][IO.Directory]::CreateDirectory($owned);[void][IO.Directory]::CreateDirectory($target)
+    $future=Join-Path $owned 'missing/deep/file.txt'
+    Assert-Equal ([IO.Path]::GetFullPath($future)) (Assert-CiContainedPath $root $future)
+    $hidden=Join-Path $owned '.hidden.txt';[IO.File]::WriteAllText($hidden,'owned hidden fixture')
+    [IO.File]::SetAttributes($hidden,([IO.File]::GetAttributes($hidden) -bor [IO.FileAttributes]::Hidden))
+    Assert-Equal ([IO.Path]::GetFullPath($hidden)) (Assert-CiContainedPath $root $hidden)
+    [IO.File]::WriteAllText((Join-Path $target 'sentinel.txt'),'owned link target')
+    [IO.Directory]::Move($owned,(Join-Path $root '.build/retained-owned'))
+    $kind=if($IsWindows){'Junction'}else{'SymbolicLink'}
+    $null=New-Item -ItemType $kind -Path $owned -Target $target
+    Assert-Refused {Assert-CiContainedPath $root $future}
+    Assert-Refused {Assert-CiContainedPath $root $owned}
+    $dangling=Join-Path $root '.build/dangling'
+    $null=New-Item -ItemType $kind -Path $dangling -Target $target
+    [IO.Directory]::Move($target,(Join-Path $root '.build/retained-target'))
+    Assert-Refused {Assert-CiContainedPath $root (Join-Path $dangling 'missing/file.txt')}
+    Assert-Refused {Assert-CiContainedPath $root (Join-Path $root '../outside')}
+    Assert-Equal 'owned link target' ([IO.File]::ReadAllText((Join-Path $root '.build/retained-target/sentinel.txt')))
+}
+
 Invoke-Case 'Revision options cannot turn classification into a Git write or external command' {
     $root = New-Fixture 'revision-options'
     Assert-Refused { Get-CiChangeDecision $root '--output=outside.txt' }
