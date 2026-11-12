@@ -7,6 +7,7 @@ Existing marked RedSalamander.Perf sandbox, or a hosted RUNNER_TEMP child. Creat
 Case results and retained results.json beneath the selected root.
 .NOTES
 Requires PowerShell 7.4 and Git. No credentials, compiler or desktop input.
+Run from clean committed engine source: trusted-controller fixtures authenticate this checkout.
 Windows formatting coverage downloads a pinned native formatter when its verified cache is absent.
 Preserves all fixtures and failures. Returns nonzero on a failed case.
 .EXAMPLE

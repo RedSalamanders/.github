@@ -59,7 +59,8 @@ The separate `Ci.LocalSdkSnapshot.psm1` data foundation captures immutable, expl
 local-unpinned payloads with dirty-source invalidation and entry leases. Pinned SDK
 and pinned application readers reject that role. Explicit local dependency and
 compiler leases feed the shared local application build broker; products own
-their literal build adapters. Local outputs retain actual linker input evidence
+their literal build adapters, including explicit absence of a configurable test switch.
+Local outputs retain actual linker input evidence
 and cannot satisfy pinned qualification or publication. See the [snapshot
 contract](Specs/SDK_Cache.md#local-unpinned-snapshot-data-foundation).
 
