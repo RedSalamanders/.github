@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "role": "ExecutionEvidenceIndex",
+  "recordedAt": "2026-11-12T11:27:54.6894490+01:00",
+  "organization": "RedSalamanders",
+  "repositories": [
+    ".github",
+    "DxUi",
+    "RedMonitor",
+    "RedPrism",
+    "RedSalamander",
+    "RedTilde",
+    "RedXe"
+  ],
+  "organizationDiscoveryDate": "2026-11-12",
+  "acceptedScopeComplete": false,
+  "controlledSpeedTargetQualified": false,
+  "localAndMainGatesRetained": true,
+  "runningActionsCancelled": false,
+  "deferred": [
+    "S7 candidate-gate replacement and local delegation",
+    "S8 cross-run candidate-to-main adoption"
+  ],
+  "sharedEngine": {
+    "pullRequest": 78,
+    "qualification": "Engine behavior only",
+    "localSdkControlsPassed": 44,
+    "hostedChecksPassed": 5,
+    "merged": "0b25b7337a49e4a617294be138e6e2e146b48df0",
+    "mainRun": 43191678906,
+    "head": "307a792fdb8a974615428777c66b67b9b50413c8",
+    "prRun": 43190632544
+  },
+  "monitor": {
+    "head": "3393b439fd6276f0a09e5b785016a5ad52d7a291",
+    "localCanonicalPrePush": "PASSED",
+    "pullRequest": 53,
+    "originalTimeoutRetained": true,
+    "canonicalLog": {
+      "path": "Z:/src/.worktrees/RM-i61-local-sdk/.build/i61-final-canonical-prepush-attempt2.log",
+      "sha256": "0d0334fe7547de99339574fd329e8477c7333f032d53307980ff1e6cb255ea73"
+    },
+    "timeoutCausallyFixed": false,
+    "mainNativeStatus": "IN_PROGRESS",
+    "merged": "dff3944e7b897fe2508e8d889b4ee6c737ac644a",
+    "mainNativeRun": 43196902574,
+    "previousMatrix": {
+      "path": "Z:\\src\\.worktrees\\RM-i61-local-sdk\\.build\\i61-local-sdk-qualification\\a67c541b31a74c6189df07ad5659670c\\scope.json",
+      "sha256": "172c21578eee64eab253cf2b32daf85a0dbad11eeb21954427c9110b9f238c2f"
+    },
+    "nativeArm64Qualified": false
+  },
+  "xe": {
+    "localDebugPrePush": "PASSED",
+    "localSdkBuild": {
+      "path": "Z:/src/.worktrees/RX-i61-local-sdk/.build/local-unpinned/3698140b251f45458d579c75f5bfca53/local-unpinned-build.json",
+      "sha256": "57ec1b531413ed54bbc00952f83b9c37c3eee992fb08c1a183577f056dbc9ef8"
+    },
+    "entryElapsedMs": 355515.3141,
+    "timing": {
+      "path": "Z:/src/.worktrees/RX-i61-local-sdk/.build/i61-local-sdk-application-timing.json",
+      "sha256": "e07c00ebf6c0bae72a9caf21ba66f2e33c1281a73d0515171f6a8871a0811986"
+    },
+    "localReleasePrePush": "PASSED",
+    "compilerElapsedMs": 100687,
+    "comparison": "Uncontrolled single build",
+    "testsQualifiedBySdkBuild": false,
+    "localAsanAndArmTail": "PENDING",
+    "source": "359fecceaea8111039fdf47c92fc72fad76cd5ff"
+  },
+  "prism": {
+    "localDebugPrePush": "PASSED",
+    "localSdkBuild": {
+      "path": "Z:/src/.worktrees/RP-i61-local-sdk/.build/local-unpinned/4d0032d5cce040e49e36d3c7de51f7e2/local-unpinned-build.json",
+      "sha256": "b1c4a2f8d12b596d528879446ef7666bd417bdca21f422de3f1fd9b36d6ecb92"
+    },
+    "controlledParallelWriterRefusalAndSerialCopy": "PASSED",
+    "localAsanBuild": "FAILED: one MSB3026 shared sanitizer runtime copy warning",
+    "nativeFixedAsanQualified": false,
+    "localReleasePrePush": "PASSED",
+    "recordingWorkerCasesPassed": 20,
+    "source": "2bbe72433ef0b952603ba4fa3436dcaff912faa8",
+    "schedulingRepair": "IN_PROGRESS: serial ASan project writers, unchanged C++ compiler budget"
+  },
+  "dxui": {
+    "originalHangAndSymbolsRetained": true,
+    "completeNativeMatrix": "IN_PROGRESS",
+    "originalCaseLog": {
+      "path": "Z:/src/.worktrees/DX-i61-shadow-caller-20261110/.build/i61-prepared-dump-original-focused.log",
+      "sha256": "f5ec07247b28ccb3aab5efb20b130f10c9449014341616918bfc7242cdf475d5"
+    },
+    "nativeArm64Qualified": false,
+    "zeroWarningReleaseBuild": "PASSED",
+    "repair": "Prepare and retain system PSAPI before installing hooks/reporting worker",
+    "originalCaseResult": "PASSED",
+    "originalFailure": "WindowHost fatal child self-dump waits in DbgCore LoadPsApi and loader work",
+    "source": "e7c451fe779951b7fe6c2d8b98d36fb1c611b283",
+    "originalCase": "TestWindowHostKeyboardMessageRejectsRetiredForeignAndFailedOwners",
+    "validatorsAndFormat": "PASSED"
+  },
+  "root": {
+    "originalMainRun": 43102634782,
+    "sdkRoutingAndOutputControlsPassed": 6,
+    "apiRevision": 4,
+    "managedPin": "4cdf1ce52c7785446698e346b8aec058ed6a9283",
+    "ownedCrashProof": {
+      "path": "Z:/RedSalamander.Perf/evidence/i61-resume-20261110/owned-viewer-capture-20261112T091019Z-32944-334b544f1424441db18e3c563986f66b/scope.json",
+      "sha256": "f9395841743d0ce9690c4841cc4589f0f22c3f987c5268d44f6c3337d937c07a"
+    },
+    "hostedFixtureLocalPrePush": "IN_PROGRESS",
+    "currentSdkSource": "b918872d37962d91501dc19b0f986617ea708d52",
+    "hostedFixtureSource": "5f7131e503b3c9fffb268215e4d5cc06aeea4a6f",
+    "originalMainStatus": "FAILED",
+    "currentSdkBuild": "IN_PROGRESS after manifest-resolution repair",
+    "originalAvCausallyFixed": false,
+    "nativeArm64Qualified": false,
+    "solutionProjectsWithIsolatedOutputMetadata": 110,
+    "ownedCrashProofSource": "a3f476c9ef4485ca08ef9902fd24e0a2e3430f11",
+    "originalSdkFailuresRetained": [
+      "Accidentally selected API5 snapshot: refused before native compilation",
+      "Disabled manifest mode instead of only installation: 27 missing-library/unresolved-symbol errors"
+    ],
+    "popupIdleAndIdentityLessFailures": "OPEN"
+  },
+  "previousNativeBaselines": {
+    "RedXe": {
+      "passedJobs": 7,
+      "source": "2168d1073b825ff9a283b00f157b30b0d75f33fa",
+      "run": 43043007856
+    },
+    "RedTilde": {
+      "passedJobs": 7,
+      "source": "26c7529a072773571dafcf1c50ac24345c45e8ad",
+      "run": 43055177782
+    },
+    "RedPrism": {
+      "passedJobs": 7,
+      "source": "706bd01b3fab2eb3f126cf428060c4954896751d",
+      "run": 43020208606
+    }
+  },
+  "remaining": [
+    "Finish current SDK builds, current-source native profiles, foreground and hosted main gates",
+    "Local SDK runtime adapter and complete runtime-byte catalog",
+    "Fine native closure and seeded/historical detection comparison",
+    "Admission/verification/ABI/compile/close timing and controlled 3x warm / 2x end-to-end / compute acceptance",
+    "Root unexplained AV, latest native main failures, normal Entire integration and durable closeout"
+  ]
+}
