@@ -5,6 +5,7 @@ Import-Module (Join-Path $PSScriptRoot 'Ci.Policy.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Ci.SourceInputs.psm1')
 $script:local=Import-Module (Join-Path $PSScriptRoot 'Ci.LocalSdkConsumer.psm1') -PassThru
 $script:consumer=Import-Module (Join-Path $PSScriptRoot 'Ci.SdkConsumer.psm1') -PassThru
+$script:abi=Import-Module (Join-Path $PSScriptRoot 'Ci.SdkAbi.psm1') -PassThru
 
 function New-CiLocalSdkBuildTiming {
     [pscustomobject]@{clock=[Diagnostics.Stopwatch]::StartNew();startedUtc=[DateTime]::UtcNow.ToString('o');
@@ -155,8 +156,13 @@ function Invoke-CiLocalSdkApplicationBuild {
         # All project outputs are leased beneath this fresh operation, so inspect
         # its bounded tracking closure rather than only the executable's IntDir.
         $link=Get-CiLocalSdkLinkInput -IntermediateRoot $output -SdkRoot $inputState.SdkRoot -Platform $Platform
+        $runtimeRoot=Assert-CiContainedPath $output $actual.OutDir
+        # Reuse the portable complete-directory byte catalog, including nested
+        # resources and plugins. Executable identity alone cannot admit runtime.
+        $runtimeBytes=& $script:abi {param($r)Get-CiPortableSdkFileReference @{ApplicationOutput=$r}} $runtimeRoot
         $result=[ordered]@{schemaVersion=1;role='LocalUnpinnedApplicationBuild';recipe='LocalUnpinnedReleaseSdk';projectRoot=$root;sourceBytes=$inputState.SourceBytes;engineInputs=$inputState.EngineInputs;
             dependency=$inputState.Evidence;platform=$Platform;configuration='Release';outputRoot=$output;executable=$executable;executableSha256=(Get-FileHash -LiteralPath $executable).Hash.ToLowerInvariant();
+            inputDescriptor=[ordered]@{path=$inputState.Descriptor.Path;sha256=$ExpectedDescriptorSha256};runtimeRoot=$runtimeRoot;runtimeBytes=$runtimeBytes;
             actualLinkInput=$link;buildElapsedMs=$clock.ElapsedMilliseconds;timingPath=(Join-Path $output 'operation-timing.json');testsExecuted=$false;repositoryQualified=$false;productionQualified=$false}
         Set-CiLocalSdkBuildPhase $timing 'dependencyClose'
         Stop-CiLocalSdkCompilerLease $inputState

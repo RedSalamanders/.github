@@ -203,6 +203,33 @@ diagnostics supply no test/qualification result, mask no original failure and
 change no local, main, packaging or publication gate. Failure to write this
 diagnostic emits a warning; it cannot turn a failed operation into a pass.
 
+Build records additionally bind the original SDK descriptor path/digest and
+the complete actual application output directory through the existing portable
+directory-byte catalog. This includes nested plugins, resources and symbols;
+equal sizes or timestamps never replace hashing. Compiler intermediates outside
+that output directory are not runtime inputs. This catalog remains byte evidence,
+not SDK or application qualification.
+
+`Ci.LocalSdkRuntime.psm1` supplies a separate live
+`LocalUnpinnedApplicationRuntimeInput` for product-owned local test adapters.
+Opening requires the original build-record path and independently retained SHA-256,
+the same current project/source/actual engine, the original descriptor, compatible
+SDK/API/ABI, the selected native execution architecture and the exact complete output
+catalog. Older records without that catalog require a new build. Pinned or production
+records, self-declared test/qualification flags, hosted/compiler-free requests and
+foreign operation/output paths refuse. Admission does not launch an executable.
+
+The runtime input exclusively owns the existing build operation and holds the
+original receipt and every cataloged payload file against writes/replacement.
+The SDK reader remains live throughout execution. Close checks the complete catalog
+again (including additions), then revalidates source, engine, producer, SDK and ABI
+through the canonical SDK reader. Failure releases all ownership and cannot publish
+a successful runtime result. The product adapter must drain its owned children before
+close, execute its declared canonical scenarios, preserve failures and bind its distinct
+local runtime result to the build digest and actual scenario evidence. This input does
+not impersonate an ordinary build receipt or satisfy pinned PrePush, hosted main,
+production, packaging, publication or a different native architecture.
+
 The shared MSBuild guard has a separate `LocalUnpinnedAbiV1` compiler-lease
 contract (witness schema 3). It retains the live process/handle check and every
 actual-tool/search-path/per-translation-unit ABI restriction of v2. Local output
