@@ -10,11 +10,13 @@ function Read-CiLocalSdkBuildContract {
     param([string]$Root,[Collections.IDictionary]$Contract)
     $keys=@('buildFile','metadataProject','target','sdkProperty','engineProperty','outputProperty','testsProperty','versionProperty','executable')
     if($Contract.Count -ne $keys.Count -or @($keys|Where-Object {-not $Contract.Contains($_)}).Count){throw 'Local SDK application contract has missing or unknown fields.'}
-    foreach($name in $keys){if($Contract[$name] -isnot [string] -or [string]::IsNullOrWhiteSpace($Contract[$name])){throw 'Local SDK application contract fields must be nonempty strings.'}}
-    foreach($name in @('sdkProperty','engineProperty','outputProperty','testsProperty','versionProperty')){
+    foreach($name in $keys){if($Contract[$name] -isnot [string] -or ($name -cne 'testsProperty' -and [string]::IsNullOrWhiteSpace($Contract[$name]))){throw 'Local SDK application contract fields must be strings; only the explicit testsProperty sentinel may be empty.'}}
+    $propertyNames=@('sdkProperty','engineProperty','outputProperty','versionProperty')
+    if($Contract.testsProperty -cne ''){$propertyNames+='testsProperty'}
+    foreach($name in $propertyNames){
         if($Contract[$name] -cnotmatch '^[A-Za-z][A-Za-z0-9]*$'){throw 'Application property names must be literal MSBuild identifiers.'}
     }
-    if(@($keys|Where-Object {$_ -like '*Property'}|ForEach-Object {$Contract[$_]}|Select-Object -Unique).Count -ne 5){throw 'Application SDK, engine, output, test and version properties must be distinct.'}
+    if(@($propertyNames|ForEach-Object {$Contract[$_]}|Select-Object -Unique).Count -ne $propertyNames.Count){throw 'Application SDK, engine, output, test and version properties must be distinct.'}
     if($Contract.target -cnotmatch '^[A-Za-z0-9_.\\:]+$'){throw 'Local SDK target must be one literal reviewed build target.'}
     foreach($name in @('buildFile','metadataProject')){
         if([IO.Path]::IsPathFullyQualified($Contract[$name])){throw 'Application build paths must be repository relative.'}
@@ -23,6 +25,20 @@ function Read-CiLocalSdkBuildContract {
     }
     if($Contract.metadataProject -cnotmatch '\.vcxproj$' -or $Contract.buildFile -cnotmatch '\.(sln|vcxproj)$'){throw 'Local SDK builds require reviewed native MSBuild inputs.'}
     if([IO.Path]::IsPathFullyQualified($Contract.executable) -or $Contract.executable -cnotmatch '\.exe$'){throw 'Application executable must be relative to the evaluated output directory.'}
+}
+
+function Get-CiLocalSdkApplicationProperties {
+    param($SdkInput,[Collections.IDictionary]$Contract,[string]$OutputRoot,[int]$BuildNumber)
+    $properties=[ordered]@{Platform=$SdkInput.Evidence.platform;Configuration='Release';CiSdkRoot=$SdkInput.SdkRoot;CiSdkProjectRoot=$SdkInput.ProjectRoot;
+        CiSdkLeasePath=$SdkInput.CompilerLease.Path;CiSdkContract=$SdkInput.CompilerLease.Contract;DxUiRoot='';DxUiDisableStlAnnotations='false';
+        PreferredToolArchitecture=[string]$SdkInput.Abi.Properties.PreferredToolArchitecture;VCToolsVersion=[string]$SdkInput.Abi.Properties.VCToolsVersion;
+        WindowsTargetPlatformVersion=[string]$SdkInput.Abi.Properties.WindowsTargetPlatformVersion}
+    $properties[$Contract.sdkProperty]=$SdkInput.SdkRoot
+    $properties[$Contract.engineProperty]=Join-Path $SdkInput.ProjectRoot '.ci-engine'
+    $properties[$Contract.outputProperty]=$OutputRoot+[IO.Path]::DirectorySeparatorChar
+    if($Contract.testsProperty -cne ''){$properties[$Contract.testsProperty]='true'}
+    $properties[$Contract.versionProperty]=[string]$BuildNumber
+    return $properties
 }
 
 function Get-CiLocalSdkLinkInput {
@@ -83,14 +99,7 @@ function Invoke-CiLocalSdkApplicationBuild {
         $operation=[IO.File]::Open((Join-Path $output 'operation.lock'),[IO.FileMode]::CreateNew,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
         $frame=Start-CiLocalSdkCompilerLease -SdkInput $inputState -OutputRoot $output
         foreach($path in @($root,$output,$inputState.SdkRoot,$frame.Path)){if($path -match '[%;"\r\n]'){throw 'Local SDK paths contain unsupported MSBuild delimiters.'}}
-        $properties=[ordered]@{Platform=$Platform;Configuration='Release';CiSdkRoot=$inputState.SdkRoot;CiSdkProjectRoot=$root;
-            CiSdkLeasePath=$frame.Path;CiSdkContract=$frame.Contract;DxUiRoot='';DxUiDisableStlAnnotations='false';
-            PreferredToolArchitecture=[string]$inputState.Abi.Properties.PreferredToolArchitecture;VCToolsVersion=[string]$inputState.Abi.Properties.VCToolsVersion;
-            WindowsTargetPlatformVersion=[string]$inputState.Abi.Properties.WindowsTargetPlatformVersion}
-        $properties[$BuildContract.sdkProperty]=$inputState.SdkRoot
-        $properties[$BuildContract.engineProperty]=Join-Path $root '.ci-engine'
-        $properties[$BuildContract.outputProperty]=$output+[IO.Path]::DirectorySeparatorChar
-        $properties[$BuildContract.testsProperty]='true';$properties[$BuildContract.versionProperty]=[string]$BuildNumber
+        $properties=Get-CiLocalSdkApplicationProperties -SdkInput $inputState -Contract $BuildContract -OutputRoot $output -BuildNumber $BuildNumber
         $arguments=@($properties.Keys|ForEach-Object {'/p:'+$_+'='+[string]$properties[$_]})
         $metadataPath=Join-Path $root $BuildContract.metadataProject
         $query=Invoke-CiProcess -FilePath $MSBuildPath -Arguments (@($metadataPath,'/nologo','/v:quiet','-getProperty:OutDir,IntDir,DxUiRoot,DxUiSdkRoot,CiSdkContract')+$arguments) -WorkingDirectory $root -TimeoutSeconds 120
@@ -112,7 +121,10 @@ function Invoke-CiLocalSdkApplicationBuild {
         $null=& $diagnostics {param($p)Assert-NativeBuildDiagnostics -LogPath $p} $log
         $executable=Assert-CiContainedPath $output (Join-Path $actual.OutDir $BuildContract.executable)
         if(-not [IO.File]::Exists($executable)){throw 'The local SDK application executable is missing from its owned output.'}
-        $link=Get-CiLocalSdkLinkInput -IntermediateRoot $actual.IntDir -SdkRoot $inputState.SdkRoot -Platform $Platform
+        # A solution may link the SDK in both its executable and a sibling plugin.
+        # All project outputs are leased beneath this fresh operation, so inspect
+        # its bounded tracking closure rather than only the executable's IntDir.
+        $link=Get-CiLocalSdkLinkInput -IntermediateRoot $output -SdkRoot $inputState.SdkRoot -Platform $Platform
         $result=[ordered]@{schemaVersion=1;role='LocalUnpinnedApplicationBuild';recipe='LocalUnpinnedReleaseSdk';projectRoot=$root;sourceBytes=$inputState.SourceBytes;engineInputs=$inputState.EngineInputs;
             dependency=$inputState.Evidence;platform=$Platform;configuration='Release';outputRoot=$output;executable=$executable;executableSha256=(Get-FileHash -LiteralPath $executable).Hash.ToLowerInvariant();
             actualLinkInput=$link;buildElapsedMs=$clock.ElapsedMilliseconds;testsExecuted=$false;repositoryQualified=$false;productionQualified=$false}

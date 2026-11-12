@@ -26,6 +26,40 @@ Case 'local application linker evidence requires the exact held archive and refu
     [IO.File]::WriteAllText($tracking,'no DxUi archive')
     Rejects-LocalConsumer {& $localBuild {param($i,$s)Get-CiLocalSdkLinkInput $i $s x64} $intermediate $sdk} 'does not establish use'
 }
+Case 'unconditional application test surfaces omit an invented switch while guarded build inputs stay identical' {
+    $unconditional=$buildContract|ConvertTo-Json|ConvertFrom-Json -AsHashtable
+    $unconditional.testsProperty=''
+    & $localBuild {param($r,$c)Read-CiLocalSdkBuildContract $r $c} $buildRoot $unconditional
+    foreach($invalid in @($null,' ','Bad=Value','AppSdkRoot')){
+        $changed=$unconditional.Clone();$changed.testsProperty=$invalid
+        Refuses {& $localBuild {param($r,$c)Read-CiLocalSdkBuildContract $r $c} $buildRoot $changed}
+    }
+    $inputState=[pscustomobject]@{ProjectRoot=$buildRoot;SdkRoot=(Join-Path $buildRoot 'sdk');Evidence=@{platform='x64'};
+        CompilerLease=@{Path=(Join-Path $buildRoot 'lease');Contract='LocalUnpinnedAbiV1'};
+        Abi=@{Properties=@{PreferredToolArchitecture='x64';VCToolsVersion='fixture';WindowsTargetPlatformVersion='fixture'}}}
+    $output=Join-Path $buildRoot 'output'
+    $ordinary=& $localBuild {param($s,$c,$o)Get-CiLocalSdkApplicationProperties $s $c $o 123} $inputState $buildContract $output
+    $always=& $localBuild {param($s,$c,$o)Get-CiLocalSdkApplicationProperties $s $c $o 123} $inputState $unconditional $output
+    Check ($ordinary.AppTests -ceq 'true' -and -not $always.Contains('AppTests') -and -not $always.Contains('')) 'The actual build mapper invented or lost a test-surface override.'
+    $ordinary.Remove('AppTests')
+    Check (($ordinary|ConvertTo-Json -Compress) -ceq ($always|ConvertTo-Json -Compress)) 'Omitting the absent test switch changed guarded source, SDK, compiler, output or version inputs.'
+}
+Case 'application link proof covers sibling executable and plugin tracking without accepting a foreign plugin archive' {
+    $operation=Join-Path $buildRoot 'multi-project-output'
+    $sdk=Join-Path $buildRoot 'multi-project-sdk'
+    $archive=Join-Path $sdk 'lib/x64/Release/DxUi.lib'
+    [void][IO.Directory]::CreateDirectory((Split-Path $archive))
+    [IO.File]::WriteAllText($archive,'synthetic SDK archive')
+    foreach($name in @('App','Plugin')){
+        $directory=Join-Path $operation ('Intermediate/'+$name)
+        [void][IO.Directory]::CreateDirectory($directory)
+        [IO.File]::WriteAllText((Join-Path $directory 'link.read.1.tlog'),$archive,[Text.Encoding]::Unicode)
+    }
+    $proof=& $localBuild {param($o,$s)Get-CiLocalSdkLinkInput $o $s x64} $operation $sdk
+    Check ($proof.tracking.Count -eq 2) 'Application proof omitted a sibling plugin tracking file.'
+    [IO.File]::WriteAllText((Join-Path $operation 'Intermediate/Plugin/link.read.1.tlog'),'C:\Foreign\DxUi.lib',[Text.Encoding]::Unicode)
+    Rejects-LocalConsumer {& $localBuild {param($o,$s)Get-CiLocalSdkLinkInput $o $s x64} $operation $sdk} 'outside the held immutable snapshot'
+}
 Case 'local application entrypoint refuses hosted and compiler-free requests before dependency or output discovery' {
     $native=$env:CI_NATIVE_BUILDS_DISABLED;$actions=$env:GITHUB_ACTIONS
     try{

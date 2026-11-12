@@ -159,15 +159,21 @@ build, linker-input verification or build-result publication by themselves.
 
 `Ci.LocalSdkBuild.psm1` supplies the explicit local application build broker.
 Each product owns its reviewed literal solution/project, target, executable and
-five distinct SDK/engine/output/test/version property names; the shared engine
-does not infer product layouts. An optional product-owned dependency preparation
+distinct SDK/engine/output/test/version property names. An application with no configurable
+test surface declares exactly the empty-string `testsProperty` sentinel: the broker omits
+that override instead of inventing a product switch. Null, whitespace, malformed and colliding
+property names still refuse. The other four property names remain required and distinct;
+omitting a test switch changes no SDK, compiler, output, source or version binding and grants
+no test result. The shared engine does not infer product layouts. An optional product-owned dependency preparation
 callback runs after dependency acquisition and before consumer output ownership.
 The broker creates a fresh exclusive operation beneath `.build/local-unpinned/`,
 starts the compiler frame, evaluates the actual application project and checks
 both output paths before compilation. It invokes the selected real MSBuild with
 the same Release SDK and tool properties, requires zero warnings/errors, and
 reads bounded, plain linker tracking files to establish that the actual link
-used the held `DxUi.lib` and no other archive with that name. Missing tracking
+used the held `DxUi.lib` and no other archive with that name. Tracking is inventoried
+across the complete fresh leased operation, including sibling plugin intermediates;
+recorded tracking paths are relative to that operation. Missing tracking
 fails. This route does not reuse canonical application outputs or kill an
 independently launched application.
 
