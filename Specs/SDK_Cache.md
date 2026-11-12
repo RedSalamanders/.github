@@ -166,6 +166,12 @@ property names still refuse. The other four property names remain required and d
 omitting a test switch changes no SDK, compiler, output, source or version binding and grants
 no test result. The shared engine does not infer product layouts. An optional product-owned dependency preparation
 callback runs after dependency acquisition and before consumer output ownership.
+An existing product-owned `.proj` native aggregate may select its normal executable,
+satellite and test project union; metadata still comes from one real `.vcxproj`.
+The aggregate must preserve all supplied guarded output/SDK properties for every
+child, and the product's local-output preflight covers every child before writes.
+This does not infer a test union, accept an arbitrary extension or permit multiple
+injected targets. Adapters declare their existing reviewed aggregate explicitly.
 The broker creates a fresh exclusive operation beneath `.build/local-unpinned/`,
 starts the compiler frame, evaluates the actual application project and checks
 both output paths before compilation. It invokes the selected real MSBuild with

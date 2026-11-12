@@ -3,12 +3,21 @@
 $localBuild=Import-Module (Join-Path $engine 'Tools/Modules/Ci.LocalSdkBuild.psm1') -PassThru
 $buildRoot=Join-Path $root 'build-contract'
 [void][IO.Directory]::CreateDirectory($buildRoot)
-foreach($name in @('App.sln','App.vcxproj')){[IO.File]::WriteAllText((Join-Path $buildRoot $name),'synthetic native input')}
+foreach($name in @('App.sln','App.vcxproj','App.proj','App.targets')){[IO.File]::WriteAllText((Join-Path $buildRoot $name),'synthetic native input')}
 $buildContract=[ordered]@{buildFile='App.sln';metadataProject='App.vcxproj';target='App';sdkProperty='AppSdkRoot';engineProperty='AppEngineRoot';outputProperty='AppOutputRoot';testsProperty='AppTests';versionProperty='AppVersion';executable='App.exe'}
 Case 'local application contract rejects property collisions, target injection and foreign build inputs' {
     & $localBuild {param($r,$c)Read-CiLocalSdkBuildContract $r $c} $buildRoot $buildContract
     foreach($pair in @(@('target','App;Other'),@('engineProperty','AppSdkRoot'),@('outputProperty','Bad=Value'),@('buildFile','../App.sln'),@('metadataProject','App.sln'),@('executable',(Join-Path ([IO.Path]::GetPathRoot($buildRoot)) 'App.exe')))){
         $changed=$buildContract|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$changed[$pair[0]]=$pair[1]
+        Refuses {& $localBuild {param($r,$c)Read-CiLocalSdkBuildContract $r $c} $buildRoot $changed}
+    }
+}
+Case 'reviewed native project aggregates retain a real vcxproj metadata boundary' {
+    $aggregate=$buildContract|ConvertTo-Json|ConvertFrom-Json -AsHashtable
+    $aggregate.buildFile='App.proj';$aggregate.target='Build'
+    & $localBuild {param($r,$c)Read-CiLocalSdkBuildContract $r $c} $buildRoot $aggregate
+    foreach($pair in @(@('metadataProject','App.proj'),@('buildFile','App.targets'),@('target','Build;Publish'))){
+        $changed=$aggregate.Clone();$changed[$pair[0]]=$pair[1]
         Refuses {& $localBuild {param($r,$c)Read-CiLocalSdkBuildContract $r $c} $buildRoot $changed}
     }
 }

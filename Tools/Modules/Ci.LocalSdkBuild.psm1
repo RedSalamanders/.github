@@ -46,7 +46,7 @@ function Read-CiLocalSdkBuildContract {
         $path=Assert-CiContainedPath $Root (Join-Path $Root $Contract[$name])
         if(-not [IO.File]::Exists($path)){throw 'Application SDK build contract names a missing project or solution.'}
     }
-    if($Contract.metadataProject -cnotmatch '\.vcxproj$' -or $Contract.buildFile -cnotmatch '\.(sln|vcxproj)$'){throw 'Local SDK builds require reviewed native MSBuild inputs.'}
+    if($Contract.metadataProject -cnotmatch '\.vcxproj$' -or $Contract.buildFile -cnotmatch '\.(sln|vcxproj|proj)$'){throw 'Local SDK builds require reviewed native MSBuild inputs.'}
     if([IO.Path]::IsPathFullyQualified($Contract.executable) -or $Contract.executable -cnotmatch '\.exe$'){throw 'Application executable must be relative to the evaluated output directory.'}
 }
 
