@@ -85,23 +85,26 @@ function Assert-CiSdkAbiSearchPathBinding {
         $consumed=0
         foreach($defaultPath in $baseline){
             if($consumed -lt $paths.Count -and $paths[$consumed].Equals($defaultPath,$comparison)){$consumed++;continue}
-            # VC defaults name optional ATL/.NET components even on images which
+            # VC defaults name optional ATL/VS support/.NET components even on images which
             # do not install them. Removing only an absent optional directory
             # cannot change library resolution. Core MSVC/Windows/CRT defaults
             # remain mandatory, including when missing on disk.
             $absentOptional=$false
             if($name -ceq 'LibraryPath'){
                 $atlRoot=[IO.Path]::GetFullPath((Join-Path $Expected.VCToolsInstallDir 'atlmfc/lib'))
+                $vsRoot=[IO.Path]::GetFullPath((Join-Path $Expected.VCToolsInstallDir '../../../Auxiliary/VS/lib'))
                 $frameworkRoot=[IO.Path]::GetFullPath((Join-Path $Expected.WindowsSdkDir '../NETFXSDK'))
                 $atlRelative=[IO.Path]::GetRelativePath($atlRoot,$defaultPath).Replace('\','/')
+                $vsRelative=[IO.Path]::GetRelativePath($vsRoot,$defaultPath).Replace('\','/')
                 $frameworkRelative=[IO.Path]::GetRelativePath($frameworkRoot,$defaultPath).Replace('\','/')
-                if($atlRelative -match '^(x86|x64|arm64)$' -or $frameworkRelative -match '^\d+(\.\d+){1,3}/lib/um/(x86|x64|arm64)$'){
+                if($atlRelative -match '^(x86|x64|arm64)$' -or $vsRelative -match '^(x86|x64|arm64)$' -or
+                    $frameworkRelative -match '^\d+(\.\d+){1,3}/lib/um/(x86|x64|arm64)$'){
                     try{$null=[IO.File]::GetAttributes($defaultPath)}
                     catch [IO.FileNotFoundException]{$absentOptional=$true}
                     catch [IO.DirectoryNotFoundException]{$absentOptional=$true}
                 }
             }
-            if(-not $absentOptional){throw "Qualified SDK actual compiler search property omits or reorders required default paths: $name."}
+            if(-not $absentOptional){throw "Qualified SDK actual compiler search property omits or reorders required default paths: $name. Required: $defaultPath; actual next: $(if($consumed -lt $paths.Count){$paths[$consumed]}else{'<end>'})."}
         }
         foreach($path in @($paths|Select-Object -Skip $consumed)){
             $owned=$false
