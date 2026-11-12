@@ -2547,7 +2547,7 @@ Invoke-Case 'Qualified SDK library defaults admit only freshly absent optional A
             $bad=$original.Clone();$bad[$field]=''
             Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $bad $fixture}
         }
-        $missingCore=$expected.Clone();$missingCore.LibraryPath=(Join-Path $vc ('lib/missing-core/'+$platform))+';'+$win
+        $missingCore=$expected|ConvertTo-Json|ConvertFrom-Json -AsHashtable;$missingCore.LibraryPath=(Join-Path $vc ('lib/missing-core/'+$platform))+';'+$win
         Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $missingCore $actual $fixture}
         $foreign=$original.Clone();$foreign.LibraryPath+='|'+(Join-Path $runRoot 'untrusted-missing-library')
         Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $foreign $fixture}
