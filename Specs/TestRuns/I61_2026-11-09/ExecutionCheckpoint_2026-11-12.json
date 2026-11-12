@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "role": "ExecutionEvidenceIndex",
-  "recordedAt": "2026-11-12T11:27:54.6894490+01:00",
+  "recordedAt": "2026-11-12T11:37:13.0628383+01:00",
   "organization": "RedSalamanders",
   "repositories": [
     ".github",
@@ -65,7 +65,7 @@
     "compilerElapsedMs": 100687,
     "comparison": "Uncontrolled single build",
     "testsQualifiedBySdkBuild": false,
-    "localAsanAndArmTail": "PENDING",
+    "localAsanAndArmTail": "PASSED: x64 ASan PrePush and all three ARM64 cross-builds",
     "source": "359fecceaea8111039fdf47c92fc72fad76cd5ff"
   },
   "prism": {
@@ -80,11 +80,11 @@
     "localReleasePrePush": "PASSED",
     "recordingWorkerCasesPassed": 20,
     "source": "2bbe72433ef0b952603ba4fa3436dcaff912faa8",
-    "schedulingRepair": "IN_PROGRESS: serial ASan project writers, unchanged C++ compiler budget"
+    "schedulingRepair": "COMMITTED 211d91a35e4a7949387a157ed2755ec68fc97e1f: canonical ASan qualification running"
   },
   "dxui": {
     "originalHangAndSymbolsRetained": true,
-    "completeNativeMatrix": "IN_PROGRESS",
+    "completeNativeMatrix": "IN_PROGRESS: explicit Full rebuild, completed independent validation retained",
     "originalCaseLog": {
       "path": "Z:/src/.worktrees/DX-i61-shadow-caller-20261110/.build/i61-prepared-dump-original-focused.log",
       "sha256": "f5ec07247b28ccb3aab5efb20b130f10c9449014341616918bfc7242cdf475d5"
@@ -96,7 +96,8 @@
     "originalFailure": "WindowHost fatal child self-dump waits in DbgCore LoadPsApi and loader work",
     "source": "e7c451fe779951b7fe6c2d8b98d36fb1c611b283",
     "originalCase": "TestWindowHostKeyboardMessageRejectsRetiredForeignAndFailedOwners",
-    "validatorsAndFormat": "PASSED"
+    "validatorsAndFormat": "PASSED",
+    "originalFullSkipBuildRequest": "REFUSED: complete native receipt required after selected build"
   },
   "root": {
     "originalMainRun": 43102634782,
@@ -111,7 +112,7 @@
     "currentSdkSource": "b918872d37962d91501dc19b0f986617ea708d52",
     "hostedFixtureSource": "5f7131e503b3c9fffb268215e4d5cc06aeea4a6f",
     "originalMainStatus": "FAILED",
-    "currentSdkBuild": "IN_PROGRESS after manifest-resolution repair",
+    "currentSdkBuild": "PASSED: zero-warning API4 application/plugin compile and link",
     "originalAvCausallyFixed": false,
     "nativeArm64Qualified": false,
     "solutionProjectsWithIsolatedOutputMetadata": 110,
@@ -120,7 +121,14 @@
       "Accidentally selected API5 snapshot: refused before native compilation",
       "Disabled manifest mode instead of only installation: 27 missing-library/unresolved-symbol errors"
     ],
-    "popupIdleAndIdentityLessFailures": "OPEN"
+    "popupIdleAndIdentityLessFailures": "OPEN",
+    "localSdkBuild": {
+      "sha256": "66149fe1fe17cd4b6e65ec478d781c814dfb5086cea5ce956a061763850a7ea0",
+      "path": "Z:/src/.worktrees/RS-i61-viewer-crash-evidence/.build/local-unpinned/52b6f3da7c7a4f24aa31ae4a50d91ce2/local-unpinned-build.json"
+    },
+    "entryElapsedMs": 675883.5098,
+    "compilerElapsedMs": 373093,
+    "currentSourcePrePush": "IN_PROGRESS"
   },
   "previousNativeBaselines": {
     "RedXe": {
