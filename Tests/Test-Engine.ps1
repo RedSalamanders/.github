@@ -2556,6 +2556,39 @@ Invoke-Case 'Qualified SDK library defaults admit only freshly absent optional A
     }
 }
 
+Invoke-Case 'Qualified SDK VS support defaults allow fresh absence only and preserve core order and appended ownership' {
+    $abi=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkAbi.psm1') -PassThru
+    foreach($platform in @('x64','ARM64','x86')){
+        $fixture=New-Fixture ('vs-support-sdk-libraries-'+$platform)
+        $vc=Join-Path $fixture 'VS/VC/Tools/MSVC/14.52.37025'
+        $windows=Join-Path $fixture 'Windows/10'
+        $core=Join-Path $vc ('lib/'+$platform)
+        $win=Join-Path $windows ('Lib/10.0.26100.0/um/'+$platform)
+        $aux=[IO.Path]::GetFullPath((Join-Path $vc ('../../../Auxiliary/VS/lib/'+$platform)))
+        $include=Join-Path $vc 'include';$references=Join-Path $vc 'references'
+        foreach($path in @($core,$win,$include,$references)){[void][IO.Directory]::CreateDirectory($path)}
+        $expected=[ordered]@{VCToolsInstallDir=$vc;WindowsSdkDir=$windows;IncludePath=$include;LibraryPath=(@($core,$aux,$win)-join ';');ReferencePath=$references}
+        $actual=@{IncludePath=$include;LibraryPath=(@($core,$win)-join '|');ReferencePath=$references}
+        & $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $actual $fixture
+        $full=$actual.Clone();$full.LibraryPath=$expected.LibraryPath.Replace(';','|')
+        & $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $full $fixture
+        [void][IO.Directory]::CreateDirectory((Split-Path $aux -Parent))
+        [IO.File]::WriteAllText($aux,'An existing support file cannot be omitted.')
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $actual $fixture}
+        [IO.File]::Delete($aux)
+        [void][IO.Directory]::CreateDirectory($aux)
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $actual $fixture}
+        & $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $full $fixture
+        $bad=$full.Clone();$bad.LibraryPath=(@($win,$aux,$core)-join '|')
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $bad $fixture}
+        $bad=$full.Clone();$bad.LibraryPath=(@($aux,$win)-join '|')
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $bad $fixture}
+        $other=$expected|ConvertTo-Json|ConvertFrom-Json -AsHashtable
+        $other.LibraryPath=(@($core,($aux+'-unreviewed'),$win)-join ';')
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $other $actual $fixture}
+    }
+}
+
 Invoke-Case 'Qualified SDK witnesses bind actual compiler roots and reject downgrade, changed tools, missing metadata and closed owners' {
     $consumer=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkConsumer.psm1') -PassThru
     $fixture=New-Fixture 'qualified-sdk-actual-tool-binding'

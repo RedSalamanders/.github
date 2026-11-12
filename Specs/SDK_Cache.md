@@ -442,7 +442,8 @@ record so a successful source fallback cannot be mistaken for SDK-hit acceptance
 
 `Ci.SdkAbi.psm1` supplies a separate v2 byte-reference format. It does not alter
 the requirement to bind actual compiler search paths. Library-path binding may
-omit an absent default ATL directory below the selected MSVC `atlmfc/lib` root
+omit an absent default ATL directory below the selected MSVC `atlmfc/lib` root,
+an absent Visual Studio support directory at the selected VC `Auxiliary/VS/lib/<architecture>` default,
 or an absent versioned `.NET` directory below the selected Windows Kits
 `NETFXSDK/<version>/lib/um` root, for x86/x64/ARM64 only. Presence is checked
 fresh; an existing directory, file, reparse entry or inaccessible path is not an
@@ -450,6 +451,7 @@ absent optional component. Core MSVC/Windows/CRT defaults, their order, include
 and reference paths, compiler environment agreement and application/SDK ownership
 of appended paths remain mandatory. Missing optional components grant no SDK or
 product qualification and never waive a real library or tool identity mismatch.
+Mismatch diagnostics identify the required default and the next actual path; they do not change admission.
 
 The v2 format does not alter
 the v1 recipe, authenticate an SDK origin, admit a consumer, or cache a product
