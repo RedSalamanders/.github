@@ -2514,6 +2514,48 @@ Invoke-Case 'Qualified SDK preparation constructs the actual strict archive-boun
     }
 }
 
+Invoke-Case 'Qualified SDK library defaults admit only freshly absent optional ATL and NETFX directories' {
+    $abi=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkAbi.psm1') -PassThru
+    foreach($platform in @('x64','ARM64','x86')){
+        $fixture=New-Fixture ('optional-sdk-libraries-'+$platform)
+        $vc=Join-Path $fixture 'tools/msvc'
+        $windows=Join-Path $fixture 'windows/10'
+        $core=Join-Path $vc ('lib/'+$platform)
+        $win=Join-Path $windows ('Lib/10.0.26100.0/um/'+$platform)
+        $atl=Join-Path $vc ('atlmfc/lib/'+$platform)
+        $netfx=Join-Path $fixture ('windows/NETFXSDK/4.8/lib/um/'+$platform)
+        $include=Join-Path $vc 'include';$references=Join-Path $vc 'references'
+        foreach($path in @($core,$win,$include,$references)){[void][IO.Directory]::CreateDirectory($path)}
+        $expected=[ordered]@{VCToolsInstallDir=$vc;WindowsSdkDir=$windows;IncludePath=$include;LibraryPath=(@($core,$atl,$netfx,$win)-join ';');ReferencePath=$references}
+        $actual=@{IncludePath=$include;LibraryPath=(@($core,$win)-join '|');ReferencePath=$references}
+        & $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $actual $fixture
+        # The full original default list remains supported, including absent entries.
+        $original=$actual.Clone();$original.LibraryPath=$expected.LibraryPath.Replace(';','|')
+        & $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $original $fixture
+        [void][IO.Directory]::CreateDirectory((Split-Path $atl -Parent))
+        [IO.File]::WriteAllText($atl,'An existing file is not an absent optional directory.')
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $actual $fixture}
+        [IO.File]::Delete($atl)
+        [void][IO.Directory]::CreateDirectory($atl)
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $actual $fixture}
+        $withAtl=$actual.Clone();$withAtl.LibraryPath=(@($core,$atl,$win)-join '|')
+        & $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $withAtl $fixture
+        [void][IO.Directory]::CreateDirectory($netfx)
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $withAtl $fixture}
+        & $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $original $fixture
+        foreach($field in @('IncludePath','ReferencePath')){
+            $bad=$original.Clone();$bad[$field]=''
+            Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $bad $fixture}
+        }
+        $missingCore=$expected.Clone();$missingCore.LibraryPath=(Join-Path $vc ('lib/missing-core/'+$platform))+';'+$win
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $missingCore $actual $fixture}
+        $foreign=$original.Clone();$foreign.LibraryPath+='|'+(Join-Path $runRoot 'untrusted-missing-library')
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $foreign $fixture}
+        $reordered=$original.Clone();$reordered.LibraryPath=(@($win,$atl,$netfx,$core)-join '|')
+        Assert-Refused {& $abi {param($e,$a,$r) Assert-CiSdkAbiSearchPathBinding $e $a $r (Join-Path $r 'sdk')} $expected $reordered $fixture}
+    }
+}
+
 Invoke-Case 'Qualified SDK witnesses bind actual compiler roots and reject downgrade, changed tools, missing metadata and closed owners' {
     $consumer=Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.SdkConsumer.psm1') -PassThru
     $fixture=New-Fixture 'qualified-sdk-actual-tool-binding'

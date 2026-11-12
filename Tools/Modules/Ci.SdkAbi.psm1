@@ -82,11 +82,28 @@ function Assert-CiSdkAbiSearchPathBinding {
         $optional=if($name -ceq 'IncludePath'){Join-Path $unitRoot 'include'}elseif($name -ceq 'LibraryPath'){Join-Path $unitRoot 'lib'}else{''}
         $baseline=@(ConvertTo-CiSdkAbiSearchPaths $Expected[$name] | Where-Object {-not $_.Equals($optional,$comparison)})
         $paths=@(ConvertTo-CiSdkAbiSearchPaths ([string]$Actual[$name]).Replace('|',';') | Where-Object {-not $_.Equals($optional,$comparison)})
-        if($paths.Count -lt $baseline.Count){throw "Qualified SDK actual compiler search property omits default paths: $name."}
-        for($i=0;$i -lt $baseline.Count;$i++){
-            if(-not $paths[$i].Equals($baseline[$i],$comparison)){throw "Qualified SDK actual compiler search property differs: $name."}
+        $consumed=0
+        foreach($defaultPath in $baseline){
+            if($consumed -lt $paths.Count -and $paths[$consumed].Equals($defaultPath,$comparison)){$consumed++;continue}
+            # VC defaults name optional ATL/.NET components even on images which
+            # do not install them. Removing only an absent optional directory
+            # cannot change library resolution. Core MSVC/Windows/CRT defaults
+            # remain mandatory, including when missing on disk.
+            $absentOptional=$false
+            if($name -ceq 'LibraryPath'){
+                $atlRoot=[IO.Path]::GetFullPath((Join-Path $Expected.VCToolsInstallDir 'atlmfc/lib'))
+                $frameworkRoot=[IO.Path]::GetFullPath((Join-Path $Expected.WindowsSdkDir '../NETFXSDK'))
+                $atlRelative=[IO.Path]::GetRelativePath($atlRoot,$defaultPath).Replace('\','/')
+                $frameworkRelative=[IO.Path]::GetRelativePath($frameworkRoot,$defaultPath).Replace('\','/')
+                if($atlRelative -match '^(x86|x64|arm64)$' -or $frameworkRelative -match '^\d+(\.\d+){1,3}/lib/um/(x86|x64|arm64)$'){
+                    try{$null=[IO.File]::GetAttributes($defaultPath)}
+                    catch [IO.FileNotFoundException]{$absentOptional=$true}
+                    catch [IO.DirectoryNotFoundException]{$absentOptional=$true}
+                }
+            }
+            if(-not $absentOptional){throw "Qualified SDK actual compiler search property omits or reorders required default paths: $name."}
         }
-        foreach($path in @($paths|Select-Object -Skip $baseline.Count)){
+        foreach($path in @($paths|Select-Object -Skip $consumed)){
             $owned=$false
             foreach($root in @($ProjectRoot,(Join-Path $SdkRoot 'include'))){
                 $full=[IO.Path]::GetFullPath($root).TrimEnd('\','/')
