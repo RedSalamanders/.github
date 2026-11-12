@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "role": "ExecutionEvidenceIndex",
+  "recordedAt": "2026-11-12T14:09:42.4493368Z",
+  "organization": "RedSalamanders",
+  "acceptedScopeComplete": false,
+  "controlledSpeedTargetQualified": false,
+  "localAndMainGatesRetained": true,
+  "runningActionsCancelled": false,
+  "deferred": [
+    "S7 candidate-gate replacement and local delegation",
+    "S8 cross-run candidate-to-main adoption"
+  ],
+  "previous": "ExecutionCheckpoint_2026-11-12.json",
+  "observations": [
+    {
+      "run": 43217596550,
+      "organizationSpeedQualified": false,
+      "componentSpeedup": 8.06983,
+      "conclusion": "success",
+      "repository": ".github",
+      "source": "07bc6f1e56804390bd5b2ecfdd4027fac2493049",
+      "scope": "Shared engine only"
+    },
+    {
+      "sdkRuntime": "Console/live ETW only",
+      "repository": "RedMonitor",
+      "run": 43214930758,
+      "conclusion": "success",
+      "source": "7ddc21eb9c552aaa355e389df72cb9a8ee216a47"
+    },
+    {
+      "conclusion": "pending",
+      "localGateProfilesPassed": 3,
+      "sdkRuntime": "HostSmoke passed",
+      "arm64CrossBuildsPassed": 3,
+      "repository": "RedXe",
+      "source": "87735d5786597a209ad1f54ca72d040b8c055128",
+      "run": 43233883707,
+      "testedSource": "6e9fcf47d5bfa007885cc2026a21abd8ecbc08cc"
+    },
+    {
+      "run": 43227031984,
+      "localGateProfilesPassed": 3,
+      "conclusion": "pending",
+      "repository": "RedPrism",
+      "source": "5b7119f0a0ec5c773ba66ed89cad535adebfa11a",
+      "arm64CrossBuildsPassed": 3,
+      "sdkRuntimeAdapter": "under implementation"
+    },
+    {
+      "repair": "f1c0192a",
+      "repairPairedControlsPassed": 40,
+      "repairQualification": "pending",
+      "arm64": "success",
+      "repository": "DxUi",
+      "x64": "failed historical shallow engine acquisition",
+      "source": "c305f7bbec34440396acd38c69cae009260a0c2d",
+      "run": 43220995910,
+      "conclusion": "failure"
+    },
+    {
+      "repair": "ac30d73",
+      "retainedRuntimeRun": "20261112T135758923Z-57332-a51117906dcb4f7d876df2439a58667c",
+      "repository": "RedTilde",
+      "source": "c21679266ba780dfdb242f9c273a527f19512a90",
+      "sdkRuntime": "failed EditorRendering capture fixture",
+      "repairQualification": "pending"
+    },
+    {
+      "focusedIdentityless": "passed",
+      "repository": "RedSalamander",
+      "sdkRuntime": "pending",
+      "originalAvCausalRepair": false,
+      "popupCadenceCausalRepair": false,
+      "entireApproval": "pending",
+      "localFull": "running",
+      "source": "5bc41f8207335384f5c67eae23ffcf74046b20f9"
+    }
+  ],
+  "remaining": [
+    "Root failures, SDK runtime and current qualification",
+    "Current DxUi/Prism/Tilde/Xe native integration",
+    "Complete engine rollout",
+    "S6B seeded/historical selection comparisons",
+    "Frozen controlled warm/end-to-end/compute objectives",
+    "S9 measured scheduling and changelog cadence",
+    "Normative documentation and Done lifecycle closeout"
+  ]
+}
