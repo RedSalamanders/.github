@@ -160,11 +160,15 @@ function Assert-CiContainedPath {
     if (-not $target.StartsWith(($rootPath + [IO.Path]::DirectorySeparatorChar), $comparison)) { throw 'Output must be a contained repository/sandbox child.' }
     $cursor = $target
     while ($cursor -and $cursor.StartsWith($rootPath, $comparison)) {
-        if (Test-Path -LiteralPath $cursor) {
-            if ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse path refused: $cursor" }
-        }
+        # Fresh native attributes retain the per-call barrier without creating
+        # provider objects for every ancestor of every SDK/header/artifact path.
+        # Only absence permits continuing; access and other IO failures propagate.
+        try{$attributes=[IO.File]::GetAttributes($cursor)}
+        catch [IO.FileNotFoundException]{$attributes=$null}
+        catch [IO.DirectoryNotFoundException]{$attributes=$null}
+        if($null -ne $attributes -and ($attributes -band [IO.FileAttributes]::ReparsePoint)){throw "Reparse path refused: $cursor"}
         if ($cursor.Equals($rootPath, $comparison)) { break }
-        $cursor = Split-Path -Parent $cursor
+        $cursor = [IO.Path]::GetDirectoryName($cursor)
     }
     return $target
 }
