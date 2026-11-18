@@ -29,7 +29,10 @@ Current adapter conformance refuses extension-wide Markdown exclusions (`**/*.md
 unowned wildcard forms). Exclusions must identify owned prose locations or known guides; new implementation,
 test data and notice files remain meaningful. Runtime includes still take precedence. Update-ProjectPin.ps1
 migrates only the original exact `**/*.md` default to reviewed root guides, Specs Markdown, the test guide and
-skill prose while updating the pin/callers. Other custom exclusions remain review-owned. Historical manifest
+skill prose while updating the pin/callers. Every pin update also adds each agent harness path the exclusions
+lack: `AGENTS.md`, `CLAUDE.md`, `.agents/**`, `.claude/**`, `.codex/**`, `.github/agents/**` and
+`.github/copilot-instructions.md` (one list, `Get-CiHarnessExclusions`), so adding or editing a harness's
+instructions, skills or settings never changes native inputs. Other custom exclusions remain review-owned. Historical manifest
 reads remain supported for original source/artifact verification; a new deployment must pass current conformance.
 Pin maintenance requires the exact clean engine, including non-ignored untracked inputs. Only committed
 top-level Templates YAML files may become callers; ignored untracked templates cannot add a workflow.

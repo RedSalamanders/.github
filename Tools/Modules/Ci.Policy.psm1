@@ -173,6 +173,14 @@ function Assert-CiContainedPath {
     return $target
 }
 
+function Get-CiHarnessExclusions {
+    # Instruction, skill and settings paths of the agent harnesses projects use (Claude Code, Codex, GitHub
+    # Copilot, Antigravity). They are prose: Update-ProjectPin.ps1 adds every one a manifest lacks.
+    [CmdletBinding()]
+    param()
+    return @('AGENTS.md', 'CLAUDE.md', '.agents/**', '.claude/**', '.codex/**', '.github/agents/**', '.github/copilot-instructions.md')
+}
+
 function Get-CiPathDisposition {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Path, [Parameter(Mandatory)][System.Collections.IDictionary]$Project)
@@ -363,4 +371,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
+Export-ModuleMember -Function Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiHarnessExclusions, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes

@@ -1124,10 +1124,35 @@ Invoke-Case 'Pin migration removes only the generated SDK publisher and preserve
             Assert-True ('**/*.md' -cnotin $migrated.exclude)
             foreach($path in @('Tests/Data/README.md','src/resource.md','Unknown/native.md')){Assert-True (Get-CiPathDisposition $path $migrated).native}
             Assert-True (-not (Get-CiPathDisposition 'README.md' $migrated).native)
+            foreach($path in @('.github/copilot-instructions.md','.codex/config.toml','.github/agents/review.agent.md','.claude/settings.json','.agents/skills/build/SKILL.md','CLAUDE.md')){
+                Assert-True (-not (Get-CiPathDisposition $path $migrated).native) "$path is harness prose"
+            }
+            foreach($path in @('.github/workflows/ci.yml','.github/actions/setup-msvc/action.yml','.codex.json')){Assert-True (Get-CiPathDisposition $path $migrated).native "$path stays meaningful"}
             Assert-Equal ($kind -ceq 'application') (Test-Path -LiteralPath (Join-Path $root '.github/workflows/publish.yml'))
             Assert-True (Test-Path -LiteralPath (Join-Path $root '.github/workflows/qualify.yml'))
         }
     }
+    # A manifest a previous pin already migrated has no **/*.md left; the pin still adds each missing harness
+    # path, keeps every reviewed entry in place and is idempotent.
+    $root=New-Fixture 'pin-migration-harness'
+    $project=Read-CiProject $root
+    $reviewed=@('README.md','AGENTS.md','CLAUDE.md','CHANGELOG.md','Specs/**/*.md','Tests/README.md','.github/skills/**/*.md','docs/**','.agents/**','.claude/**')
+    $project.exclude=$reviewed
+    $project.include=@('.github/agents/runtime-fixture.json')
+    Write-FixtureFile $root '.ci/project.json' ($project|ConvertTo-Json -Depth 12)
+    Write-FixtureFile $root '.github/workflows/ci.yml' ([IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/ci.yml')).Replace('@ENGINE@',$project.engine.ref))
+    $result=Invoke-CiProcess $hostPath @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure
+    Assert-True ($result.exitCode -eq 0) ("Harness migration failed: "+$result.stderr)
+    $migrated=Read-CiProject $root
+    $expected=@($reviewed)+@('.codex/**','.github/agents/**','.github/copilot-instructions.md')
+    Assert-Equal ($expected -join '|') (@($migrated.exclude) -join '|')
+    Assert-Equal (@(Get-CiHarnessExclusions).Count) (@(Get-CiHarnessExclusions|Where-Object{$_ -cin $migrated.exclude}).Count)
+    Assert-True (Get-CiPathDisposition '.github/agents/runtime-fixture.json' $migrated).native 'an explicit runtime include keeps precedence'
+    Assert-True (-not (Get-CiPathDisposition '.github/agents/review.agent.md' $migrated).native)
+    $once=[IO.File]::ReadAllText((Join-Path $root '.ci/project.json'))
+    $result=Invoke-CiProcess $hostPath @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure
+    Assert-True ($result.exitCode -eq 0) ("Repeated harness migration failed: "+$result.stderr)
+    Assert-Equal $once ([IO.File]::ReadAllText((Join-Path $root '.ci/project.json')))
     $root=New-Fixture 'pin-migration-untracked-engine'
     $originalCi=[IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/ci.yml')).Replace('@ENGINE@',('a'*40))
     Write-FixtureFile $root '.github/workflows/ci.yml' $originalCi

@@ -97,7 +97,8 @@ Implementation is recorded by [RedSalamander I55](https://github.com/RedSalamand
 
 All six projects have canonical callers for compiler-free PR/main coordination, serialized main qualification, manual formatting, manual diagnostic qualification and compiler-free security. The five applications additionally have a manual publication caller; SDK projects have a manual pinned dependency-input producer. Tools/Update-ProjectPin.ps1 updates the manifest and callers together from a clean, exact engine checkout; it removes an SDK's unchanged legacy publication caller and refuses to discard custom workflow changes. Conformance refuses SDK product-publication routes, moving pins and workflow-only pin updates.
 
-Pin maintenance also replaces the original global Markdown exclusion with owned prose patterns. Current
+Pin maintenance also replaces the original global Markdown exclusion with owned prose patterns and adds every
+agent harness instruction, skill and settings path a manifest lacks. Current
 conformance refuses extension-wide exclusions that could hide new runtime/test inputs; explicit runtime
 includes retain precedence. Historical source/artifact manifests remain readable under their original identity.
 
