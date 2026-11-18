@@ -7,7 +7,8 @@ One RedSalamanders project checkout.
 Exact clean engine commit currently checked out beside this command.
 .OUTPUTS
 Updated .ci/project.json and canonical CI caller files. Removes an SDK's unchanged legacy publication caller.
-Replaces the original **/*.md exclusion with owned prose patterns; explicit runtime includes still take precedence.
+Replaces the original **/*.md exclusion with owned prose patterns and adds each agent harness path the exclusions
+lack (Get-CiHarnessExclusions); explicit runtime includes still take precedence.
 No commit, push or native build.
 .NOTES
 Requires PowerShell 7.4 and Git. Explicit maintenance command; review the diff and run compiler-free
@@ -32,6 +33,9 @@ foreach($pattern in $project.exclude){
     $replacement=if($pattern -ceq '**/*.md'){@('README.md','AGENTS.md','CLAUDE.md','CHANGELOG.md','Specs/**/*.md','Tests/README.md','.github/skills/**/*.md')}else{@($pattern)}
     foreach($value in $replacement){if($value -cnotin $exclusions){$exclusions.Add($value)}}
 }
+# Agent harness instructions, skills and settings are prose in every project: the pin adds each path a manifest
+# lacks, so adding or editing one never changes native inputs. Explicit runtime includes still take precedence.
+foreach($value in (Get-CiHarnessExclusions)){if($value -cnotin $exclusions){$exclusions.Add($value)}}
 $project.exclude=$exclusions.ToArray()
 $rootPath=[IO.Path]::GetFullPath($Root)
 $legacyPublication=Assert-CiContainedPath $rootPath (Join-Path $rootPath '.github/workflows/publish.yml')
