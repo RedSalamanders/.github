@@ -737,6 +737,14 @@ Case 'a missing, other-commit, changed or nested engine checkout is refused with
     Assert ($message.Contains('is missing or predates engine shims') -and $message.Contains('git clone https://github.com/RedSalamanders/.github.git .ci-engine')) "A missing engine was not refused with the fix: $message"
     Move-Item -LiteralPath (Join-Path $r 'engine-away') -Destination $engineCheckout
     & (Join-Path $r 'Tools/Test-Changelog.ps1')
+    # The check is read-only: a tracked engine file whose timestamp alone changed would make a plain git status
+    # refresh and rewrite the engine's index.
+    $touched = Join-Path $engineCheckout 'Tools/Modules/Ci.Changelog.psm1'
+    [IO.File]::SetLastWriteTimeUtc($touched, [DateTime]::UtcNow.AddMinutes(-3))
+    $index = Join-Path $engineCheckout '.git/index'
+    $indexBefore = [Convert]::ToHexString([IO.File]::ReadAllBytes($index)) + [IO.File]::GetLastWriteTimeUtc($index).Ticks
+    & (Join-Path $r 'Tools/Test-Changelog.ps1')
+    Assert (([Convert]::ToHexString([IO.File]::ReadAllBytes($index)) + [IO.File]::GetLastWriteTimeUtc($index).Ticks) -ceq $indexBefore) 'The engine binding rewrote the engine checkout index'
     # A copy in a nested fixture without its own manifest never binds to the product around it.
     $nested = Join-Path $r 'nested/fixture'
     Put $nested 'Tools/Test-Changelog.ps1' ([IO.File]::ReadAllText((Join-Path $r 'Tools/Test-Changelog.ps1')))
