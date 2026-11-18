@@ -29,10 +29,13 @@ $changelogModule = Import-Module (Join-Path $engine 'Tools/Modules/Ci.Changelog.
 $fold = Join-Path $engine 'Tools/Fold-Changelog.ps1'
 $validate = Join-Path $engine 'Tools/Test-Changelog.ps1'
 $submit = Join-Path $engine 'Tools/Submit-ChangelogFold.ps1'
+$release = Join-Path $engine 'Tools/Release-Changelog.ps1'
 # What a product's .ci-engine needs for its changelog shims, and the shims themselves.
 $engineFiles = @('Schemas/project.schema.json', 'Tools/Modules/Ci.Policy.psm1', 'Tools/Modules/Ci.EngineBinding.psm1',
-    'Tools/Modules/Ci.Changelog.psm1', 'Tools/Fold-Changelog.ps1', 'Tools/Test-Changelog.ps1', 'Tools/Submit-ChangelogFold.ps1')
-$shims = @('Tools/Fold-Changelog.ps1', 'Tools/Test-Changelog.ps1', 'Tools/Submit-ChangelogFold.ps1', 'Tools/Test-ChangelogWorkflow.ps1')
+    'Tools/Modules/Ci.Changelog.psm1', 'Tools/Fold-Changelog.ps1', 'Tools/Test-Changelog.ps1', 'Tools/Submit-ChangelogFold.ps1',
+    'Tools/Release-Changelog.ps1')
+$shims = @('Tools/Fold-Changelog.ps1', 'Tools/Test-Changelog.ps1', 'Tools/Submit-ChangelogFold.ps1', 'Tools/Release-Changelog.ps1',
+    'Tools/Test-ChangelogWorkflow.ps1')
 $parent = [IO.Path]::GetFullPath($ScratchRoot).TrimEnd([IO.Path]::DirectorySeparatorChar)
 if (-not [IO.Directory]::Exists($parent)) { throw "Scratch root must already exist: $parent" }
 if ($ProjectRoot) {
@@ -295,9 +298,20 @@ Case 'preserve BOM, CRLF and Unicode bytes' {
 Case 'retry after publication cleans fragments without duplicate entries' {
     param($r)
     Put $r 'Changes/2026-10-21-retry.md' "- Existing.`n"
-    & $fold -Root $r
+    $warnings = @(& $fold -Root $r 3>&1 | Where-Object { $_ -is [Management.Automation.WarningRecord] } | ForEach-Object { $_.Message })
+    Assert (($warnings -join ' ').Contains('skipping Changes/2026-10-21-retry.md')) "The skipped fragment was not named: $($warnings -join ' | ')"
     $text = [IO.File]::ReadAllText((Join-Path $r 'CHANGELOG.md'))
     Assert ([regex]::Matches($text, '(?m)^- Existing\.$').Count -eq 1) 'Retry duplicated a published entry'
+}
+Case 'identical pending fragments are refused before publishing or removing either input' {
+    param($r)
+    Put $r 'Changes/2026-10-21-first.md' "- Shared entry.`n  Same details.`n"
+    Put $r 'Changes/2026-10-22-second.md' "- Shared entry.`n  Same details.`n"
+    $before = Snapshot $r
+    Refuses { & $fold -Root $r }
+    Assert ((Snapshot $r) -ceq $before) 'Ambiguous duplicate fragments changed the changelog or removed an input'
+    Assert ([IO.File]::Exists((Join-Path $r 'Changes/2026-10-21-first.md'))) 'First duplicate fragment was removed'
+    Assert ([IO.File]::Exists((Join-Path $r 'Changes/2026-10-22-second.md'))) 'Second duplicate fragment was removed'
 }
 foreach ($separator in @(@{Name='space'; Text=' '}, @{Name='tab'; Text="`t"})) {
     Case "released heading with $($separator.Name) does not suppress a new entry" {
@@ -379,6 +393,55 @@ Case 'CHANGELOG.md changes only by an exact fold of fragments the merge base hol
     }
     Reset-FixtureBase $r
     Refuses { & $validate -Root $r -Base refs/heads/no-such-base }
+}
+Case 'an unreadable base changelog fails closed instead of reading as absent' {
+    param($r)
+    New-FixtureRepository $r
+    Save-FixtureBase $r
+    # The base's CHANGELOG.md blob is missing from the object store, as after a failed promisor fetch.
+    $blob = (Invoke-FixtureGit $r @('rev-parse', 'HEAD:CHANGELOG.md'))[0].Trim()
+    Put $r 'CHANGELOG.md' "# Changelog`n`n## Unreleased`n`n- Hand edit.`n"
+    [void](Invoke-FixtureGit $r @('commit', '-q', '-a', '-m', 'Different head blob'))
+    Remove-Item -LiteralPath (Join-Path $r ".git/objects/$($blob.Substring(0, 2))/$($blob.Substring(2))") -Force
+    $problems = Get-ChangelogFoldProblems $r 'origin/main'
+    Assert (@($problems | Where-Object { $_.Contains('cat-file') }).Count -eq 1) "A missing base object was read as no changelog: $($problems -join ' | ')"
+    Refuses { & $validate -Root $r -Base origin/main }
+    # A base without CHANGELOG.md is still the adoption case.
+    $fresh = Join-Path $r 'fresh'
+    New-FixtureRepository $fresh
+    Put $fresh 'README.md' 'Before adoption.'
+    Save-FixtureBase $fresh
+    Put $fresh 'Changes/README.md' '# Fragments'
+    Put $fresh 'CHANGELOG.md' "# Changelog`n`n## Unreleased`n"
+    Assert ((Get-ChangelogFoldProblems $fresh 'origin/main').Count -eq 0) 'Adopting the changelog was refused'
+}
+Case 'a release cut is generated exactly and preserves prior history' {
+    param($r)
+    New-FixtureRepository $r
+    Put $r 'CHANGELOG.md' "# Changelog`n`n## Unreleased`n`n- First.`n- Second.`n`n## 1.0.0 - 2026-10-01`n`n- Previous.`n"
+    Save-FixtureBase $r
+    $before = Snapshot $r
+    & $release -Root $r -Version '1.1.0' -Date '2026-11-01' -WhatIf
+    Assert ((Snapshot $r) -ceq $before) 'Release WhatIf changed inputs'
+    Refuses { & $release -Root $r -Version '1.01.0' -Date '2026-11-01' }
+    Refuses { & $release -Root $r -Version '1.1.0-01' -Date '2026-11-01' }
+    Refuses { & $release -Root $r -Version '1.0.0' -Date '2026-11-01' }
+    Refuses { & $release -Root $r -Version '1.1.0' -Date '2026-02-30' }
+    Put $r 'Changes/2026-10-31-pending.md' '- Pending.'
+    Refuses { & $release -Root $r -Version '1.1.0' -Date '2026-11-01' }
+    Remove-Item -LiteralPath (Join-Path $r 'Changes/2026-10-31-pending.md')
+    & $release -Root $r -Version '1.1.0' -Date '2026-11-01'
+    $text = [IO.File]::ReadAllText((Join-Path $r 'CHANGELOG.md'))
+    Assert ($text -ceq "# Changelog`n`n## Unreleased`n`n## 1.1.0 - 2026-11-01`n`n- First.`n- Second.`n`n## 1.0.0 - 2026-10-01`n`n- Previous.`n") 'Release did not preserve exact content and history'
+    Assert ((Get-ChangelogFoldProblems $r 'origin/main').Count -eq 0) 'The exact generated release was refused'
+    [void](Invoke-FixtureGit $r @('add', 'CHANGELOG.md'))
+    [void](Invoke-FixtureGit $r @('commit', '-q', '-m', 'generated release'))
+    [void](Invoke-FixtureGit $r @('update-ref', 'refs/remotes/origin/main', 'HEAD'))
+    Put $r 'Changes/2026-11-01-next.md' '- Next feature.'
+    Assert ((Get-ChangelogFoldProblems $r 'origin/main').Count -eq 0) 'A later feature after a release was refused'
+    Remove-Item -LiteralPath (Join-Path $r 'Changes/2026-11-01-next.md')
+    Edit-Fixture $r 'CHANGELOG.md' '- Previous.' '- Changed previous.'
+    Refuses { & $validate -Root $r -Base origin/main }
 }
 Case 'a fold stays exact when the default branch meanwhile gains a fragment with the same text' {
     param($r)
@@ -463,7 +526,40 @@ Case 'fold submission opens one pull request; WhatIf writes to neither the remot
     Assert (@(& $creates).Count -eq 1 -and $output.Contains('already open')) "A second fold pull request was opened: $output"
     # The open-PR query asks for every open pull request, not gh's default first 30.
     $lists = @($calls | Where-Object { $_.StartsWith('pr list', [StringComparison]::Ordinal) })
-    Assert ($lists.Count -gt 0 -and @($lists | Where-Object { -not $_.Contains('--limit 1000') }).Count -eq 0) "An open-PR query was limited to gh's default page: $($lists -join ' | ')"
+    # It also leaves out a fork's pull request, whose head name proves nothing.
+    Assert ($lists.Count -gt 0 -and @($lists | Where-Object { -not $_.Contains('--limit 1000') -or -not $_.Contains('isCrossRepository == false') }).Count -eq 0) "An open-PR query was limited to gh's default page or took a fork's pull request: $($lists -join ' | ')"
+    Assert-NoFoldWorktree $fixture
+}
+Case 'a reused remote fold branch must contain the exact selected fold' {
+    param($r)
+    $fixture = New-FoldFixture $r
+    & $submit -Root $fixture.Clone -WorktreeParent $fixture.WorktreeParent -PushOnly
+    [void](Invoke-FixtureGit $fixture.Clone @('fetch', '-q', 'origin', "refs/heads/$($fixture.FoldBranch)"))
+    [void](Invoke-FixtureGit $fixture.Clone @('checkout', '-q', '--detach', 'FETCH_HEAD'))
+    Add-Content -LiteralPath (Join-Path $fixture.Clone 'CHANGELOG.md') -Value '- forged entry'
+    [void](Invoke-FixtureGit $fixture.Clone @('add', 'CHANGELOG.md'))
+    [void](Invoke-FixtureGit $fixture.Clone @('commit', '-q', '--amend', '--no-edit'))
+    [void](Invoke-FixtureGit $fixture.Clone @('push', '-q', '--force', 'origin', "HEAD:refs/heads/$($fixture.FoldBranch)"))
+    $message = ''
+    try { & $submit -Root $fixture.Clone -WorktreeParent $fixture.WorktreeParent -PushOnly } catch { $message = $_.Exception.Message }
+    Assert ($message -match 'Changelog validation failed') "A forged remote fold was reused: $message"
+    Assert-NoFoldWorktree $fixture
+    [void](Invoke-FixtureGit $fixture.Clone @('checkout', 'HEAD^', '--', 'CHANGELOG.md'))
+    [void](Invoke-FixtureGit $fixture.Clone @('commit', '-q', '--amend', '--no-edit'))
+    [void](Invoke-FixtureGit $fixture.Clone @('push', '-q', '--force', 'origin', "HEAD:refs/heads/$($fixture.FoldBranch)"))
+    $message = ''
+    try { & $submit -Root $fixture.Clone -WorktreeParent $fixture.WorktreeParent -PushOnly } catch { $message = $_.Exception.Message }
+    # The exact-fold check refuses it first, since merged fragments may not leave without their entries; the
+    # complete-fold comparison is the second line of defense.
+    Assert ($message -match 'without its entry reaching CHANGELOG\.md|not the complete fold') "A remote branch that discarded all pending notes was reused: $message"
+    Assert-NoFoldWorktree $fixture
+    Put $fixture.Clone 'unrelated.txt' 'Not a fold.'
+    [void](Invoke-FixtureGit $fixture.Clone @('add', 'unrelated.txt'))
+    [void](Invoke-FixtureGit $fixture.Clone @('commit', '-q', '--amend', '--no-edit'))
+    [void](Invoke-FixtureGit $fixture.Clone @('push', '-q', '--force', 'origin', "HEAD:refs/heads/$($fixture.FoldBranch)"))
+    $message = ''
+    try { & $submit -Root $fixture.Clone -WorktreeParent $fixture.WorktreeParent -PushOnly } catch { $message = $_.Exception.Message }
+    Assert ($message -match 'unrelated change') "A fold branch with an unrelated file was reused: $message"
     Assert-NoFoldWorktree $fixture
 }
 Case 'a default branch without a Changes folder has nothing to fold' {

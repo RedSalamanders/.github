@@ -1,7 +1,7 @@
 # I63 Shared project tooling: each shared script exists once
 
-Status: **ACTIVE.** T1 (shim pattern) and T2 stage 1 (changelog suite) are implemented in this plan's first pull
-request; everything else is plan only.
+Status: **ACTIVE.** T1 (shim pattern) and T2 stage 1 (changelog suite) merged in #87 (`0226b660`); T2 stage 2 (R1 to
+R4) is in the second pull request. No product has adopted a shim yet; everything else is plan only.
 Owner: organization CI and tooling owner.
 Prepared: 2026-11-18 at engine `a094b2ea66fc6fd7a8933488a71dacda262903a4`.
 Scope: `RedSalamanders/.github` and the product copies of shared tooling in `DxUi`, `RedSalamander`, `RedXe`,
@@ -28,8 +28,8 @@ Scope: `RedSalamanders/.github` and the product copies of shared tooling in `DxU
 
 | Step | RedHome | What | State |
 | --- | --- | --- | --- |
-| T1 | CV-5-01 | Shim pattern: `Ci.EngineBinding.psm1`, `Templates/Project/`, refusal cases | Implemented, first PR |
-| T2 | CV-5-02 | Changelog suite (F-01): stage 1 moves the variant of RedXe, RedPrism, RedTilde and RedMonitor; stage 2 reconciles RedSalamander and DxUi | Stage 1 implemented, first PR; stage 2 below |
+| T1 | CV-5-01 | Shim pattern: `Ci.EngineBinding.psm1`, `Templates/Project/`, refusal cases | Merged in #87; RedMonitor pilot waits for its pin wave |
+| T2 | CV-5-02 | Changelog suite (F-01): stage 1 moves the variant of RedXe, RedPrism, RedTilde and RedMonitor; stage 2 reconciles RedSalamander and DxUi | Stage 1 merged in #87; stage 2 R1 to R4 in the second PR; R5 waits for the owner; product shims after each pin wave |
 | T3 | CV-5-03 | `BuildConsole.psm1`, `NativeBuildPolicy.targets` and the Release block, `Get-CiNativeScope.ps1`, `setup-msvc`; fixed-path files written by `Update-ProjectPin.ps1` and checked by conformance | Not started |
 | T4 | CV-5-04 | `ScopedTesting.psm1`, `TestRunEvidence.psm1`, `Test-Changes.ps1` with one parameter set: one planner, per-repository suite and path data | Design to be written here before any code |
 | T5 | CV-5-05 | One skill grammar and package-integrity policy | Not started |
@@ -59,15 +59,21 @@ then the stricter option, then the majority, then fewer files):
 | R4 | Release cut: only DxUi has `Release-Changelog.ps1` and accepts the exact generated release transition under `-Base` | Engine command `Tools/Release-Changelog.ps1`, accepted everywhere | Additive; one exact generated transition | a repository that never runs it: none |
 | R5 | A merged, unfolded fragment removed without its entry (a revert or a withdrawal): common and RedSalamander refuse it ("restore it"); DxUi accepts it (its review finding R28-53) | **Owner choice.** Default: refuse, as five repositories do; a revert then keeps the fragment and adds its own | Stricter and the majority; DxUi's own contract would change | DxUi under the default; the other five under the alternative |
 
-R5 is the only difference where both end states are reasonable. Until the owner answers, stage 2 implements R1 to R4,
-which no product's current passing changes depend on, and the R5 cases stay as they are in each variant's own copy.
+R5 is the only difference where both end states are reasonable. The engine keeps the default (refuse) until the
+owner answers; DxUi keeps its own copy, and so its withdrawal behavior, until then. If the owner picks the
+alternative, the engine change is DxUi's withdrawal block in `Get-ChangelogFoldProblems` and its case, and the
+"unfolded removal" case of the other five is dropped.
 
-Stage 2 work, in order: add the RedSalamander and DxUi cases to `Tools/Test-ChangelogWorkflow.ps1` (each written to
-pass on the variant that has the behavior and to name the difference where it fails), implement R1 to R4 (and R5 once
-decided) in `Ci.Changelog.psm1`, then shim `RedSalamander` and `DxUi`. DxUi also keeps `Tools/Changelog.psm1` as a
-module shim for its validators until they import the engine module.
+Stage 2, as implemented in the second pull request: the RedSalamander duplicate case and the DxUi release, reused-branch
+and fork-filter cases are in `Tools/Test-ChangelogWorkflow.ps1`, with a new case for R1 (a missing base object); R1 to
+R4 are in `Ci.Changelog.psm1` and `Submit-ChangelogFold.ps1`; `Tools/Release-Changelog.ps1` and its shim are new, so
+every product adopts five shims. Next: shim `RedSalamander` once its pin includes stage 2; shim `DxUi` once R5 is
+decided. DxUi also keeps `Tools/Changelog.psm1` as a module shim for its validators until they import the engine
+module. DxUi's PrePush case that refuses an uncommitted tree belongs to its `Test-PrePush.ps1` (T4, register E-04),
+not to the changelog suite.
 
 ## Evidence
 
 - T1 and T2 stage 1: `./Tools/Test-ChangelogWorkflow.ps1 -ScratchRoot <marked sandbox descendant>` on Windows, 33 cases
-  passed on 2026-11-18; engine CI on Windows and Linux in the pull request.
+  passed on 2026-11-18; engine CI on Windows and Linux passed in #87.
+- T2 stage 2: the same suite, 37 cases passed on Windows on 2026-11-19.

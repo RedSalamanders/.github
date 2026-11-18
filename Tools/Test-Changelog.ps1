@@ -4,7 +4,8 @@ Validates the shared Changes workflow without writing files.
 .DESCRIPTION
 Reports fragment filename/content and changelog-heading problems; valid pending fragments are expected.
 Base also compares the checkout with its merge base: fragments may be added, and CHANGELOG.md may
-change only by folding fragments that base already holds (the fold on the default branch).
+change only by folding fragments that base already holds (the fold on the default branch), or by the exact
+generated release transition of Release-Changelog.ps1 after every fragment is folded.
 RequireFolded rejects any pending fragment, for checking a finished fold.
 .PARAMETER Root
 Repository root of the product checkout to validate. Products run this through their Tools/Test-Changelog.ps1 shim,

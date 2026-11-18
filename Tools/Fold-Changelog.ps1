@@ -6,8 +6,10 @@ Validates all input before writing, folds newest filenames first under Unrelease
 then removes only folded files. Preserves UTF-8 BOM and changelog line endings.
 Fragments are folded on the default branch after merge, normally by Tools/Submit-ChangelogFold.ps1;
 a feature change keeps its fragment. An interrupted cleanup can be retried without duplicating
-already published entries. Products run this through their Tools/Fold-Changelog.ps1 shim, which
-defaults Root to its own repository (Specs/ProjectCommands.md).
+already published entries; skipped fragment names are reported as warnings. Two pending fragments
+with the same new text are refused, since one entry would stand for both changes. Products run this
+through their Tools/Fold-Changelog.ps1 shim, which defaults Root to its own repository
+(Specs/ProjectCommands.md).
 .PARAMETER Root
 Repository root of the product checkout to fold.
 .PARAMETER Check
