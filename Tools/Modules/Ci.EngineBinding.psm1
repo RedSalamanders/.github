@@ -43,7 +43,9 @@ function Resolve-CiPinnedEngineCommand {
     }
     $head = (Invoke-CiGit $engine @('rev-parse', 'HEAD')).stdout.Trim()
     if ($head -cne $pin) { throw (Get-CiEngineBindingMessage $Name $pin "it is at $head") }
-    if ((Invoke-CiGit $engine @('-c', 'core.fsmonitor=false', 'status', '--porcelain', '--untracked-files=no')).stdout.Trim()) {
+    # --no-optional-locks: the check never refreshes or rewrites the engine's index, so a caller that snapshots its
+    # checkout (or a read-only one) sees no change.
+    if ((Invoke-CiGit $engine @('--no-optional-locks', '-c', 'core.fsmonitor=false', 'status', '--porcelain', '--untracked-files=no')).stdout.Trim()) {
         throw (Get-CiEngineBindingMessage $Name $pin 'it has changes to tracked files')
     }
     $command = Join-Path $engine "Tools/$Name"
