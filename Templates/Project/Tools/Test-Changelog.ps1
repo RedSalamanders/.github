@@ -4,7 +4,8 @@ Validates the shared Changes workflow without writing files.
 .DESCRIPTION
 Reports fragment filename/content and changelog-heading problems; valid pending fragments are expected.
 Base also compares the checkout with its merge base: fragments may be added, and CHANGELOG.md may
-change only by folding fragments that base already holds (the fold on the default branch).
+change only by folding fragments that base already holds (the fold on the default branch), or by the exact
+generated release transition of Release-Changelog.ps1 after every fragment is folded.
 RequireFolded rejects any pending fragment, for checking a finished fold.
 Engine shim: runs Tools/Test-Changelog.ps1 of the shared CI engine that .ci/project.json pins, from .ci-engine,
 and refuses with one message when that checkout is missing, at another commit or changed. The engine's

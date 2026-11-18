@@ -6,8 +6,9 @@ Feature changes only add fragments; they are folded here, after they reach the d
 branch, folds it in a temporary worktree outside this checkout, verifies the result is an exact fold, commits it,
 pushes changelog/fold-<commit> and opens its pull request with gh. This checkout's branch, index and files never
 change. Nothing is pushed when the branch has no fragments. A fold branch already pushed for the same commit is
-reused, and an open fold pull request is reported instead of opening a second, conflicting one. The pull request
-takes the repository's normal review and merge; merge it before folding again.
+reused only after its single parent and exact fold are verified, and an open fold pull request of this repository
+(a fork's is ignored) is reported instead of opening a second, conflicting one. The pull request takes the
+repository's normal review and merge; merge it before folding again.
 .PARAMETER Root
 Product checkout whose remote holds the default branch. Products run this through their Tools/Submit-ChangelogFold.ps1
 shim, which defaults Root to its own repository (Specs/ProjectCommands.md).
@@ -62,13 +63,56 @@ $foldBranch = "changelog/fold-$short"
 if (-not $PushOnly) {
     # Assigned before filtering: piping the comma-wrapped array a helper returns would make it one item.
     # Every open pull request, not gh's default first 30: --jq filters only what was fetched.
-    $listed = Invoke-FoldGh @('pr', 'list', '--state', 'open', '--base', $Branch, '--limit', '1000', '--json', 'url,headRefName',
-        '--jq', '.[] | select(.headRefName | startswith("changelog/fold-")) | .url')
+    # A fork's pull request with a fold-like head name is not this repository's fold and never blocks it.
+    $listed = Invoke-FoldGh @('pr', 'list', '--state', 'open', '--base', $Branch, '--limit', '1000', '--json', 'url,headRefName,isCrossRepository',
+        '--jq', '.[] | select(.isCrossRepository == false and (.headRefName | startswith("changelog/fold-"))) | .url')
     $open = @($listed | Where-Object { $_ })
     if ($open.Count) { Write-Host "A fold pull request is already open; merge or close it, then run this again: $($open -join ', ')"; return }
 }
 $pushed = Invoke-FoldGit $Root @('ls-remote', '--heads', $Remote, "refs/heads/$foldBranch")
 if (@($pushed | Where-Object { $_ }).Count) {
+    # Names are not evidence: fetch the exact advertised head, prove its parent and complete fold, and refuse unrelated
+    # tree changes before offering the existing remote branch for review.
+    $advertised = (@($pushed | Where-Object { $_ })[0] -split "\s+")[0]
+    [void](Invoke-FoldGit $Root @('fetch', '--quiet', '--no-tags', $Remote, "refs/heads/$foldBranch"))
+    $existing = (Invoke-FoldGit $Root @('rev-parse', '--verify', 'FETCH_HEAD^{commit}'))[0].Trim()
+    if ($existing -cne $advertised) { throw 'The remote fold branch changed while it was fetched; retry.' }
+    $parents = ((Invoke-FoldGit $Root @('rev-list', '--parents', '-n', '1', $existing))[0].Trim() -split '\s+')
+    if ($parents.Count -ne 2 -or $parents[1] -cne $commit) { throw 'The existing fold branch is not a single commit directly on the selected default branch.' }
+    foreach ($change in (Invoke-FoldGit $Root @('diff', '--name-status', '--no-renames', $commit, $existing))) {
+        if ($change -cnotmatch '^(?:M\tCHANGELOG\.md|D\tChanges/[^/]+\.md)$') { throw "The existing fold branch contains an unrelated change: $change" }
+    }
+    $WorktreeParent = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($WorktreeParent)
+    if (-not [IO.Directory]::Exists($WorktreeParent)) { throw "The fold worktree parent does not exist: $WorktreeParent" }
+    $reviewTree = [IO.Path]::GetFullPath((Join-Path $WorktreeParent ('changelog-fold-' + [guid]::NewGuid().ToString('N').Substring(0, 8))))
+    $baseReviewTree = $reviewTree + '-base'
+    if ((Test-Path -LiteralPath $reviewTree) -or (Test-Path -LiteralPath $baseReviewTree)) { throw "A temporary fold worktree path is already in use: $reviewTree" }
+    try {
+        [void](Invoke-FoldGit $Root @('worktree', 'add', '--quiet', '--detach', $reviewTree, $existing))
+        & (Join-Path $PSScriptRoot 'Fold-Changelog.ps1') -Root $reviewTree -Check
+        & (Join-Path $PSScriptRoot 'Test-Changelog.ps1') -Root $reviewTree -Base $commit
+        [void](Invoke-FoldGit $Root @('worktree', 'add', '--quiet', '--detach', $baseReviewTree, $commit))
+        & (Join-Path $PSScriptRoot 'Fold-Changelog.ps1') -Root $baseReviewTree -WhatIf:$false
+        $expected = [IO.File]::ReadAllText((Join-Path $baseReviewTree 'CHANGELOG.md')).Replace("`r`n", "`n")
+        $actual = [IO.File]::ReadAllText((Join-Path $reviewTree 'CHANGELOG.md')).Replace("`r`n", "`n")
+        if ($expected -cne $actual) { throw 'The existing remote branch is not the complete fold of the selected default branch.' }
+    } finally {
+        # Only this command's own review worktrees are removed, as for the fold worktree below.
+        $samePath = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { [StringComparer]::OrdinalIgnoreCase } else { [StringComparer]::Ordinal }
+        foreach ($ownedTree in @($reviewTree, $baseReviewTree)) {
+            $registered = @(& git -C $Root worktree list --porcelain 2>$null | Where-Object { $_ -like 'worktree *' } |
+                ForEach-Object { [IO.Path]::GetFullPath($_.Substring(9)) } | Where-Object { $samePath.Equals($_, $ownedTree) }).Count -gt 0
+            if ($registered -or [IO.Directory]::Exists($ownedTree)) {
+                $removal = @(& git -C $Root worktree remove --force $ownedTree 2>&1 | ForEach-Object { "$_" })
+                if ($LASTEXITCODE -ne 0) { Write-Warning "The review worktree $ownedTree was not unregistered ($($removal -join ' ')). Run: git worktree remove --force `"$ownedTree`"" }
+                if ([IO.Directory]::Exists($ownedTree)) {
+                    try { Remove-Item -LiteralPath $ownedTree -Recurse -Force }
+                    catch { Write-Warning "Delete the review worktree folder yourself: $ownedTree ($($_.Exception.Message))" }
+                }
+            }
+        }
+        $global:LASTEXITCODE = 0
+    }
     Write-Host "$foldBranch is already pushed for $Branch at $short."
 } else {
     # A short name: Git keeps this worktree's administration under .git/worktrees/<name>, within Windows path limits.

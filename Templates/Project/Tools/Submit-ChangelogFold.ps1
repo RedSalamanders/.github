@@ -6,8 +6,9 @@ Feature changes only add fragments; they are folded here, after they reach the d
 branch, folds it in a temporary worktree outside this checkout, verifies the result is an exact fold, commits it,
 pushes changelog/fold-<commit> and opens its pull request with gh. This checkout's branch, index and files never
 change. Nothing is pushed when the branch has no fragments. A fold branch already pushed for the same commit is
-reused, and an open fold pull request is reported instead of opening a second, conflicting one. The pull request
-takes the repository's normal review and merge; merge it before folding again.
+reused only after its single parent and exact fold are verified, and an open fold pull request of this repository
+(a fork's is ignored) is reported instead of opening a second, conflicting one. The pull request takes the
+repository's normal review and merge; merge it before folding again.
 Engine shim: runs Tools/Submit-ChangelogFold.ps1 of the shared CI engine that .ci/project.json pins, from
 .ci-engine, and refuses with one message when that checkout is missing, at another commit or changed. The
 engine's Specs/ProjectCommands.md is the contract.

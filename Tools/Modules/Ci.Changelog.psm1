@@ -118,9 +118,8 @@ function Split-Changelog([Parameter(Mandatory)][AllowEmptyString()][string] $Cha
     }
 }
 
-function Read-ChangelogGit([Parameter(Mandatory)][string] $Root, [Parameter(Mandatory)][string[]] $Arguments, [switch] $Optional) {
-    # Git output as stored, decoded as strict UTF-8 so no console code page alters it. -Optional returns $null when the
-    # command fails (a missing object) instead of throwing.
+function Read-ChangelogGit([Parameter(Mandatory)][string] $Root, [Parameter(Mandatory)][string[]] $Arguments) {
+    # Git output as stored, decoded as strict UTF-8 so no console code page alters it. Every failure throws.
     $start = [Diagnostics.ProcessStartInfo]::new('git')
     foreach ($argument in @('-C', $Root) + $Arguments) { $start.ArgumentList.Add($argument) }
     $start.UseShellExecute = $false
@@ -135,13 +134,31 @@ function Read-ChangelogGit([Parameter(Mandatory)][string] $Root, [Parameter(Mand
         if (-not $process.WaitForExit(60000)) { $process.Kill($true); throw "git $($Arguments -join ' ') did not finish within 60 seconds" }
         if (-not $copy.Wait(5000)) { throw "git $($Arguments -join ' ') output did not close" }
         if ($process.ExitCode -ne 0) {
-            if ($Optional) { return $null }
             throw "git $($Arguments -join ' ') failed ($($process.ExitCode)): $($errors.GetAwaiter().GetResult().Trim())"
         }
         $bytes = $buffer.ToArray()
         $offset = if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) { 3 } else { 0 }
         return $script:StrictUtf8.GetString($bytes, $offset, $bytes.Length - $offset)
     } finally { $process.Dispose() }
+}
+
+function Get-ChangelogReleaseText([Parameter(Mandatory)][string] $Changelog, [Parameter(Mandatory)][string] $Version, [Parameter(Mandatory)][string] $Date) {
+    # The changelog with every Unreleased entry moved under "## <version> - <date>" and an empty Unreleased section left.
+    if ($Version -cnotmatch '^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?(?:\+[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$') { throw 'Release version must be an explicit semantic version.' }
+    $core = $Version.Split('+')[0]
+    if ($core.Contains('-')) {
+        foreach ($part in ((($core -split '-', 2)[1]) -split '\.')) { if ($part -cmatch '^0[0-9]+$') { throw 'Numeric prerelease identifiers cannot have leading zeroes.' } }
+    }
+    $parsed = [DateTime]::MinValue
+    if (-not [DateTime]::TryParseExact($Date, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$parsed)) { throw 'Release date must be a real yyyy-MM-dd date.' }
+    if ($Changelog -cmatch ('(?m)^##[ \t]+' + [regex]::Escape($Version) + '(?:[ \t]|$)')) { throw "Release $Version already exists." }
+    $heading = [regex]::Match($Changelog, $script:UnreleasedHeadingPattern)
+    if (-not $heading.Success) { throw 'CHANGELOG.md has no Unreleased heading.' }
+    $after = $Changelog.Substring($heading.Index + $heading.Length)
+    $section = ($after -split '(?m)^##[ \t]+', 2)[0]
+    if (-not [regex]::IsMatch($section, $script:EntryPattern)) { throw 'Unreleased has no entries to release.' }
+    $newline = if ($Changelog.Contains("`r`n")) { "`r`n" } else { "`n" }
+    return $Changelog.Substring(0, $heading.Index) + "## Unreleased${newline}${newline}## $Version - $Date${newline}${newline}" + $after
 }
 
 function Get-ChangelogFoldProblems([Parameter(Mandatory)][string] $Root, [Parameter(Mandatory)][string] $Base) {
@@ -154,12 +171,25 @@ function Get-ChangelogFoldProblems([Parameter(Mandatory)][string] $Root, [Parame
     try {
         $Root = [IO.Path]::GetFullPath($Root)
         $mergeBase = (Read-ChangelogGit $Root @('merge-base', $Base, 'HEAD')).Trim()
-        $baseText = Read-ChangelogGit $Root @('cat-file', 'blob', "${mergeBase}:CHANGELOG.md") -Optional
-        # Before adoption there is no generated changelog to protect.
-        if ($null -eq $baseText) { return , $problems.ToArray() }
+        # Before adoption there is no generated changelog to protect. Only an absent file means that: any other Git
+        # failure, such as a missing object, fails closed.
+        if (-not (Read-ChangelogGit $Root @('ls-tree', '--name-only', $mergeBase, '--', 'CHANGELOG.md')).Trim()) { return , $problems.ToArray() }
+        $baseText = Read-ChangelogGit $Root @('cat-file', 'blob', "${mergeBase}:CHANGELOG.md")
         $changelog = Join-Path $Root 'CHANGELOG.md'
         Assert-ChangelogPath $changelog $Root
         $headText = Read-ChangelogText $changelog
+        # A separate release change may only move the complete Unreleased entries under one generated version and date
+        # heading, after every fragment is folded on the base (Release-Changelog.ps1).
+        $release = [regex]::Match(($headText -replace "`r`n", "`n"), '(?m)^## Unreleased[ \t]*\n\n## (?<version>[^\s]+) - (?<date>\d{4}-\d{2}-\d{2})\n\n')
+        if ($release.Success -and -not [regex]::IsMatch($baseText, ('(?m)^##[ \t]+' + [regex]::Escape($release.Groups['version'].Value) + '(?:[ \t]|$)'))) {
+            $baseFragments = @((Read-ChangelogGit $Root @('ls-tree', '--name-only', $mergeBase, '--', 'Changes/')) -split "`n" |
+                Where-Object { $_ -match '^Changes/[^/]+\.md$' -and $_ -cne 'Changes/README.md' })
+            $currentFragments = Get-ChangelogFragments $Root
+            if (-not $baseFragments.Count -and -not $currentFragments.Count) {
+                $releaseText = Get-ChangelogReleaseText $baseText $release.Groups['version'].Value $release.Groups['date'].Value
+                if (($releaseText -replace "`r`n", "`n") -ceq ($headText -replace "`r`n", "`n")) { return , $problems.ToArray() }
+            }
+        }
         $before = Split-Changelog $baseText
         $after = Split-Changelog $headText
         if ($before.Before -cne $after.Before -or $before.Other -cne $after.Other -or $before.After -cne $after.After) {
@@ -212,7 +242,7 @@ function Get-ChangelogFoldProblems([Parameter(Mandatory)][string] $Root, [Parame
     return , $problems.ToArray()
 }
 
-function Merge-ChangelogFragments([Parameter(Mandatory)][string] $Changelog, [object[]] $Fragments) {
+function Merge-ChangelogFragments([Parameter(Mandatory)][string] $Changelog, [object[]] $Fragments, [switch] $ReportSkipped) {
     # The changelog with the fragments' entries first under its Unreleased heading, in the order given, in the
     # changelog's own line endings.
     $heading = [regex]::Match($Changelog, $script:UnreleasedHeadingPattern)
@@ -229,6 +259,7 @@ function Merge-ChangelogFragments([Parameter(Mandatory)][string] $Changelog, [ob
         $normalized = $fragment.Text.Trim() -replace '\r\n', "`n"
         # Retry after publication but before cleanup must not duplicate the published entry.
         if ($seen.Add($normalized)) { ($normalized -replace "`n", $newline) + $newline }
+        elseif ($ReportSkipped) { Write-Warning -WarningAction Continue "Changelog entry already present; skipping Changes/$($fragment.Name)." }
     }
     $separator = if ($at -gt 0 -and $Changelog[$at - 1] -ne "`n") { $newline + $newline } else { '' }
     return $Changelog.Substring(0, $at) + $separator + ($entries -join '') + $Changelog.Substring($at)
@@ -240,6 +271,25 @@ function Write-ChangelogStage([string] $Path, [string] $Text, [bool] $Bom) {
     $bytes = [byte[]]($encoding.GetPreamble() + $encoding.GetBytes($Text))
     $stream = [IO.FileStream]::new($Path, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
     try { $stream.Write($bytes, 0, $bytes.Length); $stream.Flush($true) } finally { $stream.Dispose() }
+}
+
+function Assert-ChangelogFragmentsDoNotOmitDuplicatePendingText([string] $Changelog, [object[]] $Fragments) {
+    # An entry already published is the interrupted-cleanup retry and is skipped. Two pending fragments with the same
+    # new text would publish one entry for two changes, so the fold refuses them until their entries differ.
+    $existing = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($entry in (Split-Changelog $Changelog).Entries) { [void]$existing.Add($entry) }
+    $pendingByText = [Collections.Generic.Dictionary[string, Collections.Generic.List[string]]]::new([StringComparer]::Ordinal)
+    foreach ($fragment in $Fragments) {
+        $normalized = $fragment.Text.Trim() -replace '\r\n', "`n"
+        if ($existing.Contains($normalized)) { continue }
+        if (-not $pendingByText.ContainsKey($normalized)) { $pendingByText.Add($normalized, [Collections.Generic.List[string]]::new()) }
+        $pendingByText[$normalized].Add([string]$fragment.Name)
+    }
+    foreach ($names in $pendingByText.Values) {
+        if ($names.Count -gt 1) {
+            throw "Ambiguous duplicate changelog fragment text would omit a pending entry: $(@($names | ForEach-Object { 'Changes/' + $_ }) -join ', '). Keep both fragments and make their entries distinct before folding."
+        }
+    }
 }
 
 function Invoke-ChangelogFold([Parameter(Mandatory)][string] $Root) {
@@ -258,9 +308,10 @@ function Invoke-ChangelogFold([Parameter(Mandatory)][string] $Root) {
         if (-not $fragments.Count) { return 0 }
         $changelog = Join-Path $Root 'CHANGELOG.md'
         $original = Read-ChangelogText $changelog
+        Assert-ChangelogFragmentsDoNotOmitDuplicatePendingText $original $fragments
         $bytes = [IO.File]::ReadAllBytes($changelog)
         $bom = $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
-        $merged = Merge-ChangelogFragments $original $fragments
+        $merged = Merge-ChangelogFragments $original $fragments -ReportSkipped
         $stage = Join-Path $Root ('.changelog-' + [guid]::NewGuid().ToString('N') + '.tmp')
         Assert-ChangelogPath $stage $Root
         Write-ChangelogStage $stage $merged $bom
@@ -288,4 +339,35 @@ function Invoke-ChangelogFold([Parameter(Mandatory)][string] $Root) {
     }
 }
 
-Export-ModuleMember -Function Get-ChangelogFragmentProblems, Get-ChangelogFragments, Get-ChangelogProblems, Get-ChangelogFoldProblems, Merge-ChangelogFragments, Invoke-ChangelogFold
+function Invoke-ChangelogRelease([Parameter(Mandatory)][string] $Root, [Parameter(Mandatory)][string] $Version, [Parameter(Mandatory)][string] $Date, [switch] $CheckOnly) {
+    # Moves the folded Unreleased entries under one new release heading, atomically and under the fold lease.
+    $Root = [IO.Path]::GetFullPath($Root)
+    $problems = Get-ChangelogProblems $Root -RequireFolded
+    if ($problems.Count) { throw "A release requires valid fully folded inputs:`n$($problems -join "`n")" }
+    $path = Join-Path $Root 'CHANGELOG.md'
+    Assert-ChangelogPath $path $Root
+    $original = Read-ChangelogText $path
+    $updated = Get-ChangelogReleaseText $original $Version $Date
+    if ($CheckOnly) { return }
+    $lockPath = Join-Path $Root '.changelog-fold.lock'
+    Assert-ChangelogPath $lockPath $Root
+    $lease = [IO.FileStream]::new($lockPath, [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None, 1, [IO.FileOptions]::DeleteOnClose)
+    $stage = $null
+    try {
+        $problems = Get-ChangelogProblems $Root -RequireFolded
+        if ($problems.Count -or (Read-ChangelogText $path) -cne $original) { throw 'Changelog inputs changed while preparing the release; retry.' }
+        $bytes = [IO.File]::ReadAllBytes($path)
+        $bom = $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
+        $stage = Join-Path $Root ('.changelog-' + [guid]::NewGuid().ToString('N') + '.tmp')
+        Assert-ChangelogPath $stage $Root
+        Write-ChangelogStage $stage $updated $bom
+        if ((Get-ChangelogProblems $Root -RequireFolded).Count -or (Read-ChangelogText $path) -cne $original) { throw 'Changelog inputs changed during release preparation; retry.' }
+        [IO.File]::Move($stage, $path, $true)
+        $stage = $null
+    } finally {
+        if ($stage -and [IO.File]::Exists($stage)) { [IO.File]::Delete($stage) }
+        $lease.Dispose()
+    }
+}
+
+Export-ModuleMember -Function Get-ChangelogFragmentProblems, Get-ChangelogFragments, Get-ChangelogProblems, Get-ChangelogFoldProblems, Get-ChangelogReleaseText, Merge-ChangelogFragments, Invoke-ChangelogFold, Invoke-ChangelogRelease

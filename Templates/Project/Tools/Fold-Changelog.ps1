@@ -6,7 +6,8 @@ Validates all input before writing, folds newest filenames first under Unrelease
 then removes only folded files. Preserves UTF-8 BOM and changelog line endings.
 Fragments are folded on the default branch after merge, normally by Tools/Submit-ChangelogFold.ps1;
 a feature change keeps its fragment. An interrupted cleanup can be retried without duplicating
-already published entries.
+already published entries; skipped fragment names are reported as warnings. Two pending fragments
+with the same new text are refused, since one entry would stand for both changes.
 Engine shim: runs Tools/Fold-Changelog.ps1 of the shared CI engine that .ci/project.json pins, from .ci-engine,
 and refuses with one message when that checkout is missing, at another commit or changed. The engine's
 Specs/ProjectCommands.md is the contract.
