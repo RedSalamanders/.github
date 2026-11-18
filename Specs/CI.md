@@ -19,6 +19,9 @@ them before each remote stage and preserves partial journals/refs on refusal. Re
 metadata supplies no native verdict; integration enforcement and capacity control
 remain separate requirements under the candidate contract.
 
+Product commands that the engine implements once, and the shim through which a product runs them from its pinned
+`.ci-engine`, are specified in [ProjectCommands.md](ProjectCommands.md).
+
 Organization-owned implementation work is indexed in [Plans/WIP](Plans/WIP/README.md); completed work is indexed in [Plans/Done](Plans/Done/README.md). The canonical [plan lifecycle rule](../AGENTS.md#plan-lifecycle) governs implementation/validation closeout and migration of durable requirements into this contract or the other owning specifications. WIP proposals do not change active CI policy.
 
 ## Source and input identity

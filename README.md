@@ -82,7 +82,13 @@ manual tools do not introduce another required pre-merge native campaign.
 ```powershell
 ./Tests/Test-Engine.ps1 -TestRoot Z:/RedSalamander.Perf
 ./Tests/Test-SdkCache.ps1 -TestRoot Z:/RedSalamander.Perf
+./Tools/Test-ChangelogWorkflow.ps1 -ScratchRoot <existing descendant of Z:/RedSalamander.Perf>
 ```
+
+Shared product commands, starting with the changelog suite (`Test-Changelog.ps1`, `Fold-Changelog.ps1`,
+`Submit-ChangelogFold.ps1`), are implemented once under `Tools/` and run in each product through a thin shim of the
+same name and parameters copied from `Templates/Project/`. The shim refuses with one message unless the product's
+`.ci-engine` is its own clean checkout at the exact pin; see the [project commands contract](Specs/ProjectCommands.md).
 
 The [SDK storage contract](Specs/SDK_Cache.md) defines immutable dependency byte storage, full manifest and
 payload verification, atomic publication and process reader leases. Its synthetic controls run on Windows
