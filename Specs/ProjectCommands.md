@@ -70,8 +70,9 @@ its fragment and never edits `CHANGELOG.md`; fragments are folded on the default
   version, pending fragments and an empty Unreleased section. `-WhatIf` is read-only.
 - None of them builds native code, takes desktop focus, or stages, commits or pushes outside the submission.
 
-Products run `Test-Changelog.ps1` while editing, with `-Base origin/main` in PrePush, and with `-Base` in the static
-CI phase (`HEAD^1` for a pull request's merge commit). This one implementation joins the three product variants that
+Products run `Test-Changelog.ps1` while editing, with `-Base origin/main` in PrePush, and in the compiler-free PR
+checks, where `pr.yml` passes the pull request's immutable base SHA to the adapter's static phase, which runs it with
+`-Base <base SHA>`. Main pushes go through the quiet-window coordinator and run no separate changelog comparison. This one implementation joins the three product variants that
 existed before the move (see [the tooling plan](Plans/WIP/SharedProjectTooling_2026-11-18.md), stage 2). One
 difference is still the owner's choice (R5 there): this implementation refuses a merged, unfolded fragment removed
 without its entry, as five products did, while `DxUi`'s own copy accepted it as a withdrawal.
