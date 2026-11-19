@@ -880,13 +880,16 @@ function Invoke-Shim([string]$Path, [string[]]$Arguments = @()) {
     foreach ($argument in @('-NoProfile', '-NonInteractive', '-File', $Path) + $Arguments) { $start.ArgumentList.Add($argument) }
     $start.UseShellExecute = $false; $start.CreateNoWindow = $true
     $start.RedirectStandardOutput = $true; $start.RedirectStandardError = $true
+    $start.Environment['NO_COLOR'] = '1'
     $process = [Diagnostics.Process]::Start($start)
     try {
         $stdout = $process.StandardOutput.ReadToEndAsync(); $stderr = $process.StandardError.ReadToEndAsync()
         if (-not $process.WaitForExit(120000)) { $process.Kill($true); throw "The shim timed out: $Path" }
         $process.WaitForExit()
-        # The child's error view wraps long lines with a '|' gutter; one space per break keeps messages searchable.
-        $output = [regex]::Replace($stdout.Result + $stderr.Result, '[ \t]*\r?\n[ \t]*(?:\|[ \t]*)?', ' ')
+        # A host may still color the error view (ANSI), and it wraps long lines with a '|' gutter: the color codes go
+        # first, then one space per break keeps messages searchable.
+        $plain = [regex]::Replace($stdout.Result + $stderr.Result, "`e\[[0-9;?]*[ -/]*[@-~]", '')
+        $output = [regex]::Replace($plain, '[ \t]*\r?\n[ \t]*(?:\|[ \t]*)?', ' ')
         return [pscustomobject]@{ ExitCode = $process.ExitCode; Output = $output }
     } finally { $process.Dispose() }
 }
