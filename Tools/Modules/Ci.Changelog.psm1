@@ -3,6 +3,8 @@ Set-StrictMode -Version Latest
 
 $script:FragmentNamePattern = '^(?<date>\d{4}-\d{2}-\d{2})-[a-z0-9]+(?:-[a-z0-9]+)*\.md$'
 $script:UnreleasedHeadingPattern = '(?m)^## Unreleased[ \t]*(?:\r?\n(?:[ \t]*\r?\n)?|$)'
+# Everything before "## Unreleased" in every repository's CHANGELOG.md (line endings never count).
+$script:SharedHeader = "# Changelog`n`nEntries are generated from [Changes](Changes/README.md). Existing release notes remain in their original locations.`n`n"
 $script:EntryPattern = '(?m)^- [^\r\n]*(?:\r?\n(?:[ \t][^\r\n]*|[ \t]*(?=\r?$)))*'
 $script:StrictUtf8 = [Text.UTF8Encoding]::new($false, $true)
 # Paths compare as the file system does: Windows ignores case, while on Linux two spellings that differ only in case
@@ -192,6 +194,13 @@ function Get-ChangelogFoldProblems([Parameter(Mandatory)][string] $Root, [Parame
         }
         $before = Split-Changelog $baseText
         $after = Split-Changelog $headText
+        # The one header change allowed is to the shared header (RedHome register B-10), never away from it. The base is
+        # then read with that header, so the rest of the comparison, including the exact fold, is unchanged.
+        if ($before.Before -cne $after.Before -and $after.Before -ceq $script:SharedHeader) {
+            $heading = [regex]::Match($baseText, $script:UnreleasedHeadingPattern)
+            $baseText = $script:SharedHeader + $baseText.Substring($heading.Index)
+            $before = Split-Changelog $baseText
+        }
         if ($before.Before -cne $after.Before -or $before.Other -cne $after.Other -or $before.After -cne $after.After) {
             $problems.Add("CHANGELOG.md changed outside its Unreleased entries since $Base; only folding fragments may change it")
         }

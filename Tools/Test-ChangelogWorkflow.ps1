@@ -394,6 +394,39 @@ Case 'CHANGELOG.md changes only by an exact fold of fragments the merge base hol
     Reset-FixtureBase $r
     Refuses { & $validate -Root $r -Base refs/heads/no-such-base }
 }
+Case 'the only header change accepted is to the shared header, also beside an exact fold' {
+    param($r)
+    $shared = "# Changelog`n`nEntries are generated from [Changes](Changes/README.md). Existing release notes remain in their original locations.`n`n"
+    New-FixtureRepository $r
+    Put $r 'CHANGELOG.md' "# Changelog`r`n`r`nNew entries start as fragments under [Changes](Changes/README.md).`r`n`r`n## Unreleased`r`n`r`n- Existing.`r`n`r`n## 1.0`r`n`r`n- Released.`r`n"
+    Put $r 'Changes/2026-10-20-merged.md' '- Merged earlier.'
+    Save-FixtureBase $r
+    $path = Join-Path $r 'CHANGELOG.md'
+    $rest = { [IO.File]::ReadAllText($path).Substring([IO.File]::ReadAllText($path).IndexOf('## Unreleased', [StringComparison]::Ordinal)) }
+    # The shared header, in either line ending, alone and beside the exact fold of a merged fragment.
+    [IO.File]::WriteAllText($path, $shared + (& $rest).Replace("`r`n", "`n"))
+    Assert ((Get-ChangelogFoldProblems $r 'origin/main').Count -eq 0) 'The move to the shared header was refused'
+    & $validate -Root $r -Base origin/main
+    Reset-FixtureBase $r
+    [IO.File]::WriteAllText($path, $shared.Replace("`n", "`r`n") + (& $rest))
+    & $fold -Root $r
+    Assert ((Get-ChangelogFoldProblems $r 'origin/main').Count -eq 0) 'The shared header beside an exact fold was refused'
+    # The exact fold is still required with the new header.
+    Edit-Fixture $r 'CHANGELOG.md' '- Existing.' "- Hand edit.`r`n- Existing."
+    Refuses { & $validate -Root $r -Base origin/main }
+    # Any other header is still a change outside the Unreleased entries.
+    Reset-FixtureBase $r
+    [IO.File]::WriteAllText($path, "# Changelog`n`nAnother introduction.`n`n" + (& $rest))
+    $problems = Get-ChangelogFoldProblems $r 'origin/main'
+    Assert (@($problems | Where-Object { $_.Contains('changed outside its Unreleased entries') }).Count -eq 1) "Another header was accepted: $($problems -join ' | ')"
+    # Moving away from the shared header is refused too.
+    Reset-FixtureBase $r
+    [IO.File]::WriteAllText($path, $shared + (& $rest))
+    [void](Invoke-FixtureGit $r @('commit', '-q', '-a', '-m', 'Shared header'))
+    [void](Invoke-FixtureGit $r @('update-ref', 'refs/remotes/origin/main', 'HEAD'))
+    [IO.File]::WriteAllText($path, "# Changelog`n`n" + (& $rest))
+    Refuses { & $validate -Root $r -Base origin/main }
+}
 Case 'an unreadable base changelog fails closed instead of reading as absent' {
     param($r)
     New-FixtureRepository $r
