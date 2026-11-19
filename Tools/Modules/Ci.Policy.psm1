@@ -151,6 +151,25 @@ function Get-CiProjectWorkflowTemplates {
     }
 }
 
+function Get-CiProjectShimMarker {
+    [CmdletBinding()]
+    param()
+    # The one line every engine shim carries (Templates/Project); it marks a project file as an adopted shim.
+    return '# Engine shim (Specs/ProjectCommands.md in the engine); the same lines in every shim.'
+}
+
+function Get-CiProjectShimTemplates {
+    [CmdletBinding()]
+    param()
+    # Committed Templates/Project files with their project-relative path, as for the workflow templates above.
+    $engine=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+    $paths=(Invoke-CiGit $engine @('ls-tree','-r','--name-only','-z','HEAD','--','Templates/Project')).stdout.Split([char]0,[StringSplitOptions]::RemoveEmptyEntries)
+    foreach($path in $paths){
+        $file=Get-Item -LiteralPath (Assert-CiContainedPath $engine (Join-Path $engine $path)) -ErrorAction Stop
+        [pscustomobject]@{Path=$path.Substring('Templates/Project/'.Length);FullName=$file.FullName}
+    }
+}
+
 function Assert-CiContainedPath {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$Path)
@@ -371,4 +390,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiHarnessExclusions, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
+Export-ModuleMember -Function Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Get-CiProjectShimMarker, Get-CiProjectShimTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiHarnessExclusions, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes

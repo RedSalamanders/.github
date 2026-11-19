@@ -22,8 +22,12 @@ copies of shared tooling (RedHome `Specs/Plans/WIP/Convergence_2026-11-17.md`, P
   by the shim and passed explicitly; every other bound parameter, including `-WhatIf`, is passed unchanged. The engine
   command makes such a parameter mandatory, so it can also be run directly: `./.ci-engine/Tools/<name> -Root .`.
 - A product sees a new engine command, or a change to one, only through its pin (`Tools/Update-ProjectPin.ps1`),
-  and then in one pull request that replaces its copy with the shim. The engine never reaches into a product checkout
-  other than the one a caller names.
+  and adopts a new shim in one pull request that replaces its copy. Every shim carries one marker line
+  (`Get-CiProjectShimMarker`); the pin update rewrites each file that carries it to the new pin's template, so a
+  template change reaches every product in its pin update, and never adds a shim or replaces a file without the
+  marker. The static CI phase (`Test-CiProjectConfiguration`) refuses an adopted shim that differs from its pinned
+  template, apart from line endings. The engine never reaches into a product checkout other than the one a caller
+  names.
 
 ## Commands
 
@@ -70,8 +74,9 @@ its fragment and never edits `CHANGELOG.md`; fragments are folded on the default
   version, pending fragments and an empty Unreleased section. `-WhatIf` is read-only.
 - None of them builds native code, takes desktop focus, or stages, commits or pushes outside the submission.
 
-Products run `Test-Changelog.ps1` while editing, with `-Base origin/main` in PrePush, and with `-Base` in the static
-CI phase (`HEAD^1` for a pull request's merge commit). This one implementation joins the three product variants that
+Products run `Test-Changelog.ps1` while editing, with `-Base origin/main` in PrePush, and in the compiler-free PR
+checks, where `pr.yml` passes the pull request's immutable base SHA to the adapter's static phase, which runs it with
+`-Base <base SHA>`. Main pushes go through the quiet-window coordinator and run no separate changelog comparison. This one implementation joins the three product variants that
 existed before the move (see [the tooling plan](Plans/WIP/SharedProjectTooling_2026-11-18.md), stage 2). One
 difference is still the owner's choice (R5 there): this implementation refuses a merged, unfolded fragment removed
 without its entry, as five products did, while `DxUi`'s own copy accepted it as a withdrawal.

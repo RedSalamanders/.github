@@ -1044,6 +1044,57 @@ Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unrev
     Write-FixtureFile $root '.github/workflows/nightly.yml' ('on:'+([char]10)+'  schedule:'+([char]10)+'    - cron: "* * * * *"')
     Assert-Refused { Test-CiProjectConfiguration $context }
 }
+
+Invoke-Case 'Conformance refuses an adopted engine shim that differs from its template and ignores a project command' {
+    Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
+    $root=New-Fixture 'shim-conformance'
+    $project=Read-CiProject $root
+    Write-FixtureFile $root 'Tools/Invoke-ProjectCi.ps1' '# Fixture adapter; no source execution.'
+    foreach($template in Get-CiProjectWorkflowTemplates $project){
+        Write-FixtureFile $root ('.github/workflows/'+$template.Name) ([IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$project.engine.ref).Replace('@OPERATIONS@','Prepare, Release, Winget'))
+    }
+    $shims=@(Get-CiProjectShimTemplates)
+    Assert-True ($shims.Count -gt 0) 'The engine has no project shim templates.'
+    $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
+    # A project's own command of the same name is not a shim and is not compared.
+    Write-FixtureFile $root $shims[0].Path '# The project still implements this command.'
+    Test-CiProjectConfiguration $context
+    # An adopted shim with other line endings is the template; one with another line is refused.
+    $template=[IO.File]::ReadAllText($shims[0].FullName)
+    Write-FixtureFile $root $shims[0].Path $template.Replace([string][char]10,[string][char]13+[char]10)
+    Test-CiProjectConfiguration $context
+    Write-FixtureFile $root $shims[0].Path ($template+'# local edit'+([char]10))
+    $message=''
+    try{Test-CiProjectConfiguration $context}catch{$message=$_.Exception.Message}
+    Assert-True ($message.Contains("engine shim $($shims[0].Path) differs")) "A drifted shim was accepted: $message"
+}
+
+Invoke-Case 'Pin updates refresh only adopted engine shims and never add one' {
+    $fixtureEngine=New-Fixture 'shim-pin-engine'
+    foreach($path in @('Tools/Update-ProjectPin.ps1','Tools/Modules/Ci.Policy.psm1','Schemas/project.schema.json')){
+        Write-FixtureFile $fixtureEngine $path ([IO.File]::ReadAllText((Join-Path $engineRoot $path)))
+    }
+    foreach($template in Get-ChildItem (Join-Path $engineRoot 'Templates') -File){
+        Write-FixtureFile $fixtureEngine ('Templates/'+$template.Name) ([IO.File]::ReadAllText($template.FullName))
+    }
+    $marker=Get-CiProjectShimMarker
+    $lf=[string][char]10
+    Write-FixtureFile $fixtureEngine 'Templates/Project/Tools/Adopted-Command.ps1' ("# new shim text$lf$marker$lf")
+    Write-FixtureFile $fixtureEngine 'Templates/Project/Tools/Own-Command.ps1' ("# a shim this project has not adopted$lf$marker$lf")
+    Write-FixtureFile $fixtureEngine 'Templates/Project/Tools/Absent-Command.ps1' ("# a shim this project lacks$lf$marker$lf")
+    $engineCommit=Save-Fixture $fixtureEngine 'Engine with project shims'
+    $root=New-Fixture 'shim-pin-project'
+    # Every project already holds its workflow callers, which the pin update rewrites in place.
+    [void][IO.Directory]::CreateDirectory((Join-Path $root '.github/workflows'))
+    Write-FixtureFile $root 'Tools/Adopted-Command.ps1' ("# old shim text$([char]13)$lf$marker$([char]13)$lf")
+    Write-FixtureFile $root 'Tools/Own-Command.ps1' "# the project's own implementation$lf"
+    $result=Invoke-CiProcess (Get-Process -Id $PID).Path @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure
+    Assert-Equal 0 $result.exitCode
+    Assert-Equal $engineCommit (Read-CiProject $root).engine.ref
+    Assert-Equal "# new shim text$lf$marker$lf" ([IO.File]::ReadAllText((Join-Path $root 'Tools/Adopted-Command.ps1')))
+    Assert-Equal "# the project's own implementation$lf" ([IO.File]::ReadAllText((Join-Path $root 'Tools/Own-Command.ps1')))
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $root 'Tools/Absent-Command.ps1')))
+}
 Invoke-Case 'SDK conformance retains qualification and rejects every hosted publication route' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
     $root=New-Fixture 'sdk-no-publication'
