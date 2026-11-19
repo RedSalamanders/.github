@@ -1084,6 +1084,8 @@ Invoke-Case 'Pin updates refresh only adopted engine shims and never add one' {
     Write-FixtureFile $fixtureEngine 'Templates/Project/Tools/Absent-Command.ps1' ("# a shim this project lacks$lf$marker$lf")
     $engineCommit=Save-Fixture $fixtureEngine 'Engine with project shims'
     $root=New-Fixture 'shim-pin-project'
+    # Every project already holds its workflow callers, which the pin update rewrites in place.
+    [void][IO.Directory]::CreateDirectory((Join-Path $root '.github/workflows'))
     Write-FixtureFile $root 'Tools/Adopted-Command.ps1' ("# old shim text$([char]13)$lf$marker$([char]13)$lf")
     Write-FixtureFile $root 'Tools/Own-Command.ps1' "# the project's own implementation$lf"
     $result=Invoke-CiProcess (Get-Process -Id $PID).Path @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure
