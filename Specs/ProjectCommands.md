@@ -58,7 +58,9 @@ its fragment and never edits `CHANGELOG.md`; fragments are folded on the default
   exact fold of the fragments that the merge base holds and the checkout no longer has. Hand edits, entries folded from
   fragments the same change adds, edited, removed, reordered or duplicated entries, a merged fragment removed without
   its entry, and any change outside the Unreleased entries are refused, except the exact generated release transition
-  below; line endings never count. Only a base without `CHANGELOG.md` (before adoption) skips the comparison; any other
+  below and one header change: everything before `## Unreleased` may become the shared header (`# Changelog`, a blank
+  line, `Entries are generated from [Changes](Changes/README.md). Existing release notes remain in their original
+  locations.`, a blank line), never move away from it; line endings never count. Only a base without `CHANGELOG.md` (before adoption) skips the comparison; any other
   Git failure, such as a missing object, is refused. `-RequireFolded` also rejects any pending fragment.
 - `Fold-Changelog.ps1` validates everything before writing, inserts entries under Unreleased newest file name first,
   keeps the changelog's byte order mark and line endings, publishes a flushed staged file atomically, then removes only
