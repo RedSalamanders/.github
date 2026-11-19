@@ -10,24 +10,9 @@ function Get-CiEngineBindingMessage([string]$Command, [string]$Pin, [string]$Pro
         '(first time: git clone https://github.com/RedSalamanders/.github.git .ci-engine).'
 }
 
-function Resolve-CiPinnedEngineCommand {
-    <#
-    .SYNOPSIS
-        Returns the pinned engine's implementation of a product command shim.
-    .DESCRIPTION
-        A product keeps a thin shim with its command's name and parameters that imports this module from its own
-        .ci-engine and runs the path returned here. Refuses, with one message naming the pin and the fix, unless this
-        module is the project's own independent .ci-engine Git checkout at the exact commit .ci/project.json pins, with
-        no tracked changes: the same rule the project adapter applies. No network, writes or compiler.
-    .PARAMETER ProjectRoot
-        Product checkout that holds .ci/project.json and the shim.
-    .PARAMETER Name
-        File name of the shim, which is also the engine command's name under Tools/.
-    .OUTPUTS
-        Full path of the engine command.
-    #>
-    [CmdletBinding()]
-    param([Parameter(Mandatory)][string]$ProjectRoot, [Parameter(Mandatory)][ValidatePattern('^[A-Z][A-Za-z]*-[A-Za-z]+\.ps1$')][string]$Name)
+function Get-CiPinnedEngineRoot([string]$ProjectRoot, [string]$Name) {
+    # This module's engine, after proving it is the project's own independent .ci-engine checkout at the exact pin with no
+    # tracked changes: the rule the project adapter applies. Read-only: the status check never rewrites the index.
     $separators = [char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
     $project = [IO.Path]::GetFullPath($ProjectRoot).TrimEnd($separators)
     $engine = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..')).TrimEnd($separators)
@@ -48,9 +33,55 @@ function Resolve-CiPinnedEngineCommand {
     if ((Invoke-CiGit $engine @('--no-optional-locks', '-c', 'core.fsmonitor=false', 'status', '--porcelain', '--untracked-files=no')).stdout.Trim()) {
         throw (Get-CiEngineBindingMessage $Name $pin 'it has changes to tracked files')
     }
-    $command = Join-Path $engine "Tools/$Name"
-    if (-not [IO.File]::Exists($command)) { throw (Get-CiEngineBindingMessage $Name $pin "that engine commit has no Tools/$Name") }
+    return [pscustomobject]@{ Root = $engine; Pin = $pin }
+}
+
+function Resolve-CiPinnedEngineCommand {
+    <#
+    .SYNOPSIS
+        Returns the pinned engine's implementation of a product command shim.
+    .DESCRIPTION
+        A product keeps a thin shim with its command's name and parameters that imports this module from its own
+        .ci-engine and runs the path returned here. Refuses, with one message naming the pin and the fix, unless this
+        module is the project's own independent .ci-engine Git checkout at the exact commit .ci/project.json pins, with
+        no tracked changes: the same rule the project adapter applies. No network, writes or compiler.
+    .PARAMETER ProjectRoot
+        Product checkout that holds .ci/project.json and the shim.
+    .PARAMETER Name
+        File name of the shim, which is also the engine command's name under Tools/.
+    .OUTPUTS
+        Full path of the engine command.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$ProjectRoot, [Parameter(Mandatory)][ValidatePattern('^[A-Z][A-Za-z]*-[A-Za-z]+\.ps1$')][string]$Name)
+    $bound = Get-CiPinnedEngineRoot $ProjectRoot $Name
+    $command = Join-Path $bound.Root "Tools/$Name"
+    if (-not [IO.File]::Exists($command)) { throw (Get-CiEngineBindingMessage $Name $bound.Pin "that engine commit has no Tools/$Name") }
     return $command
 }
 
-Export-ModuleMember -Function Resolve-CiPinnedEngineCommand
+function Resolve-CiPinnedEngineModule {
+    <#
+    .SYNOPSIS
+        Returns the pinned engine's implementation of a product module shim.
+    .DESCRIPTION
+        A product module shim (for example Build/BuildConsole.psm1) imports this module from its own .ci-engine, imports
+        the path returned here into its own scope and re-exports its functions. The engine module is
+        Tools/Modules/Ci.<shim file name>. Refuses exactly as Resolve-CiPinnedEngineCommand does. No network, writes or
+        compiler.
+    .PARAMETER ProjectRoot
+        Product checkout that holds .ci/project.json and the shim.
+    .PARAMETER Name
+        File name of the module shim, such as BuildConsole.psm1.
+    .OUTPUTS
+        Full path of the engine module.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$ProjectRoot, [Parameter(Mandatory)][ValidatePattern('^[A-Z][A-Za-z]*\.psm1$')][string]$Name)
+    $bound = Get-CiPinnedEngineRoot $ProjectRoot $Name
+    $module = Join-Path $bound.Root "Tools/Modules/Ci.$Name"
+    if (-not [IO.File]::Exists($module)) { throw (Get-CiEngineBindingMessage $Name $bound.Pin "that engine commit has no Tools/Modules/Ci.$Name") }
+    return $module
+}
+
+Export-ModuleMember -Function Resolve-CiPinnedEngineCommand, Resolve-CiPinnedEngineModule

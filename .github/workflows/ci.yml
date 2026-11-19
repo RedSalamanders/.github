@@ -57,6 +57,9 @@ jobs:
           $scratch = Join-Path $env:RUNNER_TEMP 'unified-ci-tests/changelog'
           [void][IO.Directory]::CreateDirectory($scratch)
           ./Tools/Test-ChangelogWorkflow.ps1 -ScratchRoot $scratch
+      - name: Engine modules through product module shims
+        shell: pwsh
+        run: ./Tests/Test-ProjectModules.ps1 -TestRoot (Join-Path $env:RUNNER_TEMP 'unified-ci-tests')
       - name: Preserve engine behavior evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
