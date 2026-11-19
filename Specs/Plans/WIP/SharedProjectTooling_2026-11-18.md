@@ -32,7 +32,7 @@ Scope: `RedSalamanders/.github` and the product copies of shared tooling in `DxU
 | T2 | CV-5-02 | Changelog suite (F-01): stage 1 moves the variant of RedXe, RedPrism, RedTilde and RedMonitor; stage 2 reconciles RedSalamander and DxUi | Stage 1 merged in #87; stage 2 R1 to R4 in the second PR; R5 waits for the owner; product shims after each pin wave |
 | T3 | CV-5-03 | `BuildConsole.psm1`, `NativeBuildPolicy.targets` and the Release block, `Get-CiNativeScope.ps1`, `setup-msvc`; fixed-path files written by `Update-ProjectPin.ps1` and checked by conformance | Design below; item 3 taken as proposed on 2026-11-19. Items 1 and 2 touch the native path; item 4's shim half is done (#92), the rest waits for CV-6-05 |
 | T4 | CV-5-04 | `ScopedTesting.psm1`, `TestRunEvidence.psm1`, `Test-Changes.ps1` with one parameter set: one planner, per-repository suite and path data | Design below, accepted with its defaults on 2026-11-19 ("finish it"); implementation in progress |
-| T5 | CV-5-05 | One skill grammar and package-integrity policy | Not started |
+| T5 | CV-5-05 | One skill grammar and package-integrity policy | Design below (G1 to G13, defaults taken 2026-11-19); engine implementation in progress |
 | T6 | CV-5-06 | DxUi consumer interface and RedMonitor client scripts (not engine-owned) | Not started |
 | T7 | CV-5-07 | `vcpkg-install.ps1`, `VcpkgTriplet.psm1`, `VisualStudio.psm1`, `Install-ClangFormat.ps1` | Not started |
 
@@ -189,6 +189,40 @@ path and the `RedPrism` build-number branch in the RedTilde copy. A DxUi process
 3. Products, one pull request each after their pin wave: data file version 2, root shim, dead code and
    `Get-CiNativeScope.ps1` deleted. Order: RedPrism and RedTilde (identical runner), RedXe, DxUi, RedMonitor, then
    RedSalamander after O4.
+
+## T5 design: one guidance validator (defaults taken 2026-11-19)
+
+Inventory of 2026-11-19: RedHome `Tools/SkillValidation.psm1` and `WikiValidation.psm1`; RedXe `Build/SkillValidation.psm1`,
+`SkillPackageIntegrity.psm1`, `SkillText.psm1`; RedPrism `Build/SkillValidation.psm1`, `SkillPackageIntegrity.psm1`;
+RedTilde `Build/SkillPackageIntegrity.psm1`; DxUi `Tools/Validation.psm1` (skill part); RedMonitor
+`Build/AgentGuidance.psm1`; RedSalamander none. RedHome, RedXe and RedPrism share one front-matter parser and the same
+`name` and `description` rules; all 45 skills on `main` pass it. RedXe's integrity checker descends from RedTilde's.
+
+Engine `Tools/Modules/Ci.AgentGuidance.psm1` and command `Tools/Test-AgentGuidance.ps1 -Root`; each product's
+`validate-skills.ps1` runs the command through its `Tools/Test-AgentGuidance.ps1` shim (register E-01 puts
+`validate-skills.ps1` at every root). The rules, each chosen by the governing rule (a producer contract, then the
+stricter option, then the majority, then fewer files):
+
+| # | Rule | Choice | From |
+| --- | --- | --- | --- |
+| G1 | Front matter | The shared parser: keys `name`, `description`, `license`, `allowed-tools`, `metadata` (one level); block scalars; YAML 1.1 typed values refused as strings; `name` equals the folder, ≤64, lowercase-hyphen; `description` ≤1024 code points, no `<` `>`, no `[TODO:` | RedHome = RedXe = RedPrism (register A-16) |
+| G2 | Reading | Strict UTF-8; a byte order mark, UTF-16/32 and NUL bytes are refused, per skill | RedXe (stricter) |
+| G3 | Fences | An unclosed fence in any scanned Markdown is reported with its line; the rest of the file is still checked | RedXe (stricter) |
+| G4 | "Use when" | `description` contains `Use when` (case-sensitive) | RedHome plan CV-2-13; six skills change in their product's adoption pull request |
+| G5 | Skill roots | `.agents/skills` only | Register A-09; RedSalamander adopts after CV-2-09 moves its `.github/skills` |
+| G6 | References | RedXe's parser (balanced parentheses, reference definitions, footnotes excluded, code spans masked), fragment and query stripped, percent-decoded; the target exists, stays inside the repository, and matches the on-disk spelling case-sensitively | RedXe (stricter) |
+| G7 | Reparse points | The root and everything below it, as the engine changelog contract already says; a junction above the root is accepted | Engine contract (`Specs/ProjectCommands.md`), over RedPrism's and RedMonitor's walk to the drive root |
+| G8 | Harness files | `agents/openai.yaml` is refused | Register A-11 (default "none"), as RedTilde does |
+| G9 | Scoped guidance | `.agents/guidance.json` lists every scoped `AGENTS.md` | RedTilde (stricter); five repositories add the file |
+| G10 | Index and pointers | Root `AGENTS.md` links every skill as `(.agents/skills/<name>/SKILL.md)` and nothing else under that path; `CLAUDE.md` and `.github/copilot-instructions.md` exist, have at most six non-empty lines and link `AGENTS.md` | RedHome; DxUi, RedMonitor, RedSalamander fix their index, five repositories their Copilot pointer |
+| G11 | PowerShell examples | In `powershell` fences, a `./x.ps1 -Param` line names a script that exists and parses, and only declared, alias or common parameters | RedPrism (stricter) |
+| G12 | Plan index | `Specs/Plans/WIP/README.md` names each WIP plan exactly once; `Specs/Plans/Done/README.md` likewise when present | DxUi, RedMonitor, RedHome (majority) |
+| G13 | Documentation project | A project of kind `documentation` (RedHome) may link sibling repositories; their existence is checked only when the caller passes `-CheckSiblings` | RedHome (register G-10); the engine schema gains the kind |
+
+Order: engine module, command and shim with the cases of the RedXe, RedPrism, RedTilde, RedMonitor and RedHome suites;
+then one adoption pull request per product after its pin wave, each fixing its own content (G4, G9, G10) in the same
+change; then the hub moves RedHome to the engine command (CV-6-09). RedMonitor keeps
+`Assert-RedMonitorOrdinaryGuidancePath`, which its build tooling also uses, in `Build/Toolchain.psm1`.
 
 ## Evidence
 
