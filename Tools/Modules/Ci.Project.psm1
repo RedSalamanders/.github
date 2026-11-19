@@ -93,6 +93,15 @@ function Test-CiProjectConfiguration {
             throw "The common workflow or engine pin diverged: $($template.Name)"
         }
     }
+    # An adopted engine shim (it carries the shim marker) is the pinned template's text; Update-ProjectPin.ps1 refreshes it.
+    foreach($shim in @(Get-CiProjectShimTemplates)){
+        $path=Join-Path $Context.root $shim.Path
+        if(-not(Test-Path -LiteralPath $path -PathType Leaf)){continue}
+        $text=[IO.File]::ReadAllText($path).Replace($crlf,$lf)
+        if($text.Contains((Get-CiProjectShimMarker)) -and $text.TrimEnd() -cne [IO.File]::ReadAllText($shim.FullName).Replace($crlf,$lf).TrimEnd()){
+            throw "The engine shim $($shim.Path) differs from the pinned engine's Templates/Project/$($shim.Path); run Tools/Update-ProjectPin.ps1 or copy that file."
+        }
+    }
     $extensions=(Get-Content (Join-Path $Context.engineRoot 'Policy/extensions.json') -Raw|ConvertFrom-Json -AsHashtable)[$project.repository.Split('/')[1]]
     foreach($workflow in Get-ChildItem -LiteralPath (Join-Path $Context.root '.github/workflows') -Filter '*.yml' -File){
         if($workflow.Name -cin $core){continue}

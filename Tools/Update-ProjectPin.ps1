@@ -9,6 +9,8 @@ Exact clean engine commit currently checked out beside this command.
 Updated .ci/project.json and canonical CI caller files. Removes an SDK's unchanged legacy publication caller.
 Replaces the original **/*.md exclusion with owned prose patterns and adds each agent harness path the exclusions
 lack (Get-CiHarnessExclusions); explicit runtime includes still take precedence.
+Rewrites each adopted engine shim (a project file that carries the shim marker) to its Templates/Project text at the
+new pin; never adds a shim or replaces a file without the marker (Specs/ProjectCommands.md).
 No commit, push or native build.
 .NOTES
 Requires PowerShell 7.4 and Git. Explicit maintenance command; review the diff and run compiler-free
@@ -54,6 +56,14 @@ foreach($template in Get-CiProjectWorkflowTemplates -Project $project){
 }
 if($project.kind -ceq 'sdk' -and (Test-Path -LiteralPath $legacyPublication)){
     Remove-Item -LiteralPath $legacyPublication
+}
+# Engine shims the project has adopted take their template's text at the new pin (Specs/ProjectCommands.md). A file
+# without the shim marker, such as a command the project still implements itself, is never replaced or added.
+foreach($template in @(Get-CiProjectShimTemplates)){
+    $path=Assert-CiContainedPath $rootPath (Join-Path $rootPath $template.Path)
+    if((Test-Path -LiteralPath $path -PathType Leaf) -and [IO.File]::ReadAllText($path).Contains((Get-CiProjectShimMarker))){
+        [IO.File]::WriteAllText($path,[IO.File]::ReadAllText($template.FullName),[Text.UTF8Encoding]::new($false))
+    }
 }
 # Historical sealed and metadata-only definitions retain their reviewed bytes.
 foreach($name in @('asan.yml','nightly-ci.yml')){
