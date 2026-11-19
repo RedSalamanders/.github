@@ -43,6 +43,7 @@ copies of shared tooling (RedHome `Specs/Plans/WIP/Convergence_2026-11-17.md`, P
 | `Tools/Release-Changelog.ps1` | `Tools/Release-Changelog.ps1` | same |
 | `Tools/Test-ChangelogWorkflow.ps1` | `Tools/Test-ChangelogWorkflow.ps1` | engine CI, and each product's tooling tests through its shim |
 | `Build/BuildConsole.psm1` (module shim) | `Tools/Modules/Ci.BuildConsole.psm1` | `Tests/Test-ProjectModules.ps1`, and each product's own build-console tests through its shim |
+| `Tools/Test-AgentGuidance.ps1` | `Tools/Test-AgentGuidance.ps1`, `Tools/Modules/Ci.AgentGuidance.psm1` | `Tests/Test-AgentGuidance.ps1` |
 
 ## Changes workflow
 
@@ -86,7 +87,63 @@ existed before the move (see [the tooling plan](Plans/WIP/SharedProjectTooling_2
 difference is still the owner's choice (R5 there): this implementation refuses a merged, unfolded fragment removed
 without its entry, as five products did, while `DxUi`'s own copy accepted it as a withdrawal.
 
+## Agent guidance
+
+`Test-AgentGuidance.ps1 -Root <repository> [-Kind Product|Documentation] [-CheckSiblings]` is read-only and runs no
+referenced script. It reports every problem at once, one `<path>[:<line>]: <problem> (<rule>)` per line after
+`Agent guidance validation failed:`, and otherwise prints `Agent guidance valid: <n> skills, <m> references.` Products run
+it from `validate-skills.ps1`; RedHome runs it with `-Kind Documentation`. `Ci.AgentGuidance.psm1` also exports
+`Get-CiSkillProblem -FolderName -Text` (the problems of one `SKILL.md` text as one string, or `$null`) and
+`Get-CiAgentGuidanceProblems` (every problem as a string array; never throws for a content problem). The rules, whose
+origins the [tooling plan](Plans/WIP/SharedProjectTooling_2026-11-18.md) (T5) records:
+
+- G1 Front matter: `SKILL.md` starts at byte 0 with `---` front matter of the keys `name`, `description`, `license`,
+  `allowed-tools` and one-level `metadata`, with quoted, literal and folded scalars. YAML 1.1 typed plain values
+  (booleans, null, numbers, dates, timestamps) are not strings; tags, anchors, aliases, flow collections and deeper
+  mappings are refused. `name` equals its folder, has at most 64 characters and is lowercase hyphen-separated words;
+  `description` has at most 1024 code points, no `<` or `>`, and does not start with `[TODO:`. The instructions are not
+  empty and hold no `[TODO: ...]` line outside fenced code.
+- G2 Reading: every file read is strict UTF-8 without NUL bytes or a UTF-16/32 byte order mark, and `SKILL.md` also has
+  no UTF-8 byte order mark. A file that cannot be read is one problem that names it; everything else is still checked.
+  A scanned Markdown file is not empty.
+- G3 Fences: an unclosed fence in a scanned Markdown file or plan index is reported with its line. It hides only its own
+  line, so the text after it is still checked.
+- G4 "Use when": `description` contains the case-sensitive words `Use when`.
+- G5 Skill roots: each skill is a folder `.agents/skills/<name>` holding its `SKILL.md`. A missing or empty
+  `.agents/skills`, and a `SKILL.md` anywhere else, are refused.
+- G6 References: the scanned Markdown is every `.md` under `.agents/skills`, every `AGENTS.md`, `CLAUDE.md` and
+  `.github/copilot-instructions.md`. Its inline links and reference definitions (balanced parentheses, escapes, titles;
+  not footnotes) outside fenced code and code spans are local unless they are fragment-only, query-only,
+  protocol-relative or another scheme than `file:`. A fragment and then a query end the path, which is percent-decoded.
+  The target exists, stays inside the repository and matches the letter case on disk, component by component.
+- G7 Reparse points: a linked root is refused before anything is read. Below it, a reparse point under `.agents`, one
+  named `AGENTS.md` or `SKILL.md`, and one on the path to any file read or target checked are refused; a junction above
+  the root is accepted. The walk that finds `AGENTS.md` and `SKILL.md` files does not enter `.git`, `.build`, a nested
+  checkout (a folder holding `.git`) or a reparse point.
+- G8 Harness files: `.agents/skills/<name>/agents/openai.yaml` is refused.
+- G9 Scoped guidance: `.agents/guidance.json` is `{"schemaVersion":1,"files":[...]}` and lists, once each, exactly the
+  repository's `AGENTS.md` files, the root one included, as repository-relative paths with forward slashes.
+- G10 Index and pointers: the root `AGENTS.md` links each skill as `(.agents/skills/<name>/SKILL.md)` and nothing else
+  under `.agents/skills`. `CLAUDE.md` and `.github/copilot-instructions.md` exist, have at most six non-empty lines and
+  link the root `AGENTS.md`.
+- G11 PowerShell examples: in a `powershell` fence of a skill package, a line that starts with `./<script>.ps1` names a
+  script of the repository, resolved from its root, that parses and accepts each parameter the line passes: its declared
+  names and aliases and, for an advanced script, the common parameters, with `WhatIf` and `Confirm` under
+  `SupportsShouldProcess`.
+- G12 Plan indexes: `Specs/Plans/WIP/README.md`, required when that folder exists, links each Markdown plan directly in
+  the folder exactly once and no plan that does not exist; so does `Specs/Plans/Done/README.md` when present. A link
+  with a fragment or a query points into a plan and is not its entry.
+- G13 Documentation project: with `-Kind Documentation`, a reference may leave the repository for a sibling in the
+  folder that holds it, and is checked for existence and letter case only with `-CheckSiblings`; a reference beyond
+  that folder is refused. A PowerShell example may name a product command the repository lacks; one it has is still
+  checked. Every other rule applies unchanged.
+
 ## Tests
+
+`./Tests/Test-AgentGuidance.ps1 -TestRoot <marked root>` runs the cases ported from the RedXe, RedTilde and RedPrism
+skill suites, a case for each rule above, the command, and the shim against a fixture product whose `.ci-engine` is built
+from this engine. Junction and file-lock controls report SKIP off Windows, and symbolic-link controls where the host
+cannot create one. Engine CI runs it on Windows and Linux.
 
 `./Tools/Test-ChangelogWorkflow.ps1 -ScratchRoot <existing folder>` runs local Git fixtures with a fixed identity and
 none of the person's hooks or signing, a local bare remote and a stand-in `gh`, inside its scratch root; Windows-only
