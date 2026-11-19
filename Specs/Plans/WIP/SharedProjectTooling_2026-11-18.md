@@ -30,8 +30,8 @@ Scope: `RedSalamanders/.github` and the product copies of shared tooling in `DxU
 | --- | --- | --- | --- |
 | T1 | CV-5-01 | Shim pattern: `Ci.EngineBinding.psm1`, `Templates/Project/`, refusal cases | Merged in #87; RedMonitor pilot waits for its pin wave |
 | T2 | CV-5-02 | Changelog suite (F-01): stage 1 moves the variant of RedXe, RedPrism, RedTilde and RedMonitor; stage 2 reconciles RedSalamander and DxUi | Stage 1 merged in #87; stage 2 R1 to R4 in the second PR; R5 waits for the owner; product shims after each pin wave |
-| T3 | CV-5-03 | `BuildConsole.psm1`, `NativeBuildPolicy.targets` and the Release block, `Get-CiNativeScope.ps1`, `setup-msvc`; fixed-path files written by `Update-ProjectPin.ps1` and checked by conformance | Design below. Item 3 changes the RedHome homes table (owner); items 1 and 2 touch the native path; item 4 waits for CV-6-05 |
-| T4 | CV-5-04 | `ScopedTesting.psm1`, `TestRunEvidence.psm1`, `Test-Changes.ps1` with one parameter set: one planner, per-repository suite and path data | Design below, waiting for the owner's review (B1 to B14, O1 to O4); no code before that |
+| T3 | CV-5-03 | `BuildConsole.psm1`, `NativeBuildPolicy.targets` and the Release block, `Get-CiNativeScope.ps1`, `setup-msvc`; fixed-path files written by `Update-ProjectPin.ps1` and checked by conformance | Design below; item 3 taken as proposed on 2026-11-19. Items 1 and 2 touch the native path; item 4's shim half is done (#92), the rest waits for CV-6-05 |
+| T4 | CV-5-04 | `ScopedTesting.psm1`, `TestRunEvidence.psm1`, `Test-Changes.ps1` with one parameter set: one planner, per-repository suite and path data | Design below, accepted with its defaults on 2026-11-19 ("finish it"); implementation in progress |
 | T5 | CV-5-05 | One skill grammar and package-integrity policy | Not started |
 | T6 | CV-5-06 | DxUi consumer interface and RedMonitor client scripts (not engine-owned) | Not started |
 | T7 | CV-5-07 | `vcpkg-install.ps1`, `VcpkgTriplet.psm1`, `VisualStudio.psm1`, `Install-ClangFormat.ps1` | Not started |
@@ -57,12 +57,12 @@ then the stricter option, then the majority, then fewer files):
 | R2 | Reused fold branch: DxUi proves its parent and exact fold and refuses unrelated files; DxUi ignores cross-repository fold pull requests | DxUi | Stricter | none that pass today |
 | R3 | Two pending fragments with the same text: common folds one silently, DxUi warns, RedSalamander refuses the fold | RedSalamander's refusal, plus DxUi's warning when a fragment is skipped because its entry is already published (the retry case) | Stricter; the two do not overlap | a fold with ambiguous duplicates, which loses an entry today |
 | R4 | Release cut: only DxUi has `Release-Changelog.ps1` and accepts the exact generated release transition under `-Base` | Engine command `Tools/Release-Changelog.ps1`, accepted everywhere | Additive; one exact generated transition | a repository that never runs it: none |
-| R5 | A merged, unfolded fragment removed without its entry (a revert or a withdrawal): common and RedSalamander refuse it ("restore it"); DxUi accepts it (its review finding R28-53) | **Owner choice.** Default: refuse, as five repositories do; a revert then keeps the fragment and adds its own | Stricter and the majority; DxUi's own contract would change | DxUi under the default; the other five under the alternative |
+| R5 | A merged, unfolded fragment removed without its entry (a revert or a withdrawal): common and RedSalamander refuse it ("restore it"); DxUi accepts it (its review finding R28-53) | **Default, taken 2026-11-19.** Refuse, as five repositories do; a revert then keeps the fragment and adds its own | Stricter and the majority; DxUi's own contract would change | DxUi under the default; the other five under the alternative |
 
-R5 is the only difference where both end states are reasonable. The engine keeps the default (refuse) until the
-owner answers; DxUi keeps its own copy, and so its withdrawal behavior, until then. If the owner picks the
-alternative, the engine change is DxUi's withdrawal block in `Get-ChangelogFoldProblems` and its case, and the
-"unfolded removal" case of the other five is dropped.
+R5 is the only difference where both end states are reasonable. On 2026-11-19 the owner said "finish it", which, as for
+D14 to D19 of the RedHome plan, takes the default: refuse. DxUi adopts the engine commands with that behavior. If the
+owner later picks the alternative, the engine change is DxUi's withdrawal block in `Get-ChangelogFoldProblems` and its
+case, and the "unfolded removal" case of the other five is dropped.
 
 Stage 2, as implemented in the second pull request: the RedSalamander duplicate case and the DxUi release, reused-branch
 and fork-filter cases are in `Tools/Test-ChangelogWorkflow.ps1`, with a new case for R1 (a missing base object); R1 to
@@ -99,16 +99,17 @@ Proposed homes and order, each step its own engine pull request and then one pro
 3. **`NativeBuildPolicy.targets` and the Release block** belong with the DxUi pin, not with the engine pin, because the
    DxUi archive compiles under the consumer's copy. Proposal for the owner: home them in the DxUi consumer interface
    (T6, `Build/DxUi.Consumer.*`), which already travels with that pin, and keep only the toolset check in the engine.
-   This changes the homes table of the RedHome plan, so it waits for the owner and for the build-profile stream's
-   part 1, which edits these files now.
+   This changes the homes table of the RedHome plan; taken as the proposal on 2026-11-19 ("finish it"). It still waits
+   for the build-profile stream's part 1, which edits these files now.
 4. **Fixed-path files** (`.clang-format`, `.editorconfig`, the common `.gitattributes` and `.gitignore` blocks) are
    written by `Update-ProjectPin.ps1` from `Templates/Project/` and checked by `Test-CiProjectConfiguration`, once the
    formatting stream (CV-6-05) has made them equal by hand; until then a check would only fail.
 
 ## T4 design: one planner, one runner, per-repository data (for the owner's review)
 
-**Status: design only. It changes the `Test-Changes.ps1` parameter set in four repositories and picks between real
-behaviors, so no T4 code starts before the owner has reviewed this section.**
+**Status: design accepted with its defaults on 2026-11-19, when the owner said "finish it" (the same rule as D14 to D19:
+the default where the plan has one, the proposal for O1 to O4). It changes the `Test-Changes.ps1` parameter set in
+four repositories; the "other end state" column stays here so the owner can still reverse any row.**
 
 ### What exists (inventory of 2026-11-19, origin/main of each repository)
 
@@ -166,7 +167,7 @@ path and the `RedPrism` build-number branch in the RedTilde copy. A DxUi process
 | B13 | Unmapped path | Full fallback (five) | RedMonitor selects native Debug |
 | B14 | Status tokens | One vocabulary: `NOTHING_SELECTED`, `PROSE_CHECKS_PASSED`, `SELECTED_PASSED`, `FULL_PASSED`, each followed by `; repository NOT_EVALUATED` | today's four vocabularies |
 
-### Owner choices the design cannot default
+### Owner choices (taken with the proposal on 2026-11-19)
 
 | # | Question | Proposal |
 | --- | --- | --- |
