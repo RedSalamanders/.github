@@ -15,6 +15,10 @@ copies of shared tooling (RedHome `Specs/Plans/WIP/Convergence_2026-11-17.md`, P
   shim under `Tools/`); a copy in a nested fixture never binds to an outer product. The shim imports
   `Tools/Modules/Ci.EngineBinding.psm1` from that product's `.ci-engine`, and runs the path that
   `Resolve-CiPinnedEngineCommand` returns: `Tools/<shim file name>` of that engine.
+- A module shim (a `.psm1` such as `Build/BuildConsole.psm1`) finds its product root in its own folder or up to three
+  levels above it, never past a folder that holds `.git`, so a nested fixture copy still refuses. It imports the
+  module that `Resolve-CiPinnedEngineModule` returns, `Tools/Modules/Ci.<shim file name>`, into its own scope and
+  exports exactly that module's functions, so `Import-Module <product path>` gives callers the same commands as before.
 - It fails closed with one message that names the pin and the commands that fix it, when `.ci-engine` is missing,
   predates the binding module, is not a Git checkout of its own, is at another commit than `engine.ref`, or has
   changes to tracked files. This is the rule the project adapter already applies to the static CI phase.
@@ -38,6 +42,7 @@ copies of shared tooling (RedHome `Specs/Plans/WIP/Convergence_2026-11-17.md`, P
 | `Tools/Submit-ChangelogFold.ps1` | `Tools/Submit-ChangelogFold.ps1` | same |
 | `Tools/Release-Changelog.ps1` | `Tools/Release-Changelog.ps1` | same |
 | `Tools/Test-ChangelogWorkflow.ps1` | `Tools/Test-ChangelogWorkflow.ps1` | engine CI, and each product's tooling tests through its shim |
+| `Build/BuildConsole.psm1` (module shim) | `Tools/Modules/Ci.BuildConsole.psm1` | `Tests/Test-ProjectModules.ps1`, and each product's own build-console tests through its shim |
 
 ## Changes workflow
 

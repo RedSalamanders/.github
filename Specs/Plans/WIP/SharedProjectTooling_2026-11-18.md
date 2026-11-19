@@ -91,6 +91,11 @@ Proposed homes and order, each step its own engine pull request and then one pro
    caller-chosen verbosity, so those two add `;Summary` to their `/flp` first, each in its own pull request proven by
    the six builds (D21). Products keep `Build/BuildConsole.psm1` as a module shim, which needs a module form of the
    binding (`Resolve-CiPinnedEngineModule`), added with its refusal cases.
+   *Stage 1, implemented 2026-11-19:* the module binding, `Ci.BuildConsole.psm1` as RedTilde's variant (the four-repository
+   variant plus the tool-exception refusal, which needs no logger change) and the shim
+   `Templates/Project/Build/BuildConsole.psm1`, tested by `Tests/Test-ProjectModules.ps1`. RedMonitor, RedXe, RedPrism,
+   RedTilde and RedSalamander adopt the shim after their pin wave; DxUi keeps its stricter copy until stage 2 adds the
+   summary rule, after RedXe and RedSalamander log MSBuild summaries.
 2. **`setup-msvc`** moves to the engine as `.github/actions/setup-msvc`, DxUi's `Setup.ps1` plus RedPrism's
    `MSBUILD_EXE_PATH` export and RedXe's upload-on-failure rule; the required MSVC family stays product data. The
    engine workflows then use `./.ci-engine/.github/actions/setup-msvc`, and products delete their copies. Only native
