@@ -84,6 +84,7 @@ manual tools do not introduce another required pre-merge native campaign.
 ./Tests/Test-SdkCache.ps1 -TestRoot Z:/RedSalamander.Perf
 ./Tools/Test-ChangelogWorkflow.ps1 -ScratchRoot <existing descendant of Z:/RedSalamander.Perf>
 ./Tests/Test-ProjectModules.ps1 -TestRoot Z:/RedSalamander.Perf
+./Tests/Test-AgentGuidance.ps1 -TestRoot Z:/RedSalamander.Perf
 ```
 
 Shared product commands, starting with the changelog suite (`Test-Changelog.ps1`, `Fold-Changelog.ps1`,
