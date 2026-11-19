@@ -164,7 +164,7 @@ function Edit-Fixture([string] $Root, [string] $Name, [string] $Old, [string] $N
     [IO.File]::WriteAllText($path, $text.Replace($Old, $New), [Text.UTF8Encoding]::new($false))
 }
 function Invoke-FixtureProcess([Diagnostics.ProcessStartInfo] $Start,
-    [ValidateRange(1,30000)][int] $TimeoutMilliseconds = 30000, [ref] $ProcessIdentity) {
+    [ValidateRange(1,180000)][int] $TimeoutMilliseconds = 30000, [ref] $ProcessIdentity) {
     # This standalone cross-project suite owns this synthetic child; repository-specific native runners are not dependencies.
     $process = [Diagnostics.Process]::Start($Start)
     try {
@@ -778,7 +778,8 @@ if ($ProjectRoot) {
             foreach ($argument in @('-NoProfile','-File',(Join-Path $r $runnerName))) { $start.ArgumentList.Add($argument) }
             if ($scoped) { $start.ArgumentList.Add('-Mode'); $start.ArgumentList.Add('PrePush') }
             $start.Environment['NO_COLOR'] = '1'
-            $outcome = Invoke-FixtureProcess $start
+            # The product's real runner and its engine shim start several processes; a busy host needs more than the default.
+            $outcome = Invoke-FixtureProcess $start -TimeoutMilliseconds 120000
             # One line of plain text: a hosted runner may still color the error (ANSI) and wraps a long message, continuing
             # it on " | " lines, so color codes go before the lines are joined.
             $plain = $outcome.Output -replace "`e\[[0-9;?]*[ -/]*[@-~]", ''

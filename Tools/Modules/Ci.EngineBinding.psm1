@@ -18,8 +18,13 @@ function Get-CiPinnedEngineRoot([string]$ProjectRoot, [string]$Name) {
     $engine = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..')).TrimEnd($separators)
     $comparison = if ([OperatingSystem]::IsWindows()) { [StringComparison]::OrdinalIgnoreCase } else { [StringComparison]::Ordinal }
     $pin = ''
-    try { $pin = [string](Read-CiProject $project).engine.ref }
-    catch { throw (Get-CiEngineBindingMessage $Name '' "its manifest cannot be read ($($_.Exception.Message))") }
+    # Only the pin is needed here. The static CI phase validates the whole manifest against its schema; doing that on
+    # every shim call would add seconds to each local command on a busy host.
+    try {
+        $manifest = [IO.File]::ReadAllText((Join-Path $project '.ci/project.json'), [Text.UTF8Encoding]::new($false, $true)) | ConvertFrom-Json
+        $pin = [string]$manifest.engine.ref
+        if ($pin -cnotmatch '^[0-9a-f]{40}$') { throw 'engine.ref is not a full commit.' }
+    } catch { throw (Get-CiEngineBindingMessage $Name '' "its manifest cannot be read ($($_.Exception.Message))") }
     $expected = [IO.Path]::GetFullPath((Join-Path $project '.ci-engine')).TrimEnd($separators)
     if (-not $engine.Equals($expected, $comparison)) { throw (Get-CiEngineBindingMessage $Name $pin "the engine that answered is $engine instead") }
     $top = Invoke-CiGit $engine @('rev-parse', '--show-toplevel') -AllowFailure
