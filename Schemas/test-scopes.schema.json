@@ -83,6 +83,10 @@
       "description": "Native test executables (image file names) that write .build/test-artifacts; evidence capture refuses while one runs from this checkout's .build.",
       "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*\\.exe$" }
     },
+    "profileFailureImages": {
+      "description": "Optional native test executable names whose linked images and PDBs accompany current FailureEvidence from a configured build profile.",
+      "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*\\.exe$" }
+    },
     "prePushProfiles": {
       "description": "Every profile the repository qualifies locally; PrePush runs them in this order in one call.",
       "type": "array", "minItems": 1, "uniqueItems": true,

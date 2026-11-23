@@ -210,6 +210,13 @@ The evidence root must be a fully qualified local directory below its drive root
 calendar. Payload paths and alternate data stream names are compared in ordinal order. Inventories and receipt
 arrays retain their shape with zero or one entry. Win32 failures include the operating system's reason and path.
 
+Products whose test suites write `.build/<platform>/<configuration>/FailureEvidence` declare `profileFailureImages`
+in the scope manifest. A capture with that profile moves prior and current failure output into its run. Prior output
+keeps its original bytes. Current output binds the declared executables and their linked PDBs through a verified ZIP
+and per-file hashes. Windows paths, directory identities and active writers are checked before moving the output.
+`Complete-TestRunEvidenceAfterFailure` preserves an existing test failure when finalization also fails.
+The `Build/` and `Tools/` layouts bind the same `ScopedTesting.psm1` and `TestRunEvidence.psm1` templates.
+
 ### Scoped testing tests
 
 `./Tests/Test-ScopedTesting.ps1 -TestRoot <marked root>` runs fixture products whose stub `build.ps1`, `test.ps1`,

@@ -1055,6 +1055,11 @@ Invoke-Case 'Conformance refuses an adopted engine shim that differs from its te
     }
     $shims=@(Get-CiProjectShimTemplates)
     Assert-True ($shims.Count -gt 0) 'The engine has no project shim templates.'
+    foreach ($moduleName in 'ScopedTesting.psm1', 'TestRunEvidence.psm1') {
+        $buildTemplate = $shims | Where-Object Path -CEQ "Build/$moduleName"
+        $toolsTemplate = $shims | Where-Object Path -CEQ "Tools/$moduleName"
+        Assert-True ($buildTemplate -and $toolsTemplate -and $buildTemplate.FullName -ceq $toolsTemplate.FullName) "The two layouts must share the $moduleName template."
+    }
     $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
     # A project's own command of the same name is not a shim and is not compared.
     Write-FixtureFile $root $shims[0].Path '# The project still implements this command.'

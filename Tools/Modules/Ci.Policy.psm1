@@ -185,7 +185,12 @@ function Get-CiProjectShimTemplates {
     $paths=(Invoke-CiGit $engine @('ls-tree','-r','--name-only','-z','HEAD','--','Templates/Project')).stdout.Split([char]0,[StringSplitOptions]::RemoveEmptyEntries)
     foreach($path in $paths){
         $file=Get-Item -LiteralPath (Assert-CiContainedPath $engine (Join-Path $engine $path)) -ErrorAction Stop
-        [pscustomobject]@{Path=$path.Substring('Templates/Project/'.Length);FullName=$file.FullName}
+        $relative = $path.Substring('Templates/Project/'.Length)
+        [pscustomobject]@{Path=$relative;FullName=$file.FullName}
+        if ($relative -cin @('Build/ScopedTesting.psm1', 'Build/TestRunEvidence.psm1')) {
+            # DxUi keeps these modules in Tools. Both layouts use the same template bytes.
+            [pscustomobject]@{Path=('Tools/' + $file.Name);FullName=$file.FullName}
+        }
     }
 }
 
