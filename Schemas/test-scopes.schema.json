@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RedSalamanders scoped testing data (Tests/test-scopes.json, version 2)",
+  "description": "The per-repository facts of the engine's scoped testing (Specs/ProjectCommands.md, Scoped testing). Everything else is engine behavior.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "defaultBranch", "buildNumber", "prose", "unscoped", "scopes", "rules", "watchedProcesses", "prePushProfiles"],
+  "properties": {
+    "version": { "const": 2 },
+    "defaultBranch": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$" },
+    "buildNumber": {
+      "description": "none: build.ps1 receives no build number. mergeBaseCount: -BuildNumber is the commit count of HEAD's merge base with the comparison base (of HEAD when that base does not resolve).",
+      "enum": ["none", "mergeBaseCount"]
+    },
+    "nativeInventory": {
+      "description": "Declared native test sources. Required when any scope is native.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "exclude", "testFolders"],
+      "properties": {
+        "path": { "$ref": "#/$defs/path" },
+        "exclude": { "description": "Historical or external sources that never enter the inventory.", "$ref": "#/$defs/globs" },
+        "testFolders": { "description": "Folders whose every .cpp and .h is a native test source.", "$ref": "#/$defs/globs" }
+      }
+    },
+    "runtimeFiles": {
+      "description": "Deployed non-binary files under .build/<platform>/<configuration> that native results depend on.",
+      "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/path" }
+    },
+    "prose": { "description": "Paths that select every non-native scope and no native one, unless a rule naming Markdown explicitly maps them.", "$ref": "#/$defs/globs" },
+    "unscoped": { "description": "Paths that select no scope when no rule maps them.", "$ref": "#/$defs/globs" },
+    "scopes": {
+      "type": "array", "minItems": 1,
+      "items": { "$ref": "#/$defs/scope" }
+    },
+    "rules": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/rule" }
+    },
+    "projectBindings": {
+      "description": "Native projects whose compiled inputs and transitive local includes become exact-path rules.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projects", "includeRoots", "exclude"],
+      "properties": {
+        "projects": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "scopes"],
+            "properties": {
+              "path": { "type": "string", "pattern": "^[^/\\\\:*?][^\\\\:*?]*\\.vcxproj$" },
+              "scopes": { "$ref": "#/$defs/scopeNames" },
+              "overrides": {
+                "description": "Inputs matching a pattern take only these scopes from this project.",
+                "type": "array",
+                "items": {
+                  "type": "object", "additionalProperties": false, "required": ["pattern", "scopes"],
+                  "properties": { "pattern": { "$ref": "#/$defs/glob" }, "scopes": { "$ref": "#/$defs/scopeNames" } }
+                }
+              }
+            }
+          }
+        },
+        "includeRoots": { "description": "Folders that #include names may be relative to.", "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/path" } },
+        "exclude": { "description": "Paths never treated as local include targets.", "$ref": "#/$defs/globs" }
+      }
+    },
+    "interactiveObligations": {
+      "description": "Suites that need the person's interactive desktop. Scoped testing lists them as INTERACTIVE_NOT_RUN and never runs them.",
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["pattern", "suites", "reason"],
+        "properties": {
+          "pattern": { "$ref": "#/$defs/glob" },
+          "suites": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9.-]*$" } },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "watchedProcesses": {
+      "description": "Native test executables (image file names) that write .build/test-artifacts; evidence capture refuses while one runs from this checkout's .build.",
+      "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*\\.exe$" }
+    },
+    "prePushProfiles": {
+      "description": "Every profile the repository qualifies locally; PrePush runs them in this order in one call.",
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["platform", "configuration"],
+        "properties": {
+          "platform": { "$ref": "#/$defs/platform" },
+          "configuration": { "$ref": "#/$defs/configuration" },
+          "buildOnly": { "description": "Builds the profile and runs no runtime test, for a platform the local host does not run.", "type": "boolean" }
+        }
+      }
+    },
+    "instrumentationVariables": {
+      "description": "Environment variables that instrument test execution. While one is set, no receipt or iteration baseline is written or reused.",
+      "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" }
+    },
+    "systemFiles": {
+      "description": "Files under %SystemRoot%/System32 whose bytes bind native evidence (graphics, text and imaging runtimes).",
+      "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*\\.dll$" }
+    }
+  },
+  "$defs": {
+    "platform": { "enum": ["x64", "ARM64"] },
+    "configuration": { "enum": ["Debug", "Release", "ASan Debug"] },
+    "path": { "type": "string", "minLength": 1, "pattern": "^[^/\\\\:*?\\u0000][^\\\\:*?\\u0000]*$" },
+    "glob": { "type": "string", "minLength": 1, "pattern": "^[^/\\\\:\\u0000][^\\\\:\\u0000]*$" },
+    "globs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/glob" } },
+    "scopeName": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9.-]*$" },
+    "scopeNames": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/scopeName" } },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "native", "reuse"],
+      "properties": {
+        "name": { "$ref": "#/$defs/scopeName" },
+        "native": { "description": "Native scopes are suites of test.ps1; the others run their commands.", "type": "boolean" },
+        "reuse": { "description": "Whether an identical earlier pass may be reused.", "type": "boolean" },
+        "configurations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/configuration" } },
+        "commands": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["path", "arguments"],
+            "properties": {
+              "path": { "type": "string", "pattern": "^[^/\\\\:*?][^\\\\:*?]*\\.ps1$" },
+              "arguments": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      },
+      "if": { "properties": { "native": { "const": false } } },
+      "then": { "required": ["commands"] },
+      "else": { "not": { "required": ["commands"] } }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pattern", "scopes", "reason"],
+      "properties": {
+        "pattern": { "$ref": "#/$defs/glob" },
+        "scopes": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": { "anyOf": [{ "const": "*" }, { "$ref": "#/$defs/scopeName" }] }
+        },
+        "reason": { "type": "string", "minLength": 1 },
+        "exclusive": { "description": "One exact path whose match replaces every other rule and the prose rule.", "type": "boolean" },
+        "additive": { "description": "Adds its scopes to a path that another rule maps, but never maps a path by itself.", "type": "boolean" }
+      },
+      "not": { "properties": { "exclusive": { "const": true }, "additive": { "const": true } }, "required": ["exclusive", "additive"] }
+    }
+  }
+}

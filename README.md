@@ -85,7 +85,14 @@ manual tools do not introduce another required pre-merge native campaign.
 ./Tools/Test-ChangelogWorkflow.ps1 -ScratchRoot <existing descendant of Z:/RedSalamander.Perf>
 ./Tests/Test-ProjectModules.ps1 -TestRoot Z:/RedSalamander.Perf
 ./Tests/Test-AgentGuidance.ps1 -TestRoot Z:/RedSalamander.Perf
+./Tests/Test-ScopedTesting.ps1 -TestRoot Z:/RedSalamander.Perf
 ```
+
+Scoped testing (`Test-Changes.ps1`, with the `Build/ScopedTesting.psm1` and `Build/TestRunEvidence.psm1` module
+shims) is one engine planner and runner driven by each product's `Tests/test-scopes.json` version 2
+([schema](Schemas/test-scopes.schema.json)); its behaviors and data are the
+[scoped testing contract](Specs/ProjectCommands.md#scoped-testing). Its fixtures use stub product scripts and never
+compile.
 
 Shared product commands, starting with the changelog suite (`Test-Changelog.ps1`, `Fold-Changelog.ps1`,
 `Submit-ChangelogFold.ps1`), are implemented once under `Tools/` and run in each product through a thin shim of the

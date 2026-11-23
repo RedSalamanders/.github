@@ -31,8 +31,8 @@ Scope: `RedSalamanders/.github` and the product copies of shared tooling in `DxU
 | T1 | CV-5-01 | Shim pattern: `Ci.EngineBinding.psm1`, `Templates/Project/`, refusal cases | Merged in #87; RedMonitor pilot waits for its pin wave |
 | T2 | CV-5-02 | Changelog suite (F-01): stage 1 moves the variant of RedXe, RedPrism, RedTilde and RedMonitor; stage 2 reconciles RedSalamander and DxUi | Stage 1 merged in #87; stage 2 R1 to R4 in the second PR; R5 waits for the owner; product shims after each pin wave |
 | T3 | CV-5-03 | `BuildConsole.psm1`, `NativeBuildPolicy.targets` and the Release block, `Get-CiNativeScope.ps1`, `setup-msvc`; fixed-path files written by `Update-ProjectPin.ps1` and checked by conformance | Design below; item 3 taken as proposed on 2026-11-19. Items 1 and 2 touch the native path; item 4's shim half is done (#92), the rest waits for CV-6-05 |
-| T4 | CV-5-04 | `ScopedTesting.psm1`, `TestRunEvidence.psm1`, `Test-Changes.ps1` with one parameter set: one planner, per-repository suite and path data | Design below, accepted with its defaults on 2026-11-19 ("finish it"); implementation in progress |
-| T5 | CV-5-05 | One skill grammar and package-integrity policy | Design below (G1 to G13, defaults taken 2026-11-19); engine implementation in progress |
+| T4 | CV-5-04 | `ScopedTesting.psm1`, `TestRunEvidence.psm1`, `Test-Changes.ps1` with one parameter set: one planner, per-repository suite and path data | Engine planner, runner, schema and shims implemented. Hosted fixture evidence precedes product migration |
+| T5 | CV-5-05 | One skill grammar and package-integrity policy | Design below (G1 to G13, defaults taken 2026-11-19); engine implementation merged in #95 |
 | T6 | CV-5-06 | DxUi consumer interface and RedMonitor client scripts (not engine-owned) | Not started |
 | T7 | CV-5-07 | `vcpkg-install.ps1`, `VcpkgTriplet.psm1`, `VisualStudio.psm1`, `Install-ClangFormat.ps1` | Not started |
 
@@ -189,6 +189,30 @@ path and the `RedPrism` build-number branch in the RedTilde copy. A DxUi process
 3. Products, one pull request each after their pin wave: data file version 2, root shim, dead code and
    `Get-CiNativeScope.ps1` deleted. Order: RedPrism and RedTilde (identical runner), RedXe, DxUi, RedMonitor, then
    RedSalamander after O4.
+
+### T4 implementation (2026-11-19)
+
+Engine: `Schemas/test-scopes.schema.json` (version 2), `Tools/Modules/Ci.ScopedTesting.psm1`,
+`Tools/Modules/Ci.TestRunEvidence.psm1`, `Tools/Test-Changes.ps1 -Root` with the one parameter set, the bridge
+`Tools/Invoke-ScopedScript.ps1` (it hands `test.ps1` a real `-Suites` array), the shims `Templates/Project/Test-Changes.ps1`,
+`Templates/Project/Build/ScopedTesting.psm1` and `TestRunEvidence.psm1`, and `Tests/Test-ScopedTesting.ps1`
+(17 cases on Windows). B1 to B14 and O1 to O3 are implemented. Differences from the forks, beyond the B rows:
+
+- RedPrism's and RedTilde's `Format` scope keyed on compiled source only; that special case is dropped, so a prose edit
+  reruns `format.ps1 -Check`.
+- The whole-tree fingerprint leaves out the data's `unscoped` paths instead of each fork's own folder list.
+- The iteration baseline (B4) binds the environment, Git and build-output identities; DxUi's separate vcpkg and
+  toolchain fingerprint, project-subset builds, harness preflight, failure evidence and image archive are not ported.
+- `prePushProfiles` has no version-1 source. The converted RedPrism data uses x64 Debug, Release and ASan Debug with
+  tests and the three ARM64 profiles as builds; **the owner confirms this list** (O1).
+- A converted RedPrism data file plans the same scopes as RedPrism's own planner for 43 representative paths.
+
+Product migration needs, per repository: the version-2 data file, the three shims, deletion of its forks and
+`Tools/Get-CiNativeScope.ps1` (and DxUi's `Test-PrePush.ps1`); its `test.ps1` writes
+`.build/reports/<suite>-<platform>-<configuration>.json` with `exitCode` and `skips` (RedPrism, RedTilde and RedXe do
+not yet) and takes the profile lease through `Enter-ScopedProfileLease`; RedMonitor's `build.ps1` and `test.ps1` take
+the runner's parameters and its packaging and installation checks become scopes; DxUi's module path `Tools/` needs a
+template of its own. RedSalamander follows O4.
 
 ## T5 design: one guidance validator (defaults taken 2026-11-19)
 

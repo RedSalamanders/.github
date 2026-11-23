@@ -1,6 +1,25 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function Get-CiProcessCreationIdentity {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][ValidateRange(1,2147483647)][int] $ProcessId)
+    if ($IsWindows) {
+        return 'windows:' + (Get-Process -Id $ProcessId -ErrorAction Stop).StartTime.ToUniversalTime().Ticks
+    }
+    if ($IsLinux) {
+        # The managed StartTime conversion can differ across processes. Use the exact kernel clock token.
+        $stat = [IO.File]::ReadAllText("/proc/$ProcessId/stat")
+        $nameEnd = $stat.LastIndexOf(')')
+        if ($nameEnd -lt 0 -or $nameEnd + 2 -ge $stat.Length) { throw 'Cannot read process creation identity.' }
+        $fields = $stat.Substring($nameEnd + 2).Split(' ', [StringSplitOptions]::RemoveEmptyEntries)
+        if ($fields.Length -lt 20 -or $fields[19] -cnotmatch '^[0-9]+$') { throw 'Invalid kernel process creation token.' }
+        $bootId = [IO.File]::ReadAllText('/proc/sys/kernel/random/boot_id').Trim()
+        return 'linux:' + $bootId + ':' + $fields[19]
+    }
+    throw 'Process creation identity is unsupported on this operating system.'
+}
+
 function Set-CiNativeProcessEnvironment {
     [CmdletBinding()]
     param([Parameter(Mandatory)][Diagnostics.ProcessStartInfo]$ProcessStartInfo)
@@ -390,4 +409,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Get-CiProjectShimMarker, Get-CiProjectShimTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiHarnessExclusions, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
+Export-ModuleMember -Function Get-CiProcessCreationIdentity, Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Get-CiProjectShimMarker, Get-CiProjectShimTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiHarnessExclusions, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
