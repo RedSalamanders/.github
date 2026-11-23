@@ -201,7 +201,11 @@ that gives no native scope is not a native input.
 A product's `build.ps1` writes `.build/<platform>/<configuration>`; its `test.ps1` takes the parameters of B12 and
 writes the reports of B5. `Build/TestRunEvidence.psm1` serves `test.ps1` on Windows: `Start-TestRunEvidence
 -CaptureNativeArtifacts` refuses while a `watchedProcesses` executable runs from the checkout's `.build`, and never
-stops it.
+stops it. The Windows run handle starts in `Active` state. Verified completion sets `Completed` for a pass
+and `Failed` for a failed test. Verification that throws after ownership admission closes the handle in
+`Interrupted` state. Ownership or path refusal leaves the handle active so its owner can finish it.
+A closed handle refuses further publication and completion. Retained `started.json` and `completed.json`
+are the durable evidence.
 
 ### Scoped testing tests
 
