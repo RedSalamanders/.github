@@ -113,11 +113,14 @@ function Get-ScopedReceiptPath([object]$Scope, [string]$Reports) {
     return Join-Path $Root ('.build/reports/scoped-tests/independent/' + $Scope.name + '.json')
 }
 
-function Read-ScopedSuiteReport([string]$Name, [string]$P, [string]$C, [bool]$Instrumented, [Nullable[DateTime]]$Since) {
-    # B5: the suite report test.ps1 writes (.build/reports/<suite>-<platform>-<configuration>.json) with exitCode and skips.
+function Get-ScopedSuiteReportPath([string]$Name, [string]$P, [string]$C, [bool]$Instrumented) {
     $path = Join-Path $Root ".build/reports/$Name-$P-$C$(if ($Instrumented) { '.instrumented' }).json"
+    return Assert-CiContainedPath -Root $Root -Path $path
+}
+
+function Read-ScopedSuiteReport([string]$Name, [string]$P, [string]$C, [bool]$Instrumented) {
+    $path = Get-ScopedSuiteReportPath $Name $P $C $Instrumented
     if (-not [IO.File]::Exists($path)) { return $null }
-    if ($null -ne $Since -and [IO.File]::GetLastWriteTimeUtc($path) -lt $Since) { return $null }
     try {
         $report = ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($path))
         return [pscustomobject]@{ exitCode = [int]$report.exitCode; skips = @($report.skips | Where-Object { $null -ne $_ }) }
@@ -239,7 +242,7 @@ function Invoke-ScopedProfile([object]$Target) {
             $receipt = Get-ScopedReceiptPath $scope $reports
             $reuse = -not $instrumentation.Count -and -not $Force -and $scope.reuse -and (Test-ScopedReceipt -Path $receipt -Identity $key)
             if ($reuse -and $scope.native) {
-                $report = Read-ScopedSuiteReport $scope.name $P $C $false $null
+                $report = Read-ScopedSuiteReport $scope.name $P $C $false
                 $reuse = $null -ne $report -and $report.exitCode -eq 0 -and -not $report.skips.Count
             }
             if ($reuse) { Write-Host "REUSED $($scope.name) (identical successful local evidence)"; continue }
@@ -260,7 +263,14 @@ function Invoke-ScopedProfile([object]$Target) {
         if ($runtime.Count) {
             $parameters = [ordered]@{ Platform = $P; Configuration = $C; Suites = $runtime; SkipBuild = $true; SkipTooling = $true }
             if ($ParallelSuites -gt 1) { $parameters['ParallelSuites'] = $ParallelSuites }
-            $started = [DateTime]::UtcNow.AddSeconds(-2)
+            # Keep prior evidence and require test.ps1 to create the report for this invocation.
+            $archive = Assert-CiContainedPath -Root $Root -Path (Join-Path $reports ("prior-suite-reports/" + [guid]::NewGuid().ToString('N')))
+            foreach ($name in $runtime) {
+                $priorReport = Get-ScopedSuiteReportPath $name $P $C ([bool]$instrumentation.Count)
+                if (-not [IO.File]::Exists($priorReport)) { continue }
+                [void][IO.Directory]::CreateDirectory($archive)
+                [IO.File]::Move($priorReport, (Join-Path $archive ([IO.Path]::GetFileName($priorReport))))
+            }
             Invoke-ScopedProductScript 'test.ps1' $parameters "Selected runtime tests ($P $C)"
             $afterKey = Get-ScopedDigest (@($Root, $P, $C, '(common)', $nativeOptions, (Get-ScopedSourceIdentity -Root $Root -Manifest $manifest -CompiledOnly),
                     (Get-ScopedArtifactIdentity -Root $Root -Platform $P -Configuration $C -Manifest $manifest), $environment) -join "`n")
@@ -268,7 +278,7 @@ function Invoke-ScopedProfile([object]$Target) {
                 if ((Get-ScopedDigest ($afterKey + "`n" + $name)) -cne $identities[$name]) { throw "Inputs changed during $name; no reusable success was published." }
             }
             foreach ($scope in @($pending | Where-Object { $_.native })) {
-                $report = Read-ScopedSuiteReport $scope.name $P $C ([bool]$instrumentation.Count) $started
+                $report = Read-ScopedSuiteReport $scope.name $P $C ([bool]$instrumentation.Count)
                 if (-not $report) { throw "test.ps1 wrote no current suite report .build/reports/$($scope.name)-$P-$C.json; no success was established for $($scope.name)." }
                 if ($report.exitCode -ne 0) { throw "The suite report of $($scope.name) does not show a successful exit." }
                 if ($report.skips.Count) { $reduced.Add($scope.name); Write-Host "PASSED_WITH_CAPABILITY_SKIPS $($scope.name) (not reusable)"; continue }

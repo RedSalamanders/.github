@@ -468,8 +468,16 @@ Case 'reuse needs an exact receipt and a clean suite report; Force, skips and mi
     [IO.File]::Delete((Join-Path $product.Root ".build/reports/Core-$hostPlatform-Debug.json"))
     $result = Invoke-Runner $product $again
     Assert-Run $result -Output @('PASSED Core \(native suite\)') -Absent @('REUSED Core')
+    $reportFile = "Core-$hostPlatform-Debug.json"
+    $currentReport = Join-Path $product.Root ".build/reports/$reportFile"
+    $priorReportHash = (Get-FileHash -LiteralPath $currentReport).Hash
+    $archive = Join-Path (Get-ScopedReportRoot -Root $product.Root -Platform $hostPlatform -Configuration 'Debug') 'prior-suite-reports'
+    $previousPaths = @(Get-ChildItem -LiteralPath $archive -File -Filter $reportFile -Recurse | ForEach-Object FullName)
     Set-Control $product 'no-report'
     Assert-Run (Invoke-Runner $product ($again + '-Force')) -ExitCode 1 -Output @('wrote no current suite report')
+    Require (-not [IO.File]::Exists($currentReport)) 'A missing result left a prior report in the current slot.'
+    $retained = @(Get-ChildItem -LiteralPath $archive -File -Filter $reportFile -Recurse | Where-Object FullName -cnotin $previousPaths)
+    Require ($retained.Count -eq 1 -and (Get-FileHash -LiteralPath $retained[0].FullName).Hash -ceq $priorReportHash) 'The prior report was not retained byte for byte.'
     Clear-Control $product 'no-report'
     Set-Control $product 'test-fail'
     Assert-Run (Invoke-Runner $product ($again + '-Force')) -ExitCode 1 -Output @('Selected runtime tests .* failed with exit 4')
