@@ -667,8 +667,25 @@ if ($IsWindows) {
         $artifacts = Join-Path $product.Root '.build/test-artifacts'
         Put $product.Root '.build/test-artifacts/result.txt' 'first'
         $run = Start-TestRunEvidence -Repository $product.Root -Context @{ fixture = 'scoped' } -CaptureNativeArtifacts
+        Require ($run.State -ceq 'Active' -and -not $run.Closed) 'New run did not open in Active state.'
         Publish-TestRunEvidenceReceipt -Run $run -Name 'fixture-suites.json' -Receipt ([ordered]@{ passed = $true })
         Complete-TestRunEvidence -Run $run -Passed $true
+        Require ($run.State -ceq 'Completed' -and $run.Closed) 'Verified pass did not close as Completed.'
+        [void](Refuses { Complete-TestRunEvidence -Run $run -Passed $true } 'already been closed')
+        [void](Refuses { Publish-TestRunEvidenceReceipt -Run $run -Name 'second.json' -Receipt @{} } 'Invalid receipt publication')
+
+        $failedRun = Start-TestRunEvidence -Repository $product.Root -Context @{ fixture = 'failed' }
+        Complete-TestRunEvidence -Run $failedRun -Passed $false
+        Require ($failedRun.State -ceq 'Failed' -and $failedRun.Closed) 'Verified failure did not close as Failed.'
+
+        $interrupted = Start-TestRunEvidence -Repository $product.Root -Context @{ fixture = 'interrupted' }
+        $path = Join-Path $interrupted.Path 'still-writing.log'
+        $writer = [IO.File]::Open($path, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+        try {
+            [void](Refuses { Complete-TestRunEvidence -Run $interrupted -Passed $true } '')
+            Require ($interrupted.State -ceq 'Interrupted' -and $interrupted.Closed) 'Failed verification did not close as Interrupted.'
+            Require (-not [IO.File]::Exists((Join-Path $interrupted.Directory 'completed.json'))) 'Interrupted verification wrote completion evidence.'
+        } finally { $writer.Dispose() }
         Require ([IO.File]::Exists((Join-Path $run.Path 'previous-native-artifacts/result.txt'))) 'Earlier native artifacts were not preserved in the run.'
         Require ([IO.File]::Exists((Join-Path $run.Directory 'completed.json')) -and [IO.File]::Exists((Join-Path $product.Root '.build/reports/fixture-suites.json'))) 'The run or its receipt is missing.'
         Put $product.Root '.build/test-artifacts/result.txt' 'second'
