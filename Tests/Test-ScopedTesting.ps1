@@ -663,6 +663,47 @@ Case 'the shims refuse a missing, other-commit or changed engine and a nested co
 }
 
 if ($IsWindows) {
+    Case 'profile failure evidence preserves old dumps and binds current dumps to the selected image bytes' {
+        $product = New-Product 'profile-failure-evidence' {
+            param($data)
+            $data.profileFailureImages = @('fixture-probe.exe')
+        }
+        Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.TestRunEvidence.psm1') -Force
+        Put $product.Root '.build/x64/Debug/FailureEvidence/prior.record' 'prior failure'
+        Put $product.Root '.build/ARM64/Debug/FailureEvidence/other.record' 'other profile'
+        [void](Refuses {
+            Start-TestRunEvidence -Repository $product.Root -Context @{ platform = 'x64' } -CaptureNativeArtifacts
+        } 'requires an exact supported platform and configuration')
+        $context = @{ platform = 'x64'; configuration = 'Debug' }
+        $run = Start-TestRunEvidence -Repository $product.Root -Context $context -CaptureNativeArtifacts
+        try {
+            $prior = Join-Path $run.Path 'previous-native-artifacts-failures/prior.record'
+            Require ([IO.File]::ReadAllText($prior) -ceq 'prior failure') 'Prior failure evidence was not retained.'
+            Require (-not [IO.File]::Exists((Join-Path $run.Path 'previous-native-artifacts-failures-images.zip'))) 'Prior evidence acquired replacement images.'
+            Put $product.Root '.build/x64/Debug/FailureEvidence/current.record' 'current failure'
+            Put $product.Root '.build/x64/Debug/fixture-probe.exe' 'linked executable'
+            Put $product.Root '.build/x64/Debug/fixture-probe.pdb' 'linked symbols'
+            Put $product.Root '.build/x64/Debug/unlisted.exe' 'foreign image'
+            Complete-TestRunEvidenceAfterFailure -Run $run -Passed $false
+        } finally { if (-not $run.Closed) { Complete-TestRunEvidence -Run $run -Passed $false } }
+        Require ($run.State -ceq 'Failed') 'Failed capture lost its outcome.'
+        $current = Join-Path $run.Path 'native-artifacts-failures/current.record'
+        Require ([IO.File]::ReadAllText($current) -ceq 'current failure') 'Current failure evidence was not retained.'
+        $other = Join-Path $product.Root '.build/ARM64/Debug/FailureEvidence/other.record'
+        Require ([IO.File]::ReadAllText($other) -ceq 'other profile') 'Failure evidence from another profile moved.'
+        $record = Get-Content -LiteralPath (Join-Path $run.Path 'native-artifacts-failures-images.identity.json') -Raw | ConvertFrom-Json
+        Require (($record.files.file -join ',') -ceq 'fixture-probe.exe,fixture-probe.pdb') 'Failure archive did not bind the configured images.'
+        $archive = [IO.Compression.ZipFile]::OpenRead((Join-Path $run.Path $record.archive))
+        try {
+            Require ($archive.Entries.Count -eq 2) 'Failure archive has unexpected entries.'
+            foreach ($entry in $record.files) {
+                $original = Join-Path $product.Root ('.build/x64/Debug/' + $entry.file)
+                Require ($entry.sha256 -ceq (Get-FileHash -LiteralPath $original).Hash -and
+                    $archive.GetEntry($entry.file).Length -eq $entry.bytes) "Image binding changed: $($entry.file)"
+            }
+        } finally { $archive.Dispose() }
+    }
+
     Case 'evidence requires a fully qualified local directory and preserves Win32 failure reasons' {
         $module = Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.TestRunEvidence.psm1') -Force -PassThru
         $drive = [IO.Path]::GetPathRoot($runRoot)
@@ -761,6 +802,7 @@ if ($IsWindows) {
         [void](Refuses { Start-TestRunEvidence -Repository $product.Root -Context @{} -CaptureNativeArtifacts } 'needs valid scoped testing data')
     }
 } else {
+    Skip 'profile failure evidence preserves old dumps and binds current dumps to the selected image bytes' 'Windows file identity APIs'
     Skip 'evidence requires a fully qualified local directory and preserves Win32 failure reasons' 'Windows file identity APIs'
     Skip 'evidence records preserve ordinal names, invariant UTC IDs and zero or one entry arrays' 'Windows file identity APIs'
     Skip 'evidence capture refuses while a watched test executable runs from .build, and records a run otherwise' 'Windows file identity APIs'
