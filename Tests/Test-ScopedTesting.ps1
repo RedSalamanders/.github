@@ -95,8 +95,10 @@ $text = (Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'src') -File -Recur
 if ([IO.File]::Exists((Join-Path $PSScriptRoot '.fixture-control/build-fail'))) { exit 3 }
 '@
     'test.ps1' = @'
-param([string]$Platform = 'x64', [string]$Configuration = 'Debug', [string[]]$Suites = @(), [switch]$SkipBuild, [switch]$SkipTooling, [int]$ParallelSuites = 1)
+param([string]$Platform = 'x64', [string]$Configuration = 'Debug', [string[]]$Suites = @(), [switch]$SkipBuild, [switch]$SkipTooling, [int]$ParallelSuites = 1, [int]$BuildNumber = 0)
 $ErrorActionPreference = 'Stop'
+[string[]]$artifact = [IO.File]::ReadAllLines((Join-Path $PSScriptRoot ".build/$Platform/$Configuration/app.exe"))
+if ([int]$artifact[-1] -ne $BuildNumber) { throw "The test runner expected build stamp $($artifact[-1]), received $BuildNumber." }
 [IO.File]::AppendAllText($env:FIXTURE_CALL_LOG, "test $Platform $Configuration $($Suites -join ',') skipBuild=$SkipBuild skipTooling=$SkipTooling parallel=$ParallelSuites`n")
 if ($env:FIXTURE_SCOPED_MODULE) {
     Import-Module $env:FIXTURE_SCOPED_MODULE -Force

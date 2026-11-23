@@ -133,6 +133,7 @@ function Invoke-ScopedBuild([string]$P, [string]$C, [string]$Reports, [string]$E
     $compiledBefore = Get-ScopedSourceIdentity -Root $Root -Manifest $manifest -CompiledOnly -From $Source
     $parameters = [ordered]@{ Platform = $P; Configuration = $C }
     $options = ''
+    $number = $null
     if ($manifest.buildNumber -ceq 'mergeBaseCount') {
         $number = Get-ScopedBuildNumber -Root $Root -BaseRef $BaseRef
         $parameters['BuildNumber'] = $number
@@ -144,13 +145,13 @@ function Invoke-ScopedBuild([string]$P, [string]$C, [string]$Reports, [string]$E
         if (-not (Test-ScopedReceipt -Path $attestation -Identity (Get-ScopedDigest (@($compiledBefore, $artifact, $options, $Environment) -join "`n")))) {
             throw "SkipBuild refused: compiled source, build outputs, build options or environment of $P $C changed since the last attested build. Run without -SkipBuild."
         }
-        return [pscustomobject]@{ Options = $options; Compiled = $compiledBefore }
+        return [pscustomobject]@{ Options = $options; Compiled = $compiledBefore; BuildNumber = $number }
     }
     Invoke-ScopedProductScript 'build.ps1' $parameters "Build ($P $C)"
     if ((Get-ScopedSourceIdentity -Root $Root -Manifest $manifest -CompiledOnly) -cne $compiledBefore) { throw 'Compiled source changed during the build; no build attestation was published.' }
     $artifact = Get-ScopedArtifactIdentity -Root $Root -Platform $P -Configuration $C -Manifest $manifest
     Write-ScopedReceipt -Path $attestation -Identity (Get-ScopedDigest (@($compiledBefore, $artifact, $options, $Environment) -join "`n"))
-    return [pscustomobject]@{ Options = $options; Compiled = $compiledBefore }
+    return [pscustomobject]@{ Options = $options; Compiled = $compiledBefore; BuildNumber = $number }
 }
 
 function Invoke-ScopedProfile([object]$Target) {
@@ -262,6 +263,7 @@ function Invoke-ScopedProfile([object]$Target) {
         $reduced = [Collections.Generic.List[string]]::new()
         if ($runtime.Count) {
             $parameters = [ordered]@{ Platform = $P; Configuration = $C; Suites = $runtime; SkipBuild = $true; SkipTooling = $true }
+            if ($null -ne $build.BuildNumber) { $parameters['BuildNumber'] = $build.BuildNumber }
             if ($ParallelSuites -gt 1) { $parameters['ParallelSuites'] = $ParallelSuites }
             # Keep prior evidence and require test.ps1 to create the report for this invocation.
             $archive = Assert-CiContainedPath -Root $Root -Path (Join-Path $reports ("prior-suite-reports/" + [guid]::NewGuid().ToString('N')))
