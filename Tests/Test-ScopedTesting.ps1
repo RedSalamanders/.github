@@ -661,6 +661,59 @@ Case 'the shims refuse a missing, other-commit or changed engine and a nested co
 }
 
 if ($IsWindows) {
+    Case 'evidence requires a fully qualified local directory and preserves Win32 failure reasons' {
+        $module = Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.TestRunEvidence.psm1') -Force -PassThru
+        $drive = [IO.Path]::GetPathRoot($runRoot)
+        foreach ($path in @($drive, ($drive.Substring(0, 2) + 'relative'), '\rooted', 'relative', '\\evidence.invalid\share\checkout')) {
+            [void](Refuses { & $module { param($Candidate) Resolve-TestRunEvidenceRoot $Candidate } $path } 'absolute local repository directory')
+        }
+        $directory = New-Product 'evidence-paths'
+        $run = Start-TestRunEvidence -Repository $directory.Root -Context @{}
+        try {
+            $missing = Join-Path $run.Path 'missing.log'
+            $expected = [ComponentModel.Win32Exception]::new(2).Message.TrimEnd('.') + ': ' + $missing
+            $failure = $null
+            try { [void][TestRunEvidenceV3.Native]::Pin($missing, $false) }
+            catch { $failure = $_.Exception.GetBaseException() }
+            Require ($failure -is [ComponentModel.Win32Exception] -and $failure.NativeErrorCode -eq 2 -and
+                $failure.Message -ceq $expected) 'Missing file did not report its native error and path.'
+        } finally { Complete-TestRunEvidence -Run $run -Passed $false }
+    }
+
+    Case 'evidence records preserve ordinal names, invariant UTC IDs and zero or one entry arrays' {
+        $product = New-Product 'evidence-records'
+        Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.TestRunEvidence.psm1') -Force
+        Put $product.Root '.build/test-artifacts/only.txt' 'previous capture'
+        $culture = [Threading.Thread]::CurrentThread.CurrentCulture
+        try {
+            [Threading.Thread]::CurrentThread.CurrentCulture = [Globalization.CultureInfo]::GetCultureInfo('th-TH')
+            $run = Start-TestRunEvidence -Repository $product.Root -Context @{} -CaptureNativeArtifacts
+        } finally { [Threading.Thread]::CurrentThread.CurrentCulture = $culture }
+        try {
+            $year = [DateTime]::UtcNow.ToString('yyyy', [Globalization.CultureInfo]::InvariantCulture)
+            Require ($run.Id.StartsWith($year, [StringComparison]::Ordinal)) 'Evidence ID uses the process culture.'
+            [void][IO.Directory]::CreateDirectory((Join-Path $product.Root '.build/test-artifacts'))
+            Publish-TestRunEvidenceReceipt -Run $run -Name 'single.json' -Receipt @('one')
+            $accented = [string][char]0x00e4
+            [IO.File]::WriteAllText((Join-Path $run.Path 'streams.txt'), 'main')
+            foreach ($name in 'B', '_', 'a', $accented) {
+                [IO.File]::WriteAllText((Join-Path $run.Path $name), $name)
+                [IO.File]::WriteAllText((Join-Path $run.Path ('streams.txt:' + $name)), $name)
+            }
+            Complete-TestRunEvidence -Run $run -Passed $true
+        } finally { if (-not $run.Closed) { Complete-TestRunEvidence -Run $run -Passed $false } }
+        $one = Get-Content -LiteralPath (Join-Path $run.Directory 'previous-native-artifacts.intent.json') -Raw | ConvertFrom-Json
+        $empty = Get-Content -LiteralPath (Join-Path $run.Directory 'native-artifacts.after.json') -Raw | ConvertFrom-Json
+        Require ($one.inventory -is [array] -and $one.inventory.Count -eq 1 -and
+            $one.inventory[0].streams -is [array] -and $one.inventory[0].streams.Count -eq 1) 'Single-entry inventory lost its array shape.'
+        Require ($empty.inventory -is [array] -and $empty.inventory.Count -eq 0) 'Empty inventory lost its array shape.'
+        Require (([IO.File]::ReadAllText((Join-Path $run.Path 'single.json'))).TrimStart().StartsWith('[')) 'A one-entry receipt lost its array shape.'
+        $completed = Get-Content -LiteralPath (Join-Path $run.Directory 'completed.json') -Raw | ConvertFrom-Json
+        Require (($completed.payload.path -join '|') -ceq ('B|_|a|native-artifacts|previous-native-artifacts|previous-native-artifacts\only.txt|single.json|streams.txt|' + $accented)) 'Evidence paths are not in ordinal order.'
+        $streams = ($completed.payload | Where-Object path -CEQ 'streams.txt').streams
+        Require (($streams.Name -join '|') -ceq ('::$DATA|:B:$DATA|:_:$DATA|:a:$DATA|:' + $accented + ':$DATA')) 'Evidence streams are not in ordinal order.'
+    }
+
     Case 'evidence capture refuses while a watched test executable runs from .build, and records a run otherwise' {
         $product = New-Product 'evidence'
         Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.TestRunEvidence.psm1') -Force
@@ -705,7 +758,11 @@ if ($IsWindows) {
         Put $product.Root 'Tests/test-scopes.json' '{"version":1}'
         [void](Refuses { Start-TestRunEvidence -Repository $product.Root -Context @{} -CaptureNativeArtifacts } 'needs valid scoped testing data')
     }
-} else { Skip 'evidence capture refuses while a watched test executable runs from .build, and records a run otherwise' 'Windows file identity APIs' }
+} else {
+    Skip 'evidence requires a fully qualified local directory and preserves Win32 failure reasons' 'Windows file identity APIs'
+    Skip 'evidence records preserve ordinal names, invariant UTC IDs and zero or one entry arrays' 'Windows file identity APIs'
+    Skip 'evidence capture refuses while a watched test executable runs from .build, and records a run otherwise' 'Windows file identity APIs'
+}
 
 $failed = @($rows | Where-Object { -not $_.passed }).Count
 [IO.File]::WriteAllText((Join-Path $runRoot 'results.json'), (ConvertTo-Json -InputObject ([ordered]@{ schemaVersion = 1; passed = $failed -eq 0; executed = $rows.Count; failed = $failed; cases = $rows.ToArray() }) -Depth 6), [Text.UTF8Encoding]::new($false))

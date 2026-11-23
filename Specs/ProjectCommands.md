@@ -206,6 +206,9 @@ and `Failed` for a failed test. Verification that throws after ownership admissi
 `Interrupted` state. Ownership or path refusal leaves the handle active so its owner can finish it.
 A closed handle refuses further publication and completion. Retained `started.json` and `completed.json`
 are the durable evidence.
+The evidence root must be a fully qualified local directory below its drive root. Run IDs use the UTC Gregorian
+calendar. Payload paths and alternate data stream names are compared in ordinal order. Inventories and receipt
+arrays retain their shape with zero or one entry. Win32 failures include the operating system's reason and path.
 
 ### Scoped testing tests
 
