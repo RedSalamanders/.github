@@ -895,14 +895,14 @@ function Test-ScopedLeaseHandoff([string]$Key) {
     if (-not $value) { return $false }
     $parts = $value.Split(';')
     $ownerId = 0
-    $ownerTicks = [long]0
-    if ($parts.Count -ne 3 -or $parts[0] -cne $Key -or -not [int]::TryParse($parts[1], [ref]$ownerId) -or -not [long]::TryParse($parts[2], [ref]$ownerTicks)) { return $false }
+    if ($parts.Count -ne 3 -or $parts[0] -cne $Key -or -not [int]::TryParse($parts[1], [ref]$ownerId) -or
+        $ownerId -le 0 -or -not $parts[2]) { return $false }
     $process = Get-Process -Id $PID
     for ($depth = 0; $depth -lt 32; $depth++) {
         try {
             $parent = $process.Parent
             if (-not $parent) { return $false }
-            if ($parent.Id -eq $ownerId -and $parent.StartTime.ToUniversalTime().Ticks -eq $ownerTicks) { return $true }
+            if ($parent.Id -eq $ownerId) { return (Get-CiProcessCreationIdentity -ProcessId $ownerId) -ceq $parts[2] }
         } catch { return $false }
         $process = $parent
     }
@@ -924,6 +924,7 @@ function Enter-ScopedProfileLease {
     $identity = [IO.Path]::GetFullPath($OutputRoot).TrimEnd('\', '/')
     if ($IsWindows) { $identity = $identity.ToUpperInvariant() }
     $key = Get-ScopedDigest (@($identity, $Platform, $Configuration) -join "`n")
+    $processIdentity = Get-CiProcessCreationIdentity -ProcessId $PID
     $mutex = [Threading.Mutex]::new($false, "Ci.ScopedProfile.$key")
     $owned = $false
     try {
@@ -935,8 +936,7 @@ function Enter-ScopedProfileLease {
         throw "Another test operation owns this checkout and profile ($Platform $Configuration). Retry when it completes."
     }
     $previous = [Environment]::GetEnvironmentVariable((Get-ScopedLeaseVariable))
-    $ticks = (Get-Process -Id $PID).StartTime.ToUniversalTime().Ticks
-    [Environment]::SetEnvironmentVariable((Get-ScopedLeaseVariable), "$key;$PID;$ticks")
+    [Environment]::SetEnvironmentVariable((Get-ScopedLeaseVariable), "$key;$PID;$processIdentity")
     return [pscustomobject]@{ Key = $key; Mutex = $mutex; Previous = $previous; Nested = $false }
 }
 

@@ -20,22 +20,6 @@ function Read-CiLocalSdkDescriptor {
     return @{Path=$path;Hash=(Get-FileHash -LiteralPath $path).Hash;Value=$value}
 }
 
-function Get-CiSdkReaderProcessIdentity {
-    param([ValidateRange(1,2147483647)][int]$ProcessId)
-    if($IsWindows){return 'windows:'+((Get-Process -Id $ProcessId -ErrorAction Stop).StartTime.ToUniversalTime().Ticks)}
-    if($IsLinux){
-        # .NET's Linux StartTime conversion can differ between processes. Bind the kernel's exact
-        # start-clock token plus boot identity instead of adding a tolerance that could admit PID reuse.
-        $stat=[IO.File]::ReadAllText("/proc/$ProcessId/stat")
-        $end=$stat.LastIndexOf(')')
-        if($end -lt 0){throw 'Cannot read SDK reader process creation identity.'}
-        $fields=$stat.Substring($end+2).Split(' ',[StringSplitOptions]::RemoveEmptyEntries)
-        if($fields.Length -lt 20 -or $fields[19] -cnotmatch '^[0-9]+$'){throw 'Invalid SDK reader kernel creation token.'}
-        return 'linux:'+([IO.File]::ReadAllText('/proc/sys/kernel/random/boot_id').Trim())+':'+$fields[19]
-    }
-    throw 'SDK reader process identity is unsupported on this operating system.'
-}
-
 function Resolve-CiLocalSdkOutputRoot {
     param([string]$ProjectRoot,[string]$OutputRoot)
     if(-not [IO.Path]::IsPathFullyQualified($OutputRoot)){throw 'Local SDK compilation requires an absolute separate output root.'}
@@ -64,7 +48,7 @@ function New-CiSdkConsumerWitness {
     $directory=Assert-CiContainedPath $ProjectRoot (Join-Path $ProjectRoot '.build/sdk-leases')
     [void][IO.Directory]::CreateDirectory($directory)
     $path=Assert-CiContainedPath $ProjectRoot (Join-Path $directory ([guid]::NewGuid().ToString('N')+'.json'))
-    $record=[ordered]@{schemaVersion=1;ownerPid=$PID;ownerIdentity=(Get-CiSdkReaderProcessIdentity $PID);
+    $record=[ordered]@{schemaVersion=1;ownerPid=$PID;ownerIdentity=(Get-CiProcessCreationIdentity $PID);
         projectRoot=[IO.Path]::GetFullPath($ProjectRoot);sdkRoot=[IO.Path]::GetFullPath($SdkRoot);platform=$Platform;configuration='Release'}
     if($null -ne $ToolBinding){$record.schemaVersion=2;$record.contract='QualifiedAbiV2';$record.toolBinding=$ToolBinding}
     if($Contract -ceq 'LocalUnpinnedAbiV1'){
@@ -85,7 +69,7 @@ function Read-CiSdkConsumerLiveWitness {
     $witness=Get-Content -LiteralPath $path -Raw|ConvertFrom-Json
     if($witness.schemaVersion -notin @(1,2,3) -or $witness.projectRoot -cne [IO.Path]::GetFullPath($ProjectRoot) -or
         $witness.sdkRoot -cne [IO.Path]::GetFullPath($SdkRoot) -or $witness.platform -cne $Platform -or $witness.configuration -cne $Configuration){throw 'SDK reader witness has another project, payload or profile.'}
-    if((Get-CiSdkReaderProcessIdentity $witness.ownerPid) -cne $witness.ownerIdentity){throw 'SDK reader owner is stale.'}
+    if((Get-CiProcessCreationIdentity $witness.ownerPid) -cne $witness.ownerIdentity){throw 'SDK reader owner is stale.'}
     # A surviving JSON file and a recycled/live PID are insufficient: the parent must still hold its handle.
     $exclusive=$null
     $held=$false
