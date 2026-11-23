@@ -30,10 +30,11 @@ $fold = Join-Path $engine 'Tools/Fold-Changelog.ps1'
 $validate = Join-Path $engine 'Tools/Test-Changelog.ps1'
 $submit = Join-Path $engine 'Tools/Submit-ChangelogFold.ps1'
 $release = Join-Path $engine 'Tools/Release-Changelog.ps1'
-# What a product's .ci-engine needs for its changelog shims, and the shims themselves.
+# What a product's .ci-engine needs for its changelog shims and for an adopted Test-Changes.ps1 shim, and the shims.
 $engineFiles = @('Schemas/project.schema.json', 'Tools/Modules/Ci.Policy.psm1', 'Tools/Modules/Ci.EngineBinding.psm1',
     'Tools/Modules/Ci.Changelog.psm1', 'Tools/Fold-Changelog.ps1', 'Tools/Test-Changelog.ps1', 'Tools/Submit-ChangelogFold.ps1',
-    'Tools/Release-Changelog.ps1')
+    'Tools/Release-Changelog.ps1', 'Schemas/test-scopes.schema.json', 'Tools/Modules/Ci.ScopedTesting.psm1',
+    'Tools/Modules/Ci.SourceInputs.psm1', 'Tools/Test-Changes.ps1', 'Tools/Invoke-ScopedScript.ps1')
 $shims = @('Tools/Fold-Changelog.ps1', 'Tools/Test-Changelog.ps1', 'Tools/Submit-ChangelogFold.ps1', 'Tools/Release-Changelog.ps1',
     'Tools/Test-ChangelogWorkflow.ps1')
 $parent = [IO.Path]::GetFullPath($ScratchRoot).TrimEnd([IO.Path]::DirectorySeparatorChar)
@@ -800,7 +801,12 @@ if ($ProjectRoot) {
         $scoped = [IO.File]::Exists((Join-Path $ProjectRoot 'Test-Changes.ps1'))
         $runnerName = if ($scoped) { 'Test-Changes.ps1' } else { 'test.ps1' }
         [void](New-ShimProduct $r)
-        Put $r $runnerName ([IO.File]::ReadAllText((Join-Path $ProjectRoot $runnerName)))
+        $runnerText = [IO.File]::ReadAllText((Join-Path $ProjectRoot $runnerName))
+        Put $r $runnerName $runnerText
+        # The engine's runner (an adopted Test-Changes.ps1 shim) reads the product's scoped testing data before its gate.
+        if ($scoped -and $runnerText.Contains('# Engine shim (Specs/ProjectCommands.md in the engine)')) {
+            Put $r 'Tests/test-scopes.json' ([IO.File]::ReadAllText((Join-Path $ProjectRoot 'Tests/test-scopes.json')))
+        }
         Save-FixtureBase $r
         $run = {
             $start = [Diagnostics.ProcessStartInfo]::new((Get-Process -Id $PID).Path)

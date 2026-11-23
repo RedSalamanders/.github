@@ -12,7 +12,8 @@ copies of shared tooling (RedHome `Specs/Plans/WIP/Convergence_2026-11-17.md`, P
 - The shim's text is [Templates/Project](../Templates/Project)`/<path>`, the same in every product apart from line
   endings. A product adopts a command by copying the template from its pinned engine; it never edits the copy.
 - The shim's product root is its own folder when that holds `.ci/project.json`, otherwise the folder above it (a
-  shim under `Tools/`); a copy in a nested fixture never binds to an outer product. The shim imports
+  shim under `Tools/`); a root shim (such as `Test-Changes.ps1`) uses only its own folder. A copy in a nested fixture
+  never binds to an outer product. The shim imports
   `Tools/Modules/Ci.EngineBinding.psm1` from that product's `.ci-engine`, and runs the path that
   `Resolve-CiPinnedEngineCommand` returns: `Tools/<shim file name>` of that engine.
 - A module shim (a `.psm1` such as `Build/BuildConsole.psm1`) finds its product root in its own folder or up to three
@@ -44,6 +45,9 @@ copies of shared tooling (RedHome `Specs/Plans/WIP/Convergence_2026-11-17.md`, P
 | `Tools/Test-ChangelogWorkflow.ps1` | `Tools/Test-ChangelogWorkflow.ps1` | engine CI, and each product's tooling tests through its shim |
 | `Build/BuildConsole.psm1` (module shim) | `Tools/Modules/Ci.BuildConsole.psm1` | `Tests/Test-ProjectModules.ps1`, and each product's own build-console tests through its shim |
 | `Tools/Test-AgentGuidance.ps1` | `Tools/Test-AgentGuidance.ps1`, `Tools/Modules/Ci.AgentGuidance.psm1` | `Tests/Test-AgentGuidance.ps1` |
+| `Test-Changes.ps1` (root shim) | `Tools/Test-Changes.ps1` with `Tools/Invoke-ScopedScript.ps1`, data `Tests/test-scopes.json` ([schema](../Schemas/test-scopes.schema.json)) | `Tests/Test-ScopedTesting.ps1` |
+| `Build/ScopedTesting.psm1` (module shim) | `Tools/Modules/Ci.ScopedTesting.psm1` | same |
+| `Build/TestRunEvidence.psm1` (module shim) | `Tools/Modules/Ci.TestRunEvidence.psm1` | same (Windows) |
 
 ## Changes workflow
 
@@ -85,9 +89,8 @@ its fragment and never edits `CHANGELOG.md`; fragments are folded on the default
 Products run `Test-Changelog.ps1` while editing, with `-Base origin/main` in PrePush, and in the compiler-free PR
 checks, where `pr.yml` passes the pull request's immutable base SHA to the adapter's static phase, which runs it with
 `-Base <base SHA>`. Main pushes go through the quiet-window coordinator and run no separate changelog comparison. This one implementation joins the three product variants that
-existed before the move (see [the tooling plan](Plans/WIP/SharedProjectTooling_2026-11-18.md), stage 2). One
-difference is still the owner's choice (R5 there): this implementation refuses a merged, unfolded fragment removed
-without its entry, as five products did, while `DxUi`'s own copy accepted it as a withdrawal.
+existed before the move (see [the tooling plan](Plans/WIP/SharedProjectTooling_2026-11-18.md), stage 2). R5 requires a revert to keep the original pending fragment and add a new one. Removing a merged, unfolded fragment without
+publishing its entry is refused.
 
 ## Agent guidance
 
@@ -140,12 +143,73 @@ origins the [tooling plan](Plans/WIP/SharedProjectTooling_2026-11-18.md) (T5) re
   that folder is refused. A PowerShell example may name a product command the repository lacks; one it has is still
   checked. Every other rule applies unchanged.
 
-## Tests
+### Agent guidance tests
 
 `./Tests/Test-AgentGuidance.ps1 -TestRoot <marked root>` runs the cases ported from the RedXe, RedTilde and RedPrism
 skill suites, a case for each rule above, the command, and the shim against a fixture product whose `.ci-engine` is built
 from this engine. Junction and file-lock controls report SKIP off Windows, and symbolic-link controls where the host
 cannot create one. Engine CI runs it on Windows and Linux.
+
+## Scoped testing
+
+`Test-Changes.ps1` plans and runs the tests that a change affects. A repository's facts are its
+`Tests/test-scopes.json`, version 2, which [Schemas/test-scopes.schema.json](../Schemas/test-scopes.schema.json)
+defines; everything else below is engine behavior, the same in every product (the T4 design of
+[the tooling plan](Plans/WIP/SharedProjectTooling_2026-11-18.md), accepted on 2026-11-19). The engine holds no
+repository name and no PR delegation.
+
+The data: `defaultBranch`; `buildNumber` (`none`, or `mergeBaseCount`: `-BuildNumber` is the commit count of HEAD's
+merge base with the base, of HEAD when that base does not resolve); `scopes[]` (`name`; `native`, a suite of
+`test.ps1`, or not, then its `commands`, each a product `.ps1` with literal `arguments`; `reuse`; optional
+`configurations`; `build` and `iteration` cannot name a native scope); `rules[]` (`pattern`, a glob where `**` is any
+folders and `*` and `?` stay within one name, case-insensitive; `scopes`, `*` for every scope; `reason`; optional
+`exclusive`, one exact path, or `additive`); `prose` and `unscoped` globs; `projectBindings` (native projects whose
+compiled items and transitive local includes become exact-path rules, with per-pattern `overrides`, `includeRoots`
+and `exclude`); `nativeInventory` (required with a native scope: its file, `exclude` and `testFolders`);
+`runtimeFiles`; `interactiveObligations`; `watchedProcesses`; `prePushProfiles` (`buildOnly` for a profile the
+host does not run); `instrumentationVariables`; `systemFiles`. A version 1 file converts mechanically: the dead keys
+`project`, `repository`, `toolingCommands`, `prCoverage` and `prWorkflowDigest` go, and each literal of its planner
+becomes one of these keys.
+
+Each changed path is classified once, in this order: a matching `exclusive` rule gives only its scopes; a `prose`
+path gives every non-native scope plus those of matching rules whose pattern names Markdown (`*.md`); otherwise the
+matching rules give theirs, and a path that only `additive` rules match counts as unmatched; an unmatched `unscoped`
+path gives none; anything else gives every scope. A scope whose `configurations` exclude the profile is dropped, and
+named explicitly it is refused. Identities follow the same classification: an unscoped path is in none, and prose
+that gives no native scope is not a native input.
+
+| # | Behavior |
+| --- | --- |
+| B1 | The base is `-BaseRef`, by default `origin/<defaultBranch>`. Nothing is fetched. |
+| B2 | A base that does not resolve or shares no history with HEAD is refused, also under `-Explain`, naming the remedy: fetch it, pass `-BaseRef`, or `-Mode Full`. |
+| B3 | Every run except `-Explain` first runs this engine's `Tools/Test-Changelog.ps1 -Root`; PrePush first refuses an uncommitted `CHANGELOG.md` or `Changes/`, then passes `-Base <base>`. |
+| B4 | The iteration baseline, `iteration.json` of the profile, is written only by a successful ordinary Affected run (no `-Scopes`, explicit base, `CI` or `GITHUB_ACTIONS`, instrumentation or capability skip). It replaces the merge base for 24 hours while root, profile, environment and Git identity and options match, and never with `-Force`. Every run that executes revokes it first; build outputs changed since it select every scope. |
+| B5 | A scope is reused only with `reuse`, without `-Force` or instrumentation, and with a receipt of exactly its identity; a native scope also needs `.build/reports/<suite>-<platform>-<configuration>.json` with `exitCode` 0 and no `skips`. After `test.ps1` each native scope needs a current report (`.instrumented` before `.json` while instrumented); one with skips is `PASSED_WITH_CAPABILITY_SKIPS` and never reusable. |
+| B6 | Source, index, build outputs or environment that change during the build, a scope or the run refuse it, and nothing is published. |
+| B7 | Evidence lives in `.build/reports/scoped-tests/<platform>-<configuration without spaces>/` (native receipts, `build.json`, `iteration.json`) and `.build/reports/scoped-tests/independent/` (receipts of non-native scopes, shared by profiles). |
+| B8 | A fail-fast lease per checkout output folder and profile (`Enter-ScopedProfileLease`), never taken by `-Explain`, is re-entered on its thread and by the owner's child processes, which inherit `CI_SCOPED_TESTING_LEASE`. |
+| B9 | `interactiveObligations` matching the branch's changes (all of them in Full and PrePush) print `INTERACTIVE_NOT_RUN: <suite> - <reason> [<pattern>]` and never run. |
+| B10 | Runtime tests need a host of exactly the profile's architecture; a cross build stays a build (`build.ps1`, or a `buildOnly` profile). |
+| B11 | Each selected non-native scope runs its `commands` in order, each as `pwsh -NoProfile -NonInteractive -File <path> <arguments>`; formatting (`format.ps1 -Check`) is such a scope in every product. |
+| B12 | With a native scope selected, the whole profile is built: `build.ps1 -Platform -Configuration [-BuildNumber]`, then `test.ps1 -Platform -Configuration -Suites <scopes> -SkipBuild -SkipTooling [-ParallelSuites <n> above 1]`, each in a child pwsh through `Tools/Invoke-ScopedScript.ps1`. `-SkipBuild` instead requires the profile's matching `build.json`. |
+| B13 | An unmapped path selects every scope. |
+| B14 | The last line is `NOTHING_SELECTED`, `PROSE_CHECKS_PASSED` (only prose or unscoped paths and no native scope), `SELECTED_PASSED` or `FULL_PASSED` (every scope applicable to each profile), followed by `; repository NOT_EVALUATED`. Scopes print `REUSED`, `PASSED` or `PASSED_WITH_CAPABILITY_SKIPS`; `-Explain` prints no token. |
+| O1 | PrePush runs every `prePushProfiles` entry, in order, in one call; `-Platform` and `-Configuration` are refused with it. |
+| O2 | `-Scopes` takes names or comma-separated strings. |
+| O3 | A planner of three outcomes (none, prose, native) is data: `prose` patterns, no rules, a native scope. |
+
+A product's `build.ps1` writes `.build/<platform>/<configuration>`; its `test.ps1` takes the parameters of B12 and
+writes the reports of B5. `Build/TestRunEvidence.psm1` serves `test.ps1` on Windows: `Start-TestRunEvidence
+-CaptureNativeArtifacts` refuses while a `watchedProcesses` executable runs from the checkout's `.build`, and never
+stops it.
+
+### Scoped testing tests
+
+`./Tests/Test-ScopedTesting.ps1 -TestRoot <marked root>` runs fixture products whose stub `build.ps1`, `test.ps1`,
+`validate.ps1` and `format.ps1` record their calls, through the engine runner and through the shims, for every row
+above and every shim refusal; engine CI runs it on Windows and Linux.
+
+## Tests
 
 `./Tools/Test-ChangelogWorkflow.ps1 -ScratchRoot <existing folder>` runs local Git fixtures with a fixed identity and
 none of the person's hooks or signing, a local bare remote and a stand-in `gh`, inside its scratch root; Windows-only
