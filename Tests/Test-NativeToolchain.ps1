@@ -48,7 +48,10 @@ foreach ($invalidPolicy in @(
     [void](Write-FixtureFile 'setup-policy/Directory.Build.props' $invalidPolicy)
     Assert-Refused { & $setup -ProjectRoot $setupRoot -VerifyOnly } 'must declare one required MSVC major.minor family'
 }
-Write-Host 'PASS shared setup rejects missing, malformed and ambiguous product MSVC policy before discovery'
+foreach ($invalidBudget in @(0,3601)) {
+    Assert-Refused { & $setup -ProjectRoot $setupRoot -VerifyOnly -InstallerTimeoutSeconds $invalidBudget } 'InstallerTimeoutSeconds'
+}
+Write-Host 'PASS shared setup rejects invalid product MSVC policy and installer budgets before discovery'
 
 $installation = Join-Path $fixture 'VS Fixture'
 $versionPath = 'VS Fixture/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt'
