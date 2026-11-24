@@ -52,6 +52,23 @@ The manual writer accepts only main-targeting PRs, stages literal NUL-delimited 
 
 Native child commands always capture stdout/stderr, including on windowless Windows hosts. Requested console diagnostics forward both captured streams after completion with publication credentials masked; the actual exit code and raw evidence remain intact. Timeouts fail and terminate only the process tree launched by that invocation.
 
+## Hosted MSVC setup
+
+Native qualification, production, candidate execution and SDK producer jobs use the shared
+`.github/actions/setup-msvc` composite from the checked-out immutable engine. The action reads the
+required default MSVC family in the checked-out product's `Directory.Build.props`. SDK producer jobs
+verify their source, tooling and storage engine first, then select the SDK tooling checkout's product policy.
+
+The action verifies the default MSVC toolset, native MSBuild, target compiler and linker, sanitizer library,
+the Windows 11 SDK and the x64 LLVM PDB utility when applicable. A successful hosted step exports the
+selected native `MSBUILD_EXE_PATH`. Only a GitHub-hosted Windows job may provision missing tools. Installation
+uses the signed Microsoft bootstrapper, bounded download and install waits, and diagnostics under
+`RUNNER_TEMP`. Failed provisioning uploads those diagnostics for 14 days.
+
+For read-only checks, invoke `Setup.ps1 -ProjectRoot <checkout> -Platform x64 -VerifyOnly` from the pinned
+engine's action folder. Use `-Platform ARM64` to verify that target. These checks do not start a build.
+Product-local setup commands remain available during the rollout.
+
 ## Admission and persistent state
 
 The manual `integration-branch-capability.yml` diagnostic tests a separate cache-scope

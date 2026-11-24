@@ -1,0 +1,27 @@
+name: Required MSVC toolchain
+description: Verify or provision the repository's required MSVC family on a hosted Windows runner.
+inputs:
+  platform:
+    description: Native target architecture
+    default: x64
+  project-root:
+    description: Path to the checked-out project policy, relative to the workflow workspace
+    default: .
+runs:
+  using: composite
+  steps:
+    - id: prepare
+      shell: pwsh
+      env:
+        MSVC_SETUP_PLATFORM: ${{ inputs.platform }}
+        MSVC_SETUP_PROJECT_ROOT: ${{ inputs.project-root }}
+      run: '& "$env:GITHUB_ACTION_PATH/Setup.ps1" -Platform $env:MSVC_SETUP_PLATFORM -ProjectRoot $env:MSVC_SETUP_PROJECT_ROOT'
+    # Installer logs only when provisioning failed to retain evidence for a failed setup.
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      if: ${{ !cancelled() && steps.prepare.outcome == 'failure' && steps.prepare.outputs.installer_logs != '' }}
+      with:
+        name: ${{ steps.prepare.outputs.artifact_id }}
+        path: |
+          ${{ steps.prepare.outputs.installer_logs }}/*.log
+        if-no-files-found: warn
+        retention-days: 14

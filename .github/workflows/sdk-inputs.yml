@@ -113,9 +113,10 @@ jobs:
           Import-Module ./.ci-engine/Tools/Modules/Ci.SdkProducer.psm1
           $request=Resolve-CiSdkProducerRequest -Repository $env:GITHUB_REPOSITORY -Ref $env:GITHUB_REF -Event $env:GITHUB_EVENT_NAME -SourceCommit $env:SDK_SOURCE -RunId $env:GITHUB_RUN_ID -Platform $env:SDK_PLATFORM -Contract $env:SDK_CONTRACT
           Assert-CiSdkProducerCheckouts -Request $request -ToolingRoot (Join-Path $PWD '.build/sdk-producer') -SourceRoot (Join-Path $PWD '.build/sdk-source') -StorageEngineRoot (Join-Path $PWD '.build/sdk-producer/.ci-engine')
-      - uses: ./.build/sdk-producer/.github/actions/setup-msvc
+      - uses: ./.ci-engine/.github/actions/setup-msvc
         with:
           platform: ${{ matrix.platform }}
+          project-root: .build/sdk-producer
       - name: Restore ABI-indexed dependencies
         id: deps
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

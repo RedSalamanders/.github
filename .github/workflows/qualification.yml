@@ -66,7 +66,7 @@ jobs:
           ref: ${{ inputs.engine_ref }}
           path: .ci-engine
           persist-credentials: false
-      - uses: ./.github/actions/setup-msvc
+      - uses: ./.ci-engine/.github/actions/setup-msvc
         with:
           platform: ${{ matrix.platform }}
       - name: Freeze an explicit qualification identity, without advancing main state

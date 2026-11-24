@@ -128,7 +128,7 @@ jobs:
           Import-Module ./.ci-engine/Tools/Modules/Ci.CandidateQueue.psm1
           $batch=Get-Content .build/ci/batch.json -Raw|ConvertFrom-Json -AsHashtable
           $null=Assert-CiCandidateNativeStart -Root $PWD -Descriptor $batch
-      - uses: ./.github/actions/setup-msvc
+      - uses: ./.ci-engine/.github/actions/setup-msvc
         with:
           platform: ${{ matrix.platform }}
       - name: Resolve canonical Terminal dependency toolchain identity

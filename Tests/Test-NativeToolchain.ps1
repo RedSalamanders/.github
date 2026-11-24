@@ -38,6 +38,18 @@ if ($env:GITHUB_ACTIONS -eq 'true' -and $env:RUNNER_ENVIRONMENT -eq 'github-host
 } else {
     $fixture = Assert-CiContainedPath -Root $engine -Path (Join-Path $engine ".build/$run")
 }
+$setup = Join-Path $engine '.github/actions/setup-msvc/Setup.ps1'
+$setupRoot = Join-Path $fixture 'setup-policy'
+foreach ($invalidPolicy in @(
+    '<Project><PropertyGroup /></Project>',
+    '<Project><PropertyGroup><RequiredMsvcToolsVersion>latest</RequiredMsvcToolsVersion></PropertyGroup></Project>',
+    '<Project><PropertyGroup><RequiredMsvcToolsVersion>14.52</RequiredMsvcToolsVersion><RequiredMsvcToolsVersion>14.53</RequiredMsvcToolsVersion></PropertyGroup></Project>'
+)) {
+    [void](Write-FixtureFile 'setup-policy/Directory.Build.props' $invalidPolicy)
+    Assert-Refused { & $setup -ProjectRoot $setupRoot -VerifyOnly } 'must declare one required MSVC major.minor family'
+}
+Write-Host 'PASS shared setup rejects missing, malformed and ambiguous product MSVC policy before discovery'
+
 $installation = Join-Path $fixture 'VS Fixture'
 $versionPath = 'VS Fixture/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt'
 $x64 = Write-FixtureFile 'VS Fixture/MSBuild/Current/Bin/amd64/MSBuild.exe' ''

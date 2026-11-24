@@ -105,7 +105,7 @@ jobs:
         with:
           name: admission
           path: .build/ci
-      - uses: ./.github/actions/setup-msvc
+      - uses: ./.ci-engine/.github/actions/setup-msvc
         with:
           platform: ${{ matrix.platform }}
       - name: Resolve canonical Terminal dependency toolchain identity
@@ -273,7 +273,7 @@ jobs:
         with:
           name: admission
           path: .build/ci
-      - uses: ./.github/actions/setup-msvc
+      - uses: ./.ci-engine/.github/actions/setup-msvc
         with:
           platform: ${{ matrix.platform }}
       - name: Resolve canonical Terminal dependency toolchain identity
