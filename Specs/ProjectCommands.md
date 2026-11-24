@@ -72,7 +72,8 @@ and tool and registry locks. `Ci.VcpkgInstall.psm1` constructs the manifest inst
 arguments with project-contained manifests and overlay, registry and output paths below
 `.build/`. Products supply their existing target triplet, registry and cache policy.
 The common checkout helper restores the declared full Git pin under `.build/`. It
-publishes a new checkout after verification, refuses local changes and foreign origins,
+stages new checkouts at a short path under the build root, publishes after verification,
+refuses local changes and foreign origins,
 and completes older shallow or partial clones under their existing checkout.
 The product's tested bootstrap and restore policy owns architectures, sanitizer
 triplets, output roots and old consumer interfaces. The engine

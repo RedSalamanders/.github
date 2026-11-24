@@ -3,9 +3,10 @@ $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Ci.Policy.psm1') -ErrorAction Stop
 
 function Invoke-CiVcpkgGit([string] $Directory, [string[]] $Arguments, [switch] $AllowFailure) {
-    $gitArguments = @('--no-optional-locks', '-c', 'core.longpaths=true') + $Arguments
-    # Unshallowing a real ports catalogue can take longer than a local Git query.
-    return Invoke-CiProcess -FilePath 'git' -Arguments $gitArguments -WorkingDirectory $Directory -TimeoutSeconds 3600 -AllowFailure:$AllowFailure
+    $gitArguments = @('--no-optional-locks', '-c', 'core.longpaths=true', '-C', $Directory) + $Arguments
+    # Git accepts deep directories through -C. Windows process startup needs a short working directory.
+    $workingDirectory = [IO.Path]::GetPathRoot($Directory)
+    return Invoke-CiProcess -FilePath 'git' -Arguments $gitArguments -WorkingDirectory $workingDirectory -TimeoutSeconds 3600 -AllowFailure:$AllowFailure
 }
 
 function Set-CiVcpkgCheckoutCommit([string] $Path, [string] $Repository, [string] $Commit, [bool] $Materialize) {
@@ -61,7 +62,7 @@ function Initialize-CiVcpkgCheckout {
     Full nonzero vcpkg revision for the tool checkout or catalogue.
     .DESCRIPTION
     Reuses clean existing clones, completes recoverable older clones and fetches only
-    missing sources. Fresh clones are staged beside their destination and published
+    missing sources. Fresh clones use a short staging path beneath the project build root and are published
     only after Git verifies the requested worktree. Leaves bootstrap and install leases
     to the product caller.
     #>
@@ -81,8 +82,11 @@ function Initialize-CiVcpkgCheckout {
 
     if (-not (Test-Path -LiteralPath $path)) {
         $parent = [IO.Path]::GetDirectoryName($path)
-        $stage = Assert-CiContainedPath -Root $root -Path (Join-Path $parent ('vcpkg-clone-' + [guid]::NewGuid().ToString('N')))
+        # Git for Windows index-pack can reject a deep Git directory even with core.longpaths.
+        $stageName = '~v' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+        $stage = Assert-CiContainedPath -Root $root -Path (Join-Path $buildRoot $stageName)
         [void][IO.Directory]::CreateDirectory($parent)
+        if (Test-Path -LiteralPath $stage) { throw "Managed vcpkg staging path is occupied: $stage" }
         $null = Invoke-CiVcpkgGit $root @('clone', '--no-hardlinks', '--no-checkout', '--', $Repository, $stage)
         Set-CiVcpkgCheckoutCommit $stage $Repository $commit $true
 

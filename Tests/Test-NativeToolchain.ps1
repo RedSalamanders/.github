@@ -238,9 +238,22 @@ Write-Host "PASS partial checkout completion restores pinned offline port metada
 $missing = $pin.Clone()
 $missing.Path = Join-Path $product '.build/missing-pin'
 $missing.Commit = 'a' * 40
-$stagedBefore = @(Get-ChildItem -LiteralPath (Join-Path $product '.build') -Directory -Filter 'vcpkg-clone-*').Count
+$stagedBefore = @(Get-ChildItem -LiteralPath (Join-Path $product '.build') -Directory -Filter '~v*').Count
 Assert-Refused { Initialize-CiVcpkgCheckout @missing } 'failed (128)'
 Assert-Equal $false ([IO.Directory]::Exists($missing.Path))
-$stagedAfter = @(Get-ChildItem -LiteralPath (Join-Path $product '.build') -Directory -Filter 'vcpkg-clone-*').Count
+$stagedAfter = @(Get-ChildItem -LiteralPath (Join-Path $product '.build') -Directory -Filter '~v*').Count
 Assert-Equal ($stagedBefore + 1) $stagedAfter
 Write-Host 'PASS unavailable pin retains the staged attempt and leaves the destination unpublished'
+
+$deep = $pin.Clone()
+$deepParent = Join-Path $product '.build/nested'
+while ($deepParent.Length -lt 195) {
+    $deepParent = Join-Path $deepParent 'ports-catalogue-directory'
+}
+$deep.Path = Join-Path $deepParent 'vcpkg-tool'
+Initialize-CiVcpkgCheckout @deep
+Initialize-CiVcpkgCheckout @deep
+$deepCommit = (Invoke-CiGit $product @('-c', 'core.longpaths=true', '-C', $deep.Path, 'rev-parse', 'HEAD')).stdout.Trim()
+Assert-Equal $secondCommit $deepCommit
+Assert-Equal '{"baseline":2}' ([IO.File]::ReadAllText((Join-Path $deep.Path 'versions/baseline.json')))
+Write-Host 'PASS deep destination materializes through the short managed staging path'
