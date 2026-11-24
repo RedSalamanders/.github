@@ -106,4 +106,69 @@ function Initialize-CiVcpkgCheckout {
     Set-CiVcpkgCheckoutCommit $path $Repository $commit $false
 }
 
-Export-ModuleMember -Function Initialize-CiVcpkgCheckout
+function Initialize-CiVcpkgExecutable {
+    <#
+    .SYNOPSIS
+    Reuses or bootstraps the Windows vcpkg executable for a verified tool checkout.
+    .PARAMETER ProjectRoot
+    Checkout owning both the managed tool and its marker.
+    .PARAMETER ToolRoot
+    Exact prepared vcpkg tool checkout below the project's .build.
+    .PARAMETER StampPath
+    Existing product's plain-text commit marker below .build.
+    .PARAMETER Commit
+    Full nonzero immutable commit for the tool checkout.
+    .OUTPUTS
+    The managed vcpkg.exe path. Bootstrap diagnostics go to the host.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string] $ProjectRoot,
+        [Parameter(Mandatory)][string] $ToolRoot,
+        [Parameter(Mandatory)][string] $StampPath,
+        [Parameter(Mandatory)][ValidatePattern('^(?!0{40}\z)[a-fA-F0-9]{40}\z')][string] $Commit
+    )
+
+    $root = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($ProjectRoot)
+    $buildRoot = Join-Path $root '.build'
+    $toolRoot = Assert-CiContainedPath -Root $buildRoot -Path ($PSCmdlet.GetUnresolvedProviderPathFromPSPath($ToolRoot))
+    $toolRoot = Assert-CiContainedPath -Root $root -Path $toolRoot
+    $stamp = Assert-CiContainedPath -Root $buildRoot -Path ($PSCmdlet.GetUnresolvedProviderPathFromPSPath($StampPath))
+    $stamp = Assert-CiContainedPath -Root $root -Path $stamp
+    $executable = Assert-CiContainedPath -Root $root -Path (Join-Path $toolRoot 'vcpkg.exe')
+    $bootstrap = Assert-CiContainedPath -Root $root -Path (Join-Path $toolRoot 'bootstrap-vcpkg.bat')
+    if ($stamp -ieq $executable -or $stamp -ieq $bootstrap) { throw 'vcpkg bootstrap marker must have a separate path.' }
+    $commit = $Commit.ToLowerInvariant()
+
+    $head = (Invoke-CiVcpkgGit $toolRoot @('rev-parse', 'HEAD')).stdout.Trim()
+    if ($head -cne $commit) { throw "vcpkg bootstrap checkout does not match $commit." }
+    if ([IO.File]::Exists($executable) -and [IO.File]::Exists($stamp) -and [IO.File]::ReadAllText($stamp).Trim() -ceq $commit) {
+        return $executable
+    }
+    if (-not [IO.File]::Exists($bootstrap)) { throw "vcpkg bootstrap script is missing: $bootstrap" }
+    if ($env:CI_NATIVE_BUILDS_DISABLED -eq 'true') { throw 'vcpkg bootstrap is unavailable in compiler-free checks.' }
+
+    # A failed bootstrap may leave an executable behind. Only a successful attempt may restore the marker.
+    if ([IO.File]::Exists($stamp)) { [IO.File]::Delete($stamp) }
+    Write-Host 'Bootstrapping vcpkg...' -ForegroundColor Cyan
+    $PSNativeCommandUseErrorActionPreference = $false
+    & $bootstrap -disableMetrics | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "vcpkg bootstrap failed with exit code $LASTEXITCODE." }
+    if (-not [IO.File]::Exists($executable)) { throw 'vcpkg bootstrap did not create vcpkg.exe.' }
+
+    $directory = [IO.Path]::GetDirectoryName($stamp)
+    [void][IO.Directory]::CreateDirectory($directory)
+    $temporary = Assert-CiContainedPath -Root $root -Path (Join-Path $directory ('~s' + [guid]::NewGuid().ToString('N').Substring(0, 8)))
+    $bytes = [Text.Encoding]::ASCII.GetBytes($commit + [Environment]::NewLine)
+    $stream = [IO.File]::Open($temporary, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+    try {
+        try { $stream.Write($bytes, 0, $bytes.Length) } finally { $stream.Dispose() }
+        $stamp = Assert-CiContainedPath -Root $root -Path $stamp
+        [IO.File]::Move($temporary, $stamp, $true)
+    } finally {
+        if ([IO.File]::Exists($temporary)) { [IO.File]::Delete((Assert-CiContainedPath -Root $root -Path $temporary)) }
+    }
+    return $executable
+}
+
+Export-ModuleMember -Function Initialize-CiVcpkgCheckout, Initialize-CiVcpkgExecutable

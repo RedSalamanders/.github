@@ -75,8 +75,11 @@ The common checkout helper restores the declared full Git pin under `.build/`. I
 stages new checkouts at a short path under the build root, publishes after verification,
 refuses local changes and foreign origins,
 and completes older shallow or partial clones under their existing checkout.
-The product's tested bootstrap and restore policy owns architectures, sanitizer
-triplets, output roots and old consumer interfaces. The engine
+The Windows bootstrap helper verifies the tool commit, retains the product's plain
+commit marker and reuses a matching executable. It invalidates the marker before
+an actual bootstrap and writes it only after a successful operation produces the file.
+A failed bootstrap leaves the next attempt eligible for repair. Product restore policy
+owns architectures, sanitizer triplets, output roots and old consumer interfaces. The engine
 already owns `Install-CiFormatter` in `Ci.Format.psm1` and its reviewed formatter pin.
 
 ## Changes workflow
