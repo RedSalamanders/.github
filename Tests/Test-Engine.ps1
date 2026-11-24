@@ -521,6 +521,29 @@ Invoke-Case 'winget manifests carry schema headers, use the ZIP nested executabl
         Assert-Equal ('# yaml-language-server: $schema=https://aka.ms/winget-manifest.'+$manifest[1]+'.1.12.0.schema.json') $lines[0]
         Assert-Equal ('ManifestType: '+$manifest[1]) @($lines|Where-Object {$_.StartsWith('ManifestType: ')})[0]
     }
+    $metadata=@{
+        ShortDescription='Monitor: "Diagnostics"'
+        Description="First line`nSecond line"
+        InstallationNotes='Run from %LocalAppData%\Microsoft\WinGet\Packages'
+        Tags=@('diagnostics','etw')
+        Documentations=@(@{DocumentLabel='User guide';DocumentUrl='https://example.invalid/guide'})
+    }
+    $plan.project.winget.localeMetadata=$metadata
+    $plan.project.winget.releaseNotes=$true
+    $custom=Join-Path $root 'custom-manifest'
+    $null=New-CiWingetManifest $plan $custom -ReleaseDate '2026-11-24'
+    $locale=[IO.File]::ReadAllLines((Join-Path $custom 'RedSalamanders.RedMonitor.locale.en-US.yaml'))
+    foreach ($field in $metadata.Keys) {
+        $line=@($locale | Where-Object { $_.StartsWith("${field}: ") })
+        Assert-Equal 1 $line.Count
+        $json=$line[0].Substring($field.Length+2)
+        Assert-Equal (ConvertTo-Json -InputObject $metadata[$field] -Depth 4 -Compress) $json
+    }
+    Assert-True ($locale -ccontains 'ReleaseNotesUrl: https://github.com/RedSalamanders/RedMonitor/releases/tag/v0.1.123')
+    Assert-True ([IO.File]::ReadAllLines((Join-Path $custom 'RedSalamanders.RedMonitor.installer.yaml')) -ccontains 'ReleaseDate: 2026-11-24')
+    Assert-Refused { New-CiWingetManifest $plan (Join-Path $root 'invalid-release-date') -ReleaseDate '2026-02-30' }
+    $plan.project.winget.Remove('localeMetadata')
+    $plan.project.winget.Remove('releaseNotes')
     foreach($asset in $assets){
         $zip=[IO.Compression.ZipFile]::Open($asset.path,[IO.Compression.ZipArchiveMode]::Update)
         try{$entry=$zip.CreateEntry("product/tools/red.exe");$stream=$entry.Open();try{$stream.WriteByte(43)}finally{$stream.Dispose()}}finally{$zip.Dispose()}

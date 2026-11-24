@@ -118,10 +118,20 @@ function Publish-CiGitHubRelease {
 
 function New-CiWingetManifest {
     [CmdletBinding()]
-    param([Parameter(Mandatory)][System.Collections.IDictionary]$Plan,[Parameter(Mandatory)][string]$Directory)
+    param(
+        [Parameter(Mandatory)][System.Collections.IDictionary]$Plan,
+        [Parameter(Mandatory)][string]$Directory,
+        [string]$ReleaseDate = ''
+    )
     $project=$Plan.project
     if($project.kind -cne 'application' -or -not $project.winget){throw 'DxUi SDK publication does not support winget.'}
     if(-not $project.winget.Contains('license') -or -not $project.winget.license){throw 'The product license must be configured before winget publication.'}
+    if ($ReleaseDate) {
+        $parsedDate = [datetime]::MinValue
+        if (-not [datetime]::TryParseExact($ReleaseDate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$parsedDate)) {
+            throw 'WinGet release date must be a valid calendar date in yyyy-MM-dd format.'
+        }
+    }
     [void][IO.Directory]::CreateDirectory($Directory)
     $id=$project.winget.identifier;$version=$Plan.batch.version;$name=$project.repository.Split('/')[1]
     $common="PackageIdentifier: $id`nPackageVersion: $version`n"
@@ -142,6 +152,7 @@ function New-CiWingetManifest {
     }
     $installer+="Commands:`n"
     foreach($alias in $aliases){$installer+="- '$alias'`n"}
+    if ($ReleaseDate) { $installer += "ReleaseDate: $ReleaseDate`n" }
     $installer+="Installers:`n"
     foreach($platform in @('x64','ARM64')){
         $assets=@($Plan.assets|Where-Object { $_.platform -ceq $platform -and $_.file -notmatch '(?i)symbols' })
@@ -168,7 +179,26 @@ function New-CiWingetManifest {
         }
     }
     $installer+="ManifestType: installer`nManifestVersion: 1.12.0`n"
-    $locale=$common+"PackageLocale: en-US`nPublisher: RedSalamanders`nPackageName: $name`nLicense: $($project.winget.license)`nShortDescription: $name Windows application`nPackageUrl: https://github.com/$($project.repository)`nManifestType: defaultLocale`nManifestVersion: 1.12.0`n"
+    $metadata = $project.winget['localeMetadata']
+    $shortDescription = "$name Windows application"
+    if ($metadata -and $metadata.Contains('ShortDescription')) {
+        $shortDescription = ConvertTo-Json -InputObject $metadata.ShortDescription -Compress
+    }
+    $locale=$common+"PackageLocale: en-US`nPublisher: RedSalamanders`nPackageName: $name`nLicense: $($project.winget.license)`nShortDescription: $shortDescription`nPackageUrl: https://github.com/$($project.repository)`n"
+    if ($metadata) {
+        # JSON-quoted scalars and flow collections are valid YAML and preserve content such as colons and line breaks.
+        foreach ($field in 'PublisherUrl','PublisherSupportUrl','Author','LicenseUrl','Copyright','Description','Moniker','Tags','InstallationNotes','Documentations') {
+            if ($metadata.Contains($field)) {
+                $value = ConvertTo-Json -InputObject $metadata[$field] -Compress -Depth 4
+                $locale += "${field}: $value`n"
+            }
+        }
+    }
+    if ($project.winget['releaseNotes']) {
+        $notes = "https://github.com/$($project.repository)/releases/tag/$($Plan.tag)"
+        $locale += "ReleaseNotes: See $notes`nReleaseNotesUrl: $notes`n"
+    }
+    $locale += "ManifestType: defaultLocale`nManifestVersion: 1.12.0`n"
     $versionFile=$common+"DefaultLocale: en-US`nManifestType: version`nManifestVersion: 1.12.0`n"
     # winget validate exits nonzero with a warning when a manifest lacks its schema header.
     foreach($pair in @(@("$id.yaml",'version',$versionFile),@("$id.installer.yaml",'installer',$installer),@("$id.locale.en-US.yaml",'defaultLocale',$locale))){

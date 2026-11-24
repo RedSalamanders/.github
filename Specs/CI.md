@@ -26,6 +26,11 @@ The engine template owns `.github/dependabot.yml` for native adapters. It schedu
 vcpkg checks and leaves reusable engine pins to the reviewed project pin update. RedSalamander retains
 its terminal workflow exclusion and coordinated vcpkg review in its adapter until its operator adopts the template.
 
+The shared WinGet generator reads optional `winget.localeMetadata` from the project manifest. It retains the
+application's names, product descriptions, links, tags and installation notes in the default locale file.
+`winget.releaseNotes` adds links for the generated release tag. A caller may pass the release date explicitly
+in `yyyy-MM-dd` format to generate the installer date. [WinGet v1.12 default locale schema](https://github.com/microsoft/winget-pkgs/blob/master/doc/manifest/schema/1.12.0/defaultLocale.md)
+
 Organization-owned implementation work is indexed in [Plans/WIP](Plans/WIP/README.md); completed work is indexed in [Plans/Done](Plans/Done/README.md). The canonical [plan lifecycle rule](../AGENTS.md#plan-lifecycle) governs implementation/validation closeout and migration of durable requirements into this contract or the other owning specifications. WIP proposals do not change active CI policy.
 
 ## Source and input identity
