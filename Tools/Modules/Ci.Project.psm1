@@ -93,6 +93,13 @@ function Test-CiProjectConfiguration {
             throw "The common workflow or engine pin diverged: $($template.Name)"
         }
     }
+    foreach ($template in Get-CiManagedProjectFileTemplates $project) {
+        $path = Assert-CiContainedPath $Context.root (Join-Path $Context.root $template.Path)
+        $expected = [IO.File]::ReadAllText($template.FullName).Replace($crlf,$lf)
+        if (-not [IO.File]::Exists($path) -or [IO.File]::ReadAllText($path).Replace($crlf,$lf) -cne $expected) {
+            throw "Managed project file $($template.Path) differs from the pinned engine template. Run Tools/Update-ProjectPin.ps1."
+        }
+    }
     # An adopted engine shim (it carries the shim marker) is the pinned template's text; Update-ProjectPin.ps1 refreshes it.
     foreach($shim in @(Get-CiProjectShimTemplates)){
         $path=Join-Path $Context.root $shim.Path

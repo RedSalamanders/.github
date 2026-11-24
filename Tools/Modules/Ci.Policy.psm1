@@ -194,6 +194,22 @@ function Get-CiProjectShimTemplates {
     }
 }
 
+function Get-CiManagedProjectFileTemplates {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][System.Collections.IDictionary]$Project)
+
+    if ($Project.kind -cnotin @('application','sdk')) { return }
+    $engine = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+    $directory = 'Templates/ManagedProjectFiles'
+    $committed = (Invoke-CiGit $engine @('ls-tree','-r','--name-only','-z','HEAD','--',$directory)).stdout.Split([char]0,[StringSplitOptions]::RemoveEmptyEntries)
+    foreach ($name in '.clang-format', '.editorconfig') {
+        $source = "$directory/$name"
+        if ($source -cnotin $committed) { throw "Missing committed managed project template: $source" }
+        $path = Assert-CiContainedPath $engine (Join-Path $engine $source)
+        [pscustomobject]@{ Path = $name; FullName = $path }
+    }
+}
+
 function Assert-CiContainedPath {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$Path)
@@ -414,4 +430,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Get-CiProcessCreationIdentity, Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Get-CiProjectShimMarker, Get-CiProjectShimTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiHarnessExclusions, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
+Export-ModuleMember -Function Get-CiProcessCreationIdentity, Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Get-CiProjectShimMarker, Get-CiProjectShimTemplates, Get-CiManagedProjectFileTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiHarnessExclusions, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes

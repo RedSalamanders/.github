@@ -6,7 +6,8 @@ One RedSalamanders project checkout.
 .PARAMETER EngineRef
 Exact clean engine commit currently checked out beside this command.
 .OUTPUTS
-Updated .ci/project.json and canonical CI caller files. Removes an SDK's unchanged legacy publication caller.
+Updated .ci/project.json, canonical CI callers, and the managed formatting files .clang-format and .editorconfig.
+Removes an SDK's unchanged legacy publication caller.
 Replaces the original **/*.md exclusion with owned prose patterns and adds each agent harness path the exclusions
 lack (Get-CiHarnessExclusions); explicit runtime includes still take precedence.
 Rewrites each adopted engine shim (a project file that carries the shim marker) to its Templates/Project text at the
@@ -49,6 +50,16 @@ if($project.kind -ceq 'sdk' -and (Test-Path -LiteralPath $legacyPublication)){
         throw 'SDK publication caller has custom changes; review it before removing the workflow.'
     }
 }
+$lf = [string][char]10
+$crlf = [string][char]13 + $lf
+$managedUpdates = @(foreach ($template in Get-CiManagedProjectFileTemplates $project) {
+    $path = Assert-CiContainedPath $rootPath (Join-Path $rootPath $template.Path)
+    if ([IO.Directory]::Exists($path)) { throw "Managed project file is a directory: $($template.Path)" }
+    $text = [IO.File]::ReadAllText($template.FullName)
+    if (-not [IO.File]::Exists($path) -or [IO.File]::ReadAllText($path).Replace($crlf,$lf) -cne $text.Replace($crlf,$lf)) {
+        [pscustomobject]@{ Path = $path; Text = $text }
+    }
+})
 foreach($template in Get-CiProjectWorkflowTemplates -Project $project){
     $content=[IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$EngineRef).Replace('@OPERATIONS@','Prepare, Release, Winget')
     $path=Assert-CiContainedPath $rootPath (Join-Path $rootPath ('.github/workflows/'+$template.Name))
@@ -64,6 +75,9 @@ foreach($template in @(Get-CiProjectShimTemplates)){
     if((Test-Path -LiteralPath $path -PathType Leaf) -and [IO.File]::ReadAllText($path).Contains((Get-CiProjectShimMarker))){
         [IO.File]::WriteAllText($path,[IO.File]::ReadAllText($template.FullName),[Text.UTF8Encoding]::new($false))
     }
+}
+foreach ($update in $managedUpdates) {
+    [IO.File]::WriteAllText($update.Path,$update.Text,[Text.UTF8Encoding]::new($false))
 }
 # Historical sealed and metadata-only definitions retain their reviewed bytes.
 foreach($name in @('asan.yml','nightly-ci.yml')){
