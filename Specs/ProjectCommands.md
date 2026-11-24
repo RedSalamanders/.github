@@ -64,11 +64,14 @@ that equivalent adoption preserves overlay bytes and vcpkg package identities. T
 output belongs below the product's `.build/`. Stock and sanitizer inputs can name
 companion files beside themselves. The writer validates and reads all referenced input
 files first, copies the companion bytes, then publishes the overlay through a
-same-directory replacement. An unchanged file retains its timestamp. A product holds
-its restore lease while producing a triplet and installing dependencies for that profile.
+same-directory replacement. An unchanged file retains its timestamp. When a product
+uses restore leases, the lease covers triplet publication and installation for that profile.
 
 Product `vcpkg-install.ps1` entry points keep their platform defaults, supported parameters
-and tool and registry locks. The product's tested restore and bootstrap policy owns
+and tool and registry locks. `Ci.VcpkgInstall.psm1` constructs the manifest install
+arguments with project-contained manifests and overlay, registry and output paths below
+`.build/`. Products supply their existing target triplet, registry and cache policy.
+The product's tested restore and bootstrap policy owns
 architectures, sanitizer triplets, output roots and old consumer interfaces. The engine
 already owns `Install-CiFormatter` in `Ci.Format.psm1` and its reviewed formatter pin.
 

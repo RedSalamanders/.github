@@ -120,3 +120,54 @@ $invalid.SourceTripletPath = $created.Path
 $invalid.OutputDirectory = [IO.Path]::GetDirectoryName($created.Path)
 Assert-Refused { Update-CiVcpkgOverlayTriplet @invalid } 'cannot overwrite its source'
 Write-Host "PASS incomplete, external, reparse and source-overwriting outputs are refused. Evidence at $fixture"
+
+Import-Module (Join-Path $engine 'Tools/Modules/Ci.VcpkgInstall.psm1')
+[void](Write-FixtureFile 'product/vcpkg.json' '{"name":"fixture","version":"0.1.0"}')
+[void](Write-FixtureFile 'product/.build/alternate/vcpkg.json' '{"name":"fixture","version":"0.1.1"}')
+$product = Join-Path $fixture 'product'
+$arguments = @{
+    ProjectRoot = $product
+    Triplet = 'arm64-windows-static-md-asan'
+    InstallRoot = (Join-Path $product '.build/installed/arm64 asan')
+    BuildTreesRoot = (Join-Path $product '.build/buildtrees/arm64 asan')
+    PackagesRoot = (Join-Path $product '.build/packages/arm64 asan')
+    DownloadsRoot = (Join-Path $product '.build/downloads')
+    OverlayTriplets = (Join-Path $product '.build/triplets')
+}
+[void][IO.Directory]::CreateDirectory($arguments.OverlayTriplets)
+$expected = @(
+    'install',
+    '--triplet=arm64-windows-static-md-asan',
+    "--x-manifest-root=$product",
+    "--x-install-root=$($arguments.InstallRoot)",
+    "--x-buildtrees-root=$($arguments.BuildTreesRoot)",
+    "--x-packages-root=$($arguments.PackagesRoot)",
+    "--downloads-root=$($arguments.DownloadsRoot)",
+    "--overlay-triplets=$($arguments.OverlayTriplets)"
+)
+$actual = @(Get-CiVcpkgManifestInstallArguments @arguments)
+Assert-Equal ($expected -join [char]0) ($actual -join [char]0)
+Assert-Equal $false ([IO.Directory]::Exists($arguments.InstallRoot))
+$registry = Join-Path $product '.build/registry'
+[void][IO.Directory]::CreateDirectory($registry)
+$alternate = Join-Path $product '.build/alternate'
+$actual = @(Get-CiVcpkgManifestInstallArguments @arguments -RegistryRoot $registry -ManifestRoot $alternate -DisableBinaryCache)
+Assert-Equal "--vcpkg-root=$registry" $actual[1]
+Assert-Equal "--x-manifest-root=$alternate" $actual[3]
+Assert-Equal '--binarysource=clear' $actual[-1]
+Assert-Equal 10 $actual.Count
+Write-Host 'PASS ordinary and independent-registry vcpkg arguments preserve exact owned paths and cache option'
+
+$invalid = $arguments.Clone()
+$invalid.InstallRoot = Join-Path $fixture 'foreign'
+Assert-Refused { Get-CiVcpkgManifestInstallArguments @invalid } 'contained repository'
+$invalid = $arguments.Clone()
+$invalid.OverlayTriplets = Join-Path $product '.build/missing'
+Assert-Refused { Get-CiVcpkgManifestInstallArguments @invalid } 'overlay directory is missing'
+Assert-Refused { Get-CiVcpkgManifestInstallArguments @arguments -ManifestRoot (Join-Path $product 'missing') } 'manifest is missing'
+Assert-Refused { Get-CiVcpkgManifestInstallArguments @arguments -RegistryRoot (Join-Path $product '.build/absent-registry') } 'registry is missing'
+$badOverlay = Join-Path $product '.build/linked'
+New-Item -ItemType $linkKind -Path $badOverlay -Target $arguments.OverlayTriplets | Out-Null
+$invalid.OverlayTriplets = $badOverlay
+Assert-Refused { Get-CiVcpkgManifestInstallArguments @invalid } 'Reparse path refused'
+Write-Host "PASS vcpkg manifest, registry, overlay and output ownership refusals. Evidence at $fixture"
