@@ -49,6 +49,29 @@ copies of shared tooling (RedHome `Specs/Plans/WIP/Convergence_2026-11-17.md`, P
 | `Build/ScopedTesting.psm1` (module shim) | `Tools/Modules/Ci.ScopedTesting.psm1` | same |
 | `Build/TestRunEvidence.psm1` (module shim) | `Tools/Modules/Ci.TestRunEvidence.psm1` | same (Windows) |
 
+## Shared native toolchain helpers
+
+A product selects the MSBuild installation according to its build contract. The shared
+`Ci.VisualStudio.psm1` provides prerelease-aware discovery with an optional version range,
+the VS installation of an explicitly selected MSBuild and the native x64 or ARM64 MSBuild
+path. A missing native host executable fails discovery. `Get-CiDefaultMsvcToolset` reads
+the selected installation's MSVC default file and returns its full and major.minor versions.
+The selected MSBuild installation and default toolset also supply the vcpkg overlay pins.
+
+`Ci.VcpkgTriplet.psm1` appends the Visual Studio and toolset pins, preserving the source
+triplet's text and line endings. The product supplies its existing generated comment so
+that equivalent adoption preserves overlay bytes and vcpkg package identities. The
+output belongs below the product's `.build/`. Stock and sanitizer inputs can name
+companion files beside themselves. The writer validates and reads all referenced input
+files first, copies the companion bytes, then publishes the overlay through a
+same-directory replacement. An unchanged file retains its timestamp. A product holds
+its restore lease while producing a triplet and installing dependencies for that profile.
+
+Product `vcpkg-install.ps1` entry points keep their platform defaults, supported parameters
+and tool and registry locks. The product's tested restore and bootstrap policy owns
+architectures, sanitizer triplets, output roots and old consumer interfaces. The engine
+already owns `Install-CiFormatter` in `Ci.Format.psm1` and its reviewed formatter pin.
+
 ## Changes workflow
 
 Each change records one UTF-8 Markdown file `Changes/<yyyy-mm-dd>-<topic>.md` (a real calendar date, a topic in
