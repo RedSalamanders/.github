@@ -257,3 +257,59 @@ $deepCommit = (Invoke-CiGit $product @('-c', 'core.longpaths=true', '-C', $deep.
 Assert-Equal $secondCommit $deepCommit
 Assert-Equal '{"baseline":2}' ([IO.File]::ReadAllText((Join-Path $deep.Path 'versions/baseline.json')))
 Write-Host 'PASS deep destination materializes through the short managed staging path'
+
+if ([OperatingSystem]::IsWindows()) {
+    $fixtureBootstrap = @'
+@echo off
+if not "%1"=="-disableMetrics" exit /b 19
+if "%RedHome_CV507_Bootstrap_Fixture%"=="fail" (
+    > "%~dp0vcpkg.exe" echo partial
+    exit /b 17
+)
+> "%~dp0vcpkg.exe" echo initialized
+exit /b 0
+'@
+    [void](Write-FixtureFile 'source repository/bootstrap-vcpkg.bat' $fixtureBootstrap)
+    [void](Write-FixtureFile 'source repository/.gitignore' 'vcpkg.exe')
+    $null = Invoke-CiGit $sourceDir @('add', '--', 'bootstrap-vcpkg.bat', '.gitignore')
+    $null = Invoke-CiGit $sourceDir @('commit', '-m', 'Add a recording Windows bootstrap')
+    $bootstrapCommit = Resolve-CiCommit $sourceDir HEAD
+    $tool = Join-Path $product '.build/bootstrap'
+    Initialize-CiVcpkgCheckout -ProjectRoot $product -Path $tool -Repository $repository -Commit $bootstrapCommit
+    $bootstrapArgs = @{
+        ProjectRoot = $product
+        ToolRoot = $tool
+        StampPath = (Join-Path $product '.build/bootstrap.commit')
+        Commit = $bootstrapCommit
+    }
+
+    $previous = [Environment]::GetEnvironmentVariable('RedHome_CV507_Bootstrap_Fixture', 'Process')
+    try {
+        $env:RedHome_CV507_Bootstrap_Fixture = 'success'
+        $executable = Initialize-CiVcpkgExecutable @bootstrapArgs
+        Assert-Equal (Join-Path $tool 'vcpkg.exe') $executable
+        Assert-Equal $bootstrapCommit ([IO.File]::ReadAllText($bootstrapArgs.StampPath).Trim())
+        Assert-Equal 'initialized' ([IO.File]::ReadAllText($executable).Trim())
+        $env:RedHome_CV507_Bootstrap_Fixture = 'fail'
+        Assert-Equal $executable (Initialize-CiVcpkgExecutable @bootstrapArgs)
+        Assert-Equal 'initialized' ([IO.File]::ReadAllText($executable).Trim())
+        [IO.File]::Delete($executable)
+        Assert-Refused { Initialize-CiVcpkgExecutable @bootstrapArgs } 'exit code 17'
+        Assert-Equal 'partial' ([IO.File]::ReadAllText($executable).Trim())
+        Assert-Equal $false ([IO.File]::Exists($bootstrapArgs.StampPath))
+        $env:RedHome_CV507_Bootstrap_Fixture = 'success'
+        Assert-Equal $executable (Initialize-CiVcpkgExecutable @bootstrapArgs)
+        Assert-Equal $bootstrapCommit ([IO.File]::ReadAllText($bootstrapArgs.StampPath).Trim())
+        Assert-Equal 'initialized' ([IO.File]::ReadAllText($executable).Trim())
+    } finally {
+        [Environment]::SetEnvironmentVariable('RedHome_CV507_Bootstrap_Fixture', $previous, 'Process')
+    }
+    $wrong = $bootstrapArgs.Clone()
+    $wrong.Commit = $firstCommit
+    Assert-Refused { Initialize-CiVcpkgExecutable @wrong } 'checkout does not match'
+    $wrong = $bootstrapArgs.Clone()
+    $wrong.StampPath = $executable
+    Assert-Refused { Initialize-CiVcpkgExecutable @wrong } 'separate path'
+    Assert-Equal 'initialized' ([IO.File]::ReadAllText($executable).Trim())
+    Write-Host 'PASS bootstrap marker reuse, failure refusal, retry and exact source binding'
+}
