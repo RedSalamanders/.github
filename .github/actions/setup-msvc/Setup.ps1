@@ -3,12 +3,14 @@
 .PARAMETER ProjectRoot Checked-out product that owns RequiredMsvcToolsVersion in Directory.Build.props.
 .PARAMETER Platform Native target architecture.
 .PARAMETER VerifyOnly Local read-only verification. Downloads, installation and GitHub outputs are disabled.
+.PARAMETER InstallerTimeoutSeconds Wait budget before terminating the owned installer, chiefly for local fixture execution.
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string] $ProjectRoot,
     [ValidateSet('x64','ARM64')][string] $Platform = 'x64',
-    [switch] $VerifyOnly
+    [switch] $VerifyOnly,
+    [ValidateRange(1,3600)][int] $InstallerTimeoutSeconds = 1800
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -87,7 +89,7 @@ if(-not $selected){
     Write-Host "Provisioning required MSVC $required at '$installRoot'; bootstrapper output: $scratch"
     # --wait keeps the GUI bootstrapper alive for installation. The exact
     # process handle supplies its exit code and bounds termination to the owned tree.
-    $installerTimeoutMilliseconds=1800000
+    $installerTimeoutMilliseconds=$InstallerTimeoutSeconds * 1000
     $installerStarted=Get-Date
     $installerTimedOut=$false
     $terminationProblem=$null
@@ -117,7 +119,7 @@ if(-not $selected){
                 catch {Write-Warning "Cannot archive installer log '$($_.TargetObject)': $($_.Exception.Message)"}
             }
     }
-    if($installerTimedOut){throw "VS provisioning timed out after $($installerTimeoutMilliseconds / 1000) seconds. Owned installer termination: $(if($terminationProblem){$terminationProblem}else{'confirmed'}). Bootstrapper output remains at '$scratch'; detailed installer logs are listed above."}
+    if($installerTimedOut){throw "VS provisioning timed out after $InstallerTimeoutSeconds seconds. Owned installer termination: $(if($terminationProblem){$terminationProblem}else{'confirmed'}). Bootstrapper output remains at '$scratch'; detailed installer logs are listed above."}
     if($installerExit-notin @(0,3010)){throw "VS provisioning failed: $installerExit. Bootstrapper output remains at '$scratch'; detailed installer logs are listed above."}
     $selected=Get-SelectedTools
     if(-not $selected){throw "Insiders did not provide default MSVC $required.x and every required target tool. Review channel/component availability; another compiler is never accepted."}

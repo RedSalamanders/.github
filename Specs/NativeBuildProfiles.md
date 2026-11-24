@@ -25,6 +25,14 @@ bootstrap's size optimization in those project files. ASan dependency linkage an
 exact dependency recipe. A shared policy change and the consumer's dependency pin advance together where those inputs
 enter the archive identity.
 
+## Hosted MSVC setup
+
+The pinned setup action verifies the required default toolset before use. When a hosted runner needs provisioning,
+the action verifies the Microsoft signature and waits for the owned installer. The default wait budget is 1,800 seconds.
+The setup script accepts an explicit installer wait budget from 1 through 3,600 seconds, including short budgets used
+to prove timeout, owned-process termination and diagnostic retention in local fixtures. Read-only verification never
+runs an installer.
+
 ## Evidence
 
 A source-bound build records the exact profile, dependency inputs, build diagnostics and artifact identity. Changing
