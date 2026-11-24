@@ -49,6 +49,17 @@ copies of shared tooling (RedHome `Specs/Plans/WIP/Convergence_2026-11-17.md`, P
 | `Build/ScopedTesting.psm1` (module shim) | `Tools/Modules/Ci.ScopedTesting.psm1` | same |
 | `Build/TestRunEvidence.psm1` (module shim) | `Tools/Modules/Ci.TestRunEvidence.psm1` | same (Windows) |
 
+## Managed formatting files
+
+The engine publishes the common `.clang-format` and `.editorconfig` in
+[Templates/ManagedProjectFiles](../Templates/ManagedProjectFiles). A pin update writes both at the
+root of an application or SDK checkout when they are missing or differ. The compiler-free project
+check requires both to match the engine pin, allowing the checkout's line endings. Identical files
+keep their timestamps.
+
+Product `.gitattributes` and `.gitignore` retain their project-specific rules. Their common blocks
+have a separate rollout after the line-ending and ignore policy inventories are reconciled.
+
 ## Shared native toolchain helpers
 
 A product selects the MSBuild installation according to its build contract. The shared

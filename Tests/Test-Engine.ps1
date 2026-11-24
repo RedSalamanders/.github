@@ -1028,8 +1028,20 @@ Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unrev
         $text=[IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$project.engine.ref).Replace('@OPERATIONS@','Prepare, Release, Winget')
         Write-FixtureFile $root ('.github/workflows/'+$template.Name) $text
     }
+    foreach ($template in Get-CiManagedProjectFileTemplates $project) {
+        Write-FixtureFile $root $template.Path ([IO.File]::ReadAllText($template.FullName))
+    }
     $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
     Test-CiProjectConfiguration $context
+    $format = Join-Path $root '.clang-format'
+    $canonical = [IO.File]::ReadAllText($format)
+    Remove-Item -LiteralPath $format
+    try { Test-CiProjectConfiguration $context; throw 'Conformance accepted a missing formatter policy.' }
+    catch { Assert-True ($_.Exception.Message.Contains('Managed project file .clang-format differs')) }
+    Write-FixtureFile $root '.clang-format' ($canonical + '# unexpected template drift')
+    try { Test-CiProjectConfiguration $context; throw 'Conformance accepted a drifted formatter policy.' }
+    catch { Assert-True ($_.Exception.Message.Contains('Managed project file .clang-format differs')) }
+    Write-FixtureFile $root '.clang-format' $canonical
     Write-FixtureFile $root '.github/workflows/sdk-inputs.yml' ([IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/sdk-inputs.yml')).Replace('@ENGINE@',$project.engine.ref))
     Assert-Refused {Test-CiProjectConfiguration $context}
     Remove-Item -LiteralPath (Join-Path $root '.github/workflows/sdk-inputs.yml')
@@ -1060,6 +1072,9 @@ Invoke-Case 'Conformance refuses an adopted engine shim that differs from its te
         $toolsTemplate = $shims | Where-Object Path -CEQ "Tools/$moduleName"
         Assert-True ($buildTemplate -and $toolsTemplate -and $buildTemplate.FullName -ceq $toolsTemplate.FullName) "The two layouts must share the $moduleName template."
     }
+    foreach ($template in Get-CiManagedProjectFileTemplates $project) {
+        Write-FixtureFile $root $template.Path ([IO.File]::ReadAllText($template.FullName))
+    }
     $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
     # A project's own command of the same name is not a shim and is not compared.
     Write-FixtureFile $root $shims[0].Path '# The project still implements this command.'
@@ -1082,6 +1097,9 @@ Invoke-Case 'Pin updates refresh only adopted engine shims and never add one' {
     foreach($template in Get-ChildItem (Join-Path $engineRoot 'Templates') -File){
         Write-FixtureFile $fixtureEngine ('Templates/'+$template.Name) ([IO.File]::ReadAllText($template.FullName))
     }
+    foreach ($template in Get-ChildItem -LiteralPath (Join-Path $engineRoot 'Templates/ManagedProjectFiles') -File -Force) {
+        Write-FixtureFile $fixtureEngine ('Templates/ManagedProjectFiles/' + $template.Name) ([IO.File]::ReadAllText($template.FullName))
+    }
     $marker=Get-CiProjectShimMarker
     $lf=[string][char]10
     Write-FixtureFile $fixtureEngine 'Templates/Project/Tools/Adopted-Command.ps1' ("# new shim text$lf$marker$lf")
@@ -1093,9 +1111,13 @@ Invoke-Case 'Pin updates refresh only adopted engine shims and never add one' {
     [void][IO.Directory]::CreateDirectory((Join-Path $root '.github/workflows'))
     Write-FixtureFile $root 'Tools/Adopted-Command.ps1' ("# old shim text$([char]13)$lf$marker$([char]13)$lf")
     Write-FixtureFile $root 'Tools/Own-Command.ps1' "# the project's own implementation$lf"
+    Write-FixtureFile $root '.clang-format' 'stale bytes'
     $result=Invoke-CiProcess (Get-Process -Id $PID).Path @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure
     Assert-Equal 0 $result.exitCode
     Assert-Equal $engineCommit (Read-CiProject $root).engine.ref
+    foreach ($template in Get-CiManagedProjectFileTemplates (Read-CiProject $root)) {
+        Assert-Equal ([IO.File]::ReadAllText($template.FullName)) ([IO.File]::ReadAllText((Join-Path $root $template.Path)))
+    }
     Assert-Equal "# new shim text$lf$marker$lf" ([IO.File]::ReadAllText((Join-Path $root 'Tools/Adopted-Command.ps1')))
     Assert-Equal "# the project's own implementation$lf" ([IO.File]::ReadAllText((Join-Path $root 'Tools/Own-Command.ps1')))
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $root 'Tools/Absent-Command.ps1')))
@@ -1109,6 +1131,9 @@ Invoke-Case 'SDK conformance retains qualification and rejects every hosted publ
     Write-FixtureFile $root 'Tools/Invoke-ProjectCi.ps1' '# Fixture adapter.'
     foreach($template in Get-CiProjectWorkflowTemplates $project){
         Write-FixtureFile $root ('.github/workflows/'+$template.Name) ([IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$project.engine.ref))
+    }
+    foreach ($template in Get-CiManagedProjectFileTemplates $project) {
+        Write-FixtureFile $root $template.Path ([IO.File]::ReadAllText($template.FullName))
     }
     $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
     Test-CiProjectConfiguration $context
@@ -1153,6 +1178,9 @@ Invoke-Case 'Pin migration removes only the generated SDK publisher and preserve
     }
     foreach($template in Get-ChildItem (Join-Path $engineRoot 'Templates') -File){
         Write-FixtureFile $fixtureEngine ('Templates/'+$template.Name) ([IO.File]::ReadAllText($template.FullName))
+    }
+    foreach ($template in Get-ChildItem -LiteralPath (Join-Path $engineRoot 'Templates/ManagedProjectFiles') -File -Force) {
+        Write-FixtureFile $fixtureEngine ('Templates/ManagedProjectFiles/' + $template.Name) ([IO.File]::ReadAllText($template.FullName))
     }
     $engineCommit=Save-Fixture $fixtureEngine 'Clean maintenance engine'
     $hostPath=(Get-Process -Id $PID).Path
