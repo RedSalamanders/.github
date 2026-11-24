@@ -57,8 +57,9 @@ root of an application or SDK checkout when they are missing or differ. The comp
 check requires both to match the engine pin, allowing the checkout's line endings. Identical files
 keep their timestamps.
 
-Product `.gitattributes` and `.gitignore` retain their project-specific rules. Their common blocks
-have a separate rollout after the line-ending and ignore policy inventories are reconciled.
+The same pin operation owns the marked common blocks in `.gitattributes` and `.gitignore`. A new file starts with its shared block. An existing file needs one ordered pair of common block markers.
+A pin updates only the marked lines and retains the surrounding product-specific rules and checkout line endings.
+Compiler-free conformance verifies the marked content. Git does not renormalize tracked inputs during a pin update.
 
 ## Shared native toolchain helpers
 

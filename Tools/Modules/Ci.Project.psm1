@@ -94,9 +94,8 @@ function Test-CiProjectConfiguration {
         }
     }
     foreach ($template in Get-CiManagedProjectFileTemplates $project) {
-        $path = Assert-CiContainedPath $Context.root (Join-Path $Context.root $template.Path)
-        $expected = [IO.File]::ReadAllText($template.FullName).Replace($crlf,$lf)
-        if (-not [IO.File]::Exists($path) -or [IO.File]::ReadAllText($path).Replace($crlf,$lf) -cne $expected) {
+        $update = Get-CiManagedProjectFileUpdate -Root $Context.root -Template $template
+        if ($update.Changed) {
             throw "Managed project file $($template.Path) differs from the pinned engine template. Run Tools/Update-ProjectPin.ps1."
         }
     }
