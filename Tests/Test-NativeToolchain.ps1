@@ -171,3 +171,76 @@ New-Item -ItemType $linkKind -Path $badOverlay -Target $arguments.OverlayTriplet
 $invalid.OverlayTriplets = $badOverlay
 Assert-Refused { Get-CiVcpkgManifestInstallArguments @invalid } 'Reparse path refused'
 Write-Host "PASS vcpkg manifest, registry, overlay and output ownership refusals. Evidence at $fixture"
+
+Import-Module (Join-Path $engine 'Tools/Modules/Ci.VcpkgCheckout.psm1')
+$sourceDir = Join-Path $fixture 'source repository'
+[void](Write-FixtureFile 'source repository/versions/baseline.json' '{"baseline":1}')
+[void](Write-FixtureFile 'source repository/.gitattributes' '* -text')
+$null = Invoke-CiGit $sourceDir @('init', '--initial-branch=main')
+foreach ($setting in @(@('user.name','Toolchain Fixture'), @('user.email','toolchain-fixture@example.invalid'),
+                       @('commit.gpgsign','false'), @('core.longpaths','true'), @('uploadpack.allowFilter','true'))) {
+    $null = Invoke-CiGit $sourceDir @('config', $setting[0], $setting[1])
+}
+$null = Invoke-CiGit $sourceDir @('add', '--', '.gitattributes', 'versions')
+$null = Invoke-CiGit $sourceDir @('commit', '-m', 'Declare the original baseline')
+$firstCommit = Resolve-CiCommit $sourceDir HEAD
+[void](Write-FixtureFile 'source repository/versions/baseline.json' '{"baseline":2}')
+$null = Invoke-CiGit $sourceDir @('commit', '-am', 'Declare the next baseline')
+$secondCommit = Resolve-CiCommit $sourceDir HEAD
+$repository = [uri]::new($sourceDir).AbsoluteUri
+$checkoutRoot = Join-Path $product '.build/checkout'
+$pin = @{ ProjectRoot=$product; Path=$checkoutRoot; Repository=$repository; Commit=$firstCommit }
+
+Initialize-CiVcpkgCheckout @pin
+Assert-Equal $firstCommit (Resolve-CiCommit $checkoutRoot HEAD)
+Assert-Equal '{"baseline":1}' ([IO.File]::ReadAllText((Join-Path $checkoutRoot 'versions/baseline.json')))
+Initialize-CiVcpkgCheckout @pin
+Assert-Equal $firstCommit (Resolve-CiCommit $checkoutRoot HEAD)
+$pin.Commit = $secondCommit
+Initialize-CiVcpkgCheckout @pin
+Assert-Equal $secondCommit (Resolve-CiCommit $checkoutRoot HEAD)
+Assert-Equal $secondCommit (Resolve-CiCommit $sourceDir HEAD)
+Write-Host 'PASS complete pinned checkout reuse and move to a different reviewed commit'
+
+$dirtyPath = Join-Path $checkoutRoot 'versions/baseline.json'
+[IO.File]::WriteAllText($dirtyPath, 'retain this edit')
+Assert-Refused { Initialize-CiVcpkgCheckout @pin } 'contains local changes'
+Assert-Equal 'retain this edit' ([IO.File]::ReadAllText($dirtyPath))
+$wrongRepository = $pin.Clone()
+$wrongRepository.Repository = 'file:///wrong-pinned-origin'
+Assert-Refused { Initialize-CiVcpkgCheckout @wrongRepository } 'origin differs'
+$badPath = $pin.Clone()
+$badPath.Path = Join-Path $fixture 'external-checkout'
+Assert-Refused { Initialize-CiVcpkgCheckout @badPath } 'contained repository'
+Assert-Equal $false ([IO.Directory]::Exists($badPath.Path))
+$badPath.Path = Join-Path $product '.build/unowned'
+[void][IO.Directory]::CreateDirectory($badPath.Path)
+Assert-Refused { Initialize-CiVcpkgCheckout @badPath } 'not an owned clone'
+$badPath.Path = Join-Path $product '.build/linked-checkout'
+New-Item -ItemType $linkKind -Path $badPath.Path -Target $sourceDir | Out-Null
+Assert-Refused { Initialize-CiVcpkgCheckout @badPath } 'Reparse path refused'
+Write-Host 'PASS dirty, foreign, out-of-scope and reparse checkouts retain their files'
+
+$older = Join-Path $product '.build/partial'
+$null = Invoke-CiGit $product @('clone','--depth=1','--filter=blob:none','--',$repository,$older)
+Assert-Equal 'true' ((Invoke-CiGit $older @('rev-parse','--is-shallow-repository')).stdout.Trim())
+Assert-Equal 'blob:none' ((Invoke-CiGit $older @('config','--get','remote.origin.partialclonefilter')).stdout.Trim())
+$recovery = $pin.Clone()
+$recovery.Path = $older
+$recovery.Commit = $firstCommit
+Initialize-CiVcpkgCheckout @recovery
+Assert-Equal 'false' ((Invoke-CiGit $older @('rev-parse','--is-shallow-repository')).stdout.Trim())
+Assert-Equal 1 (Invoke-CiGit $older @('config','--get','remote.origin.partialclonefilter') -AllowFailure).exitCode
+Assert-Equal $firstCommit (Resolve-CiCommit $older HEAD)
+Assert-Equal '{"baseline":1}' ((Invoke-CiGit $older @('cat-file','blob','HEAD:versions/baseline.json')).stdout.Trim())
+Write-Host "PASS partial checkout completion restores pinned offline port metadata. Evidence at $fixture"
+
+$missing = $pin.Clone()
+$missing.Path = Join-Path $product '.build/missing-pin'
+$missing.Commit = 'a' * 40
+$stagedBefore = @(Get-ChildItem -LiteralPath (Join-Path $product '.build') -Directory -Filter 'vcpkg-clone-*').Count
+Assert-Refused { Initialize-CiVcpkgCheckout @missing } 'failed (128)'
+Assert-Equal $false ([IO.Directory]::Exists($missing.Path))
+$stagedAfter = @(Get-ChildItem -LiteralPath (Join-Path $product '.build') -Directory -Filter 'vcpkg-clone-*').Count
+Assert-Equal ($stagedBefore + 1) $stagedAfter
+Write-Host 'PASS unavailable pin retains the staged attempt and leaves the destination unpublished'

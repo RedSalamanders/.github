@@ -71,8 +71,11 @@ Product `vcpkg-install.ps1` entry points keep their platform defaults, supported
 and tool and registry locks. `Ci.VcpkgInstall.psm1` constructs the manifest install
 arguments with project-contained manifests and overlay, registry and output paths below
 `.build/`. Products supply their existing target triplet, registry and cache policy.
-The product's tested restore and bootstrap policy owns
-architectures, sanitizer triplets, output roots and old consumer interfaces. The engine
+The common checkout helper restores the declared full Git pin under `.build/`. It
+publishes a new checkout after verification, refuses local changes and foreign origins,
+and completes older shallow or partial clones under their existing checkout.
+The product's tested bootstrap and restore policy owns architectures, sanitizer
+triplets, output roots and old consumer interfaces. The engine
 already owns `Install-CiFormatter` in `Ci.Format.psm1` and its reviewed formatter pin.
 
 ## Changes workflow
