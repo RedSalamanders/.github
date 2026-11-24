@@ -42,7 +42,32 @@
               "timeoutSeconds":{"type":"integer","minimum":1,"maximum":600}
             }}
           },
-          "license": { "type": "string", "pattern": "^[A-Za-z0-9 .()-]*$" }
+          "license": { "type": "string", "pattern": "^[A-Za-z0-9 .()-]*$" },
+          "releaseNotes": { "type": "boolean" },
+          "localeMetadata": {
+            "type": "object", "additionalProperties": false, "properties": {
+              "PublisherUrl": { "type": "string", "minLength": 1 },
+              "PublisherSupportUrl": { "type": "string", "minLength": 1 },
+              "Author": { "type": "string", "minLength": 1 },
+              "LicenseUrl": { "type": "string", "minLength": 1 },
+              "Copyright": { "type": "string", "minLength": 1 },
+              "ShortDescription": { "type": "string", "minLength": 1 },
+              "Description": { "type": "string", "minLength": 1 },
+              "Moniker": { "type": "string", "minLength": 1 },
+              "Tags": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+              "InstallationNotes": { "type": "string", "minLength": 1 },
+              "Documentations": {
+                "type": "array",
+                "items": {
+                  "type": "object", "additionalProperties": false, "required": ["DocumentLabel", "DocumentUrl"],
+                  "properties": {
+                    "DocumentLabel": { "type": "string", "minLength": 1 },
+                    "DocumentUrl": { "type": "string", "minLength": 1 }
+                  }
+                }
+              }
+            }
+          }
         } }
       ]
     }
