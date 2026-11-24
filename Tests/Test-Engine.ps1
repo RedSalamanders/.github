@@ -1035,7 +1035,7 @@ Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unrev
     Test-CiProjectConfiguration $context
     $format = Join-Path $root '.clang-format'
     $canonical = [IO.File]::ReadAllText($format)
-    Remove-Item -LiteralPath $format
+    Remove-Item -LiteralPath $format -Force
     try { Test-CiProjectConfiguration $context; throw 'Conformance accepted a missing formatter policy.' }
     catch { Assert-True ($_.Exception.Message.Contains('Managed project file .clang-format differs')) }
     Write-FixtureFile $root '.clang-format' ($canonical + '# unexpected template drift')
@@ -2097,6 +2097,9 @@ Invoke-Case 'Trusted shadow admission creates only an exact main ref and dispatc
         foreach($template in Get-CiProjectWorkflowTemplates $project){
             Write-FixtureFile $root ('.github/workflows/'+$template.Name) ([IO.File]::ReadAllText($template.FullName).Replace('@ENGINE@',$controller).Replace('@OPERATIONS@','Prepare, Release, Winget'))
         }
+        foreach ($template in Get-CiManagedProjectFileTemplates $project) {
+            Write-FixtureFile $root $template.Path ([IO.File]::ReadAllText($template.FullName))
+        }
         Save-Fixture $root 'Trusted main callers'
         $base=Resolve-CiCommit $root HEAD
         $null=Invoke-CiGit $root @('checkout','-b','proposal')
@@ -2175,8 +2178,14 @@ Invoke-Case 'Trusted shadow admission creates only an exact main ref and dispatc
         try{
             $expected=if($scenario -ceq 'wrong-identity'){'0'*64}else{$candidate.identity}
             $result=$null;$failed=$false
-            try{$result=Start-CiCandidateShadow -Root $root -PullRequest 43 -ExpectedIdentity $expected -WhatIf:($scenario -ceq 'preview')}catch{$failed=$true}
-            Assert-Equal ($scenario -notin @('native','preview','prose')) $failed
+            $expectedFailure = $scenario -notin @('native','preview','prose')
+            try {
+                $result=Start-CiCandidateShadow -Root $root -PullRequest 43 -ExpectedIdentity $expected -WhatIf:($scenario -ceq 'preview')
+            } catch {
+                if (-not $expectedFailure) { throw }
+                $failed = $true
+            }
+            Assert-Equal $expectedFailure $failed
             $observed=& $admission {$script:dispatchControl}
             $writes=$scenario -in @('native','pre-dispatch-candidate','pre-dispatch-ref','dispatch-refusal','checks-pre-dispatch')
             Assert-Equal ([int]$writes) $observed.creates
