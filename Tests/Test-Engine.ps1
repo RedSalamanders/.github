@@ -1042,6 +1042,14 @@ Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unrev
     try { Test-CiProjectConfiguration $context; throw 'Conformance accepted a drifted formatter policy.' }
     catch { Assert-True ($_.Exception.Message.Contains('Managed project file .clang-format differs')) }
     Write-FixtureFile $root '.clang-format' $canonical
+    $dependabot = Join-Path $root '.github/dependabot.yml'
+    $dependabotTemplate = [IO.File]::ReadAllText($dependabot)
+    Write-FixtureFile $root '.github/dependabot.yml' ($dependabotTemplate + '# unexpected template drift')
+    try { Test-CiProjectConfiguration $context; throw 'Conformance accepted a drifted Dependabot policy.' }
+    catch { Assert-True ($_.Exception.Message.Contains('Managed project file .github/dependabot.yml differs')) }
+    Write-FixtureFile $root '.github/dependabot.yml' $dependabotTemplate
+    $redSalamander = @{ kind = 'application'; repository = 'RedSalamanders/RedSalamander' }
+    Assert-True ('.github/dependabot.yml' -cnotin @(Get-CiManagedProjectFileTemplates $redSalamander).Path)
     Write-FixtureFile $root '.github/workflows/sdk-inputs.yml' ([IO.File]::ReadAllText((Join-Path $engineRoot 'Templates/sdk-inputs.yml')).Replace('@ENGINE@',$project.engine.ref))
     Assert-Refused {Test-CiProjectConfiguration $context}
     Remove-Item -LiteralPath (Join-Path $root '.github/workflows/sdk-inputs.yml')

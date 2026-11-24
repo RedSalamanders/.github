@@ -202,9 +202,13 @@ function Get-CiManagedProjectFileTemplates {
     $engine = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
     $directory = 'Templates/ManagedProjectFiles'
     $committed = (Invoke-CiGit $engine @('ls-tree','-r','--name-only','-z','HEAD','--',$directory)).stdout.Split([char]0,[StringSplitOptions]::RemoveEmptyEntries)
-    foreach ($name in '.clang-format', '.editorconfig', '.gitattributes', '.gitignore') {
+    $paths = @('.clang-format', '.editorconfig', '.gitattributes', '.gitignore')
+    if ($Project.repository -cne 'RedSalamanders/RedSalamander') {
+        $paths += '.github/dependabot.yml'
+    }
+    foreach ($name in $paths) {
         $block = $name -cin @('.gitattributes','.gitignore')
-        $fileName = if ($block) { $name.Substring(1) + '.block' } else { $name }
+        $fileName = if ($block) { $name.Substring(1) + '.block' } else { [IO.Path]::GetFileName($name) }
         $source = "$directory/$fileName"
         if ($source -cnotin $committed) { throw "Missing committed managed project template: $source" }
         $path = Assert-CiContainedPath $engine (Join-Path $engine $source)
