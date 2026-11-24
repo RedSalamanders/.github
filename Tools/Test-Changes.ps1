@@ -132,13 +132,25 @@ function Invoke-ScopedBuild([string]$P, [string]$C, [string]$Reports, [string]$E
     # taken from the run's source map when given (the final input check covers any change since).
     $compiledBefore = Get-ScopedSourceIdentity -Root $Root -Manifest $manifest -CompiledOnly -From $Source
     $parameters = [ordered]@{ Platform = $P; Configuration = $C }
-    $options = ''
+    $buildOptions = [Collections.Generic.List[string]]::new()
     $number = $null
     if ($manifest.buildNumber -ceq 'mergeBaseCount') {
         $number = Get-ScopedBuildNumber -Root $Root -BaseRef $BaseRef
         $parameters['BuildNumber'] = $number
-        $options = "build-number=$number"
+        $buildOptions.Add("build-number=$number")
     }
+    $buildScript = Join-Path $Root 'build.ps1'
+    $tokens = $null
+    $parseErrors = $null
+    $buildDefinition = [System.Management.Automation.Language.Parser]::ParseFile($buildScript, [ref]$tokens, [ref]$parseErrors)
+    if ($parseErrors.Count) { throw "Cannot read build parameters from ${buildScript}: $($parseErrors[0].Message)" }
+    if ($buildDefinition.ParamBlock -and ($buildDefinition.ParamBlock.Parameters | Where-Object {
+        $_.Name.VariablePath.UserPath -eq 'EnableTests' -and $_.StaticType -eq [switch]
+    })) {
+        $parameters['EnableTests'] = $true
+        $buildOptions.Add('enable-tests=true')
+    }
+    $options = $buildOptions -join ','
     $attestation = Join-Path $Reports 'build.json'
     if ($SkipBuild) {
         $artifact = Get-ScopedArtifactState $P $C

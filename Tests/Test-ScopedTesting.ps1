@@ -587,6 +587,20 @@ Case 'the base, explicit scopes, SkipBuild and the parameter set refuse what the
     Assert-Run (Invoke-Runner $product @('-Platform', $hostPlatform, '-Force')) -ExitCode 1 -Output @("Build \($hostPlatform Debug\) failed with exit 3")
 }
 
+Case 'the scoped build enables a declared test-hook switch and reuses the resulting receipt (B12)' {
+    $product = New-Product 'test-hook-build'
+    $build = $stubs['build.ps1'].Replace('[int]$BuildNumber = 0)', '[int]$BuildNumber = 0, [switch]$EnableTests)')
+    $build = $build.Replace('$BuildNumber`n")', '$BuildNumber hooks=$EnableTests`n")')
+    Put $product.Root 'build.ps1' $build
+    $arguments = @('-Platform', $hostPlatform, '-Configuration', 'Release', '-Scopes', 'Core')
+    $result = Invoke-Runner $product $arguments
+    Assert-Run $result -Token 'SELECTED_PASSED'
+    Assert-Calls $result @("build $hostPlatform Release 1 hooks=True", "test $hostPlatform Release Core skipBuild=True skipTooling=True parallel=1")
+    $result = Invoke-Runner $product ($arguments + @('-SkipBuild', '-Force'))
+    Assert-Run $result -Token 'SELECTED_PASSED'
+    Assert-Calls $result @("test $hostPlatform Release Core skipBuild=True skipTooling=True parallel=1")
+}
+
 function New-ShimProduct([string]$Name) {
     # A product with this engine's shims and a .ci-engine checkout of this engine's files at its pin.
     $product = New-Product $Name
