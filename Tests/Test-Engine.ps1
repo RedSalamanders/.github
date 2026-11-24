@@ -1485,7 +1485,8 @@ Invoke-Case 'SDK workflow keeps reviewed tooling separate, read-only tokens and 
             '-SdkStoreRoot','-ProductionOnly','-SmokeRoot $env:RUNNER_TEMP',
             '    name: sdk (${{ matrix.platform }}, ${{ matrix.runner }})')){Assert-True ($Text.Contains($required))}
         Assert-True (-not($Text.Contains('contents: write') -or $Text.Contains('statuses: write') -or $Text.Contains('secrets: inherit')))
-        Assert-True ($Text.IndexOf('Assert-CiSdkProducerCheckouts') -lt $Text.IndexOf('uses: ./.build/sdk-producer/.github/actions/setup-msvc'))
+        Assert-True ($Text.IndexOf('Assert-CiSdkProducerCheckouts') -lt $Text.IndexOf('uses: ./.ci-engine/.github/actions/setup-msvc'))
+        Assert-True ($Text.Contains('project-root: .build/sdk-producer'))
         Assert-True (-not($Text.Contains('Invoke-Admission') -or $Text.Contains('ci-state') -or $Text.Contains('ProductionRelease')))
     }
     $text=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/sdk-inputs.yml'))
@@ -3044,7 +3045,7 @@ Invoke-Case 'Shared native architecture lanes bound all actual native roles with
         }
     }
     $shadow=[IO.File]::ReadAllText((Join-Path $engineRoot '.github/workflows/integration-execution.yml'))
-    Assert-True ($shadow.IndexOf('Assert-CiCandidateNativeStart') -lt $shadow.IndexOf('uses: ./.github/actions/setup-msvc'))
+    Assert-True ($shadow.IndexOf('Assert-CiCandidateNativeStart') -lt $shadow.IndexOf('uses: ./.ci-engine/.github/actions/setup-msvc'))
     Assert-True ($shadow.IndexOf('Assert-CiCandidateNativeStart') -lt $shadow.IndexOf('uses: actions/cache/restore@'))
     Assert-Equal 2 ([regex]::Matches($shadow,'(?m)^      checks: read\r?$').Count)
 }
