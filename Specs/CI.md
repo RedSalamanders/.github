@@ -22,6 +22,10 @@ remain separate requirements under the candidate contract.
 Product commands that the engine implements once, and the shim through which a product runs them from its pinned
 `.ci-engine`, are specified in [ProjectCommands.md](ProjectCommands.md).
 
+The engine template owns `.github/dependabot.yml` for native adapters. It schedules weekly GitHub Actions and
+vcpkg checks and leaves reusable engine pins to the reviewed project pin update. RedSalamander retains
+its terminal workflow exclusion and coordinated vcpkg review in its adapter until its operator adopts the template.
+
 Organization-owned implementation work is indexed in [Plans/WIP](Plans/WIP/README.md); completed work is indexed in [Plans/Done](Plans/Done/README.md). The canonical [plan lifecycle rule](../AGENTS.md#plan-lifecycle) governs implementation/validation closeout and migration of durable requirements into this contract or the other owning specifications. WIP proposals do not change active CI policy.
 
 ## Source and input identity

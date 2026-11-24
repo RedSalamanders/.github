@@ -111,6 +111,8 @@ Proposed homes and order, each step its own engine pull request and then one pro
 4. **Fixed-path files** (`.clang-format`, `.editorconfig`, the common `.gitattributes` and `.gitignore` blocks) are
    written by `Update-ProjectPin.ps1` from `Templates/Project/` and checked by `Test-CiProjectConfiguration`, once the
    formatting stream (CV-6-05) has made them equal by hand; until then a check would only fail.
+   The managed-file template also supplies `.github/dependabot.yml` to RedMonitor, RedXe, RedPrism, RedTilde and DxUi.
+   RedSalamander keeps its reviewed repository configuration pending its operator's adoption.
 
 ## T4 design: one planner, one runner, per-repository data (for the owner's review)
 
