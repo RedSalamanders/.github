@@ -202,11 +202,61 @@ function Get-CiManagedProjectFileTemplates {
     $engine = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
     $directory = 'Templates/ManagedProjectFiles'
     $committed = (Invoke-CiGit $engine @('ls-tree','-r','--name-only','-z','HEAD','--',$directory)).stdout.Split([char]0,[StringSplitOptions]::RemoveEmptyEntries)
-    foreach ($name in '.clang-format', '.editorconfig') {
-        $source = "$directory/$name"
+    foreach ($name in '.clang-format', '.editorconfig', '.gitattributes', '.gitignore') {
+        $block = $name -cin @('.gitattributes','.gitignore')
+        $fileName = if ($block) { $name.Substring(1) + '.block' } else { $name }
+        $source = "$directory/$fileName"
         if ($source -cnotin $committed) { throw "Missing committed managed project template: $source" }
         $path = Assert-CiContainedPath $engine (Join-Path $engine $source)
-        [pscustomobject]@{ Path = $name; FullName = $path }
+        [pscustomobject]@{ Path = $name; FullName = $path; Block = $block }
+    }
+}
+
+function Get-CiManagedProjectFileUpdate {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$Root,
+        [Parameter(Mandatory)][pscustomobject]$Template
+    )
+
+    $path = Assert-CiContainedPath $Root (Join-Path $Root $Template.Path)
+    if ([IO.Directory]::Exists($path)) { throw "Managed project file is a directory: $($Template.Path)" }
+    $lf = [string][char]10
+    $crlf = [string][char]13 + $lf
+    $expected = [IO.File]::ReadAllText($Template.FullName).Replace($crlf,$lf)
+    $encoding = [Text.UTF8Encoding]::new($false,$true)
+    if (-not [IO.File]::Exists($path)) {
+        return [pscustomobject]@{ Path = $path; Text = $expected; Encoding = $encoding; Changed = $true }
+    }
+
+    $reader = [IO.StreamReader]::new($path,$encoding,$true)
+    try {
+        $original = $reader.ReadToEnd()
+        $encoding = $reader.CurrentEncoding
+    } finally {
+        $reader.Dispose()
+    }
+
+    if (-not $Template.Block) {
+        return [pscustomobject]@{ Path = $path; Text = $expected; Encoding = $encoding; Changed = $original.Replace($crlf,$lf) -cne $expected }
+    }
+
+    $begin = [regex]::Matches($original, '(?m)^# Common block:[^\r\n]*')
+    $end = [regex]::Matches($original, '(?m)^# End of the common block\.(?=\r?$)')
+    if ($begin.Count -ne 1 -or $end.Count -ne 1 -or $begin[0].Index -ge $end[0].Index) {
+        throw "Managed project file $($Template.Path) requires one ordered common block."
+    }
+
+    $offset = $begin[0].Index
+    $limit = $end[0].Index + $end[0].Length
+    $previous = $original.Substring($offset,$limit-$offset)
+    $canonical = $expected.TrimEnd([char]10)
+    $replacement = if ($previous.Contains($crlf)) { $canonical.Replace($lf,$crlf) } else { $canonical }
+    return [pscustomobject]@{
+        Path = $path
+        Text = $original.Substring(0,$offset) + $replacement + $original.Substring($limit)
+        Encoding = $encoding
+        Changed = $previous.Replace($crlf,$lf) -cne $canonical
     }
 }
 
@@ -430,4 +480,4 @@ function Test-CiWorkflowQueues {
     return $true
 }
 
-Export-ModuleMember -Function Get-CiProcessCreationIdentity, Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Get-CiProjectShimMarker, Get-CiProjectShimTemplates, Get-CiManagedProjectFileTemplates, Test-CiGlob, Assert-CiContainedPath, Get-CiHarnessExclusions, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes
+Export-ModuleMember -Function Get-CiProcessCreationIdentity, Invoke-CiNativeCommand, Set-CiNativeProcessEnvironment, Protect-CiDiagnostic, Invoke-CiProcess, Invoke-CiGit, Get-CiSha256, Resolve-CiCommit, Read-CiProject, Get-CiProjectWorkflowTemplates, Get-CiProjectShimMarker, Get-CiProjectShimTemplates, Get-CiManagedProjectFileTemplates, Get-CiManagedProjectFileUpdate, Test-CiGlob, Assert-CiContainedPath, Get-CiHarnessExclusions, Get-CiPathDisposition, Get-CiChangedPaths, Get-CiChangeDecision, New-CiInputDescriptor, Get-CiQuietDecision, Get-CiAdmissionDecision, Test-CiRegressionReceipt, Test-CiWorkflowQueues, Test-CiWorkflowCacheModes

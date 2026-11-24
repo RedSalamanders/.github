@@ -1112,11 +1112,20 @@ Invoke-Case 'Pin updates refresh only adopted engine shims and never add one' {
     Write-FixtureFile $root 'Tools/Adopted-Command.ps1' ("# old shim text$([char]13)$lf$marker$([char]13)$lf")
     Write-FixtureFile $root 'Tools/Own-Command.ps1' "# the project's own implementation$lf"
     Write-FixtureFile $root '.clang-format' 'stale bytes'
+    $prefix = "# Local product prefix$([char]13)$lf"
+    $suffix = "$([char]13)$lf# Local product suffix$([char]13)$lf*.fixture binary$([char]13)$lf"
+    foreach ($template in Get-CiManagedProjectFileTemplates (Read-CiProject $root) | Where-Object Block) {
+        $canonical = [IO.File]::ReadAllText($template.FullName).TrimEnd([char]10)
+        $stale = ($canonical -replace '# Common block:[^\r\n]*','# Common block: old reviewed block').Replace($lf,([string][char]13+$lf))
+        Write-FixtureFile $root $template.Path ($prefix + $stale + $suffix)
+    }
     $result=Invoke-CiProcess (Get-Process -Id $PID).Path @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure
     Assert-Equal 0 $result.exitCode
     Assert-Equal $engineCommit (Read-CiProject $root).engine.ref
     foreach ($template in Get-CiManagedProjectFileTemplates (Read-CiProject $root)) {
-        Assert-Equal ([IO.File]::ReadAllText($template.FullName)) ([IO.File]::ReadAllText((Join-Path $root $template.Path)))
+        $canonical = [IO.File]::ReadAllText($template.FullName)
+        $expected = if ($template.Block) { $prefix + $canonical.TrimEnd([char]10).Replace($lf,([string][char]13+$lf)) + $suffix } else { $canonical }
+        Assert-Equal $expected ([IO.File]::ReadAllText((Join-Path $root $template.Path)))
     }
     Assert-Equal "# new shim text$lf$marker$lf" ([IO.File]::ReadAllText((Join-Path $root 'Tools/Adopted-Command.ps1')))
     Assert-Equal "# the project's own implementation$lf" ([IO.File]::ReadAllText((Join-Path $root 'Tools/Own-Command.ps1')))
