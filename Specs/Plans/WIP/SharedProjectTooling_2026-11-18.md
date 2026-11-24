@@ -1,7 +1,9 @@
 # I63 Shared project tooling: each shared script exists once
 
-Status: **ACTIVE.** T1 (shim pattern) and T2 stage 1 (changelog suite) merged in #87 (`0226b660`); T2 stage 2 (R1 to
-R4) is in the second pull request. No product has adopted a shim yet; everything else is plan only.
+Status: **ACTIVE.** Shared changelog, build-console, scoped-testing, guidance and toolchain implementations
+have published consumer pins. The shared hosted MSVC action and fixed-path templates are in the engine.
+Tracked consumers, stricter console checks and DxUi policy adoption remain open. The RedHome convergence plan
+owns each product's rollout and qualification status.
 Owner: organization CI and tooling owner.
 Prepared: 2026-11-18 at engine `a094b2ea66fc6fd7a8933488a71dacda262903a4`.
 Scope: `RedSalamanders/.github` and the product copies of shared tooling in `DxUi`, `RedSalamander`, `RedXe`,
@@ -28,13 +30,13 @@ Scope: `RedSalamanders/.github` and the product copies of shared tooling in `DxU
 
 | Step | RedHome | What | State |
 | --- | --- | --- | --- |
-| T1 | CV-5-01 | Shim pattern: `Ci.EngineBinding.psm1`, `Templates/Project/`, refusal cases | Merged in #87; RedMonitor pilot waits for its pin wave |
-| T2 | CV-5-02 | Changelog suite (F-01): stage 1 moves the variant of RedXe, RedPrism, RedTilde and RedMonitor; stage 2 reconciles RedSalamander and DxUi | Stage 1 merged in #87; stage 2 R1 to R4 in the second PR; R5 waits for the owner; product shims after each pin wave |
-| T3 | CV-5-03 | `BuildConsole.psm1`, `NativeBuildPolicy.targets` and the Release block, `Get-CiNativeScope.ps1`, `setup-msvc`; fixed-path files written by `Update-ProjectPin.ps1` and checked by conformance | Design below; item 3 taken as proposed on 2026-11-19. Items 1 and 2 touch the native path; item 4's shim half is done (#92), the rest waits for CV-6-05 |
-| T4 | CV-5-04 | `ScopedTesting.psm1`, `TestRunEvidence.psm1`, `Test-Changes.ps1` with one parameter set: one planner, per-repository suite and path data | Engine planner, runner, schema and shims implemented. Hosted fixture evidence precedes product migration |
-| T5 | CV-5-05 | One skill grammar and package-integrity policy | Design below (G1 to G13, defaults taken 2026-11-19); engine implementation merged in #95 |
-| T6 | CV-5-06 | DxUi consumer interface and RedMonitor client scripts (not engine-owned) | Not started |
-| T7 | CV-5-07 | `vcpkg-install.ps1`, `VcpkgTriplet.psm1`, `VisualStudio.psm1`, `Install-ClangFormat.ps1` | Shared discovery, overlays, manifest arguments, checkout and bootstrap implemented. Product adoption remains. |
+| T1 | CV-5-01 | Shim pattern: `Ci.EngineBinding.psm1`, `Templates/Project/`, refusal cases | Engine #87 published the shims. RedMonitor #71 verified its first adoption. |
+| T2 | CV-5-02 | Changelog suite (F-01): stage 1 moves the variant of RedXe, RedPrism, RedTilde and RedMonitor; stage 2 reconciles RedSalamander and DxUi | Engine #87 and #89 published the shared commands. Five products adopted their shims. RedSalamander's rollout follows its operator. |
+| T3 | CV-5-03 | Build console, producer native policy, shared hosted MSVC setup and fixed project file templates | #108 published hosted setup at `7d94328f`. RedTilde verified native Debug on x64 and ARM64. #109 and #110 published the formatting files and marked Git policy blocks. The remaining console and DxUi policy adoption follow their prerequisites. |
+| T4 | CV-5-04 | `ScopedTesting.psm1`, `TestRunEvidence.psm1`, `Test-Changes.ps1` with one parameter set: one planner, per-repository suite and path data | Engine #98 published the shared planner, runner, schema and shims. Five products adopted them. RedSalamander's runner remains open. |
+| T5 | CV-5-05 | One skill grammar and package-integrity policy | Engine #95 published the guidance validator. Five products and RedHome adopted it. RedSalamander retains its own adoption gate. |
+| T6 | CV-5-06 | DxUi consumer interface and RedMonitor client scripts (not engine-owned) | RedMonitor #93 published the producer commands. RedPrism, RedTilde and RedXe adopted them. New DxUi consumer interfaces follow the API 6 handoffs. |
+| T7 | CV-5-07 | `vcpkg-install.ps1`, `VcpkgTriplet.psm1`, `VisualStudio.psm1`, `Install-ClangFormat.ps1` | Engine #103–#107 published shared discovery, overlays, checkout and bootstrap. Five products adopted the shared commands. RedSalamander's remaining adoption follows its qualification operator. The older DxUi consumer bootstrap retains Windows PowerShell 5.1 compatibility. |
 
 ## T2 stage 2: reconciling the changelog variants
 

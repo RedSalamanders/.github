@@ -54,6 +54,8 @@ Native child commands always capture stdout/stderr, including on windowless Wind
 
 ## Hosted MSVC setup
 
+The [native build profiles](NativeBuildProfiles.md) define the common compiler, linker and runtime settings.
+
 Native qualification, production, candidate execution and SDK producer jobs use the shared
 `.github/actions/setup-msvc` composite from the checked-out immutable engine. The action reads the
 required default MSVC family in the checked-out product's `Directory.Build.props`. SDK producer jobs
