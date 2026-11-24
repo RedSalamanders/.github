@@ -43,7 +43,9 @@
     "sealed": {}
   },
   "RedTilde": {
-    "manual": [],
+    "manual": [
+      "benchmark.yml"
+    ],
     "metadata": {},
     "sealedDisabled": {},
     "sealed": {}
