@@ -27,7 +27,7 @@ vcpkg checks and leaves reusable engine pins to the reviewed project pin update.
 its terminal workflow exclusion and coordinated vcpkg review in its adapter until its operator adopts the template.
 
 `Policy/extensions.json` classifies product-owned workflows outside the generated callers. The registry permits
-DxUi, RedTilde and RedPrism to run a manual `benchmark.yml` for paired performance evidence. Each product spec owns
+DxUi, RedTilde, RedPrism and RedMonitor to run a manual `benchmark.yml` for paired performance evidence. Each product spec owns
 its benchmark protocol, evidence handling and review. These extensions run by explicit dispatch and do not participate
 in native PR checks or production admission.
 
