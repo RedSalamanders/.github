@@ -29,7 +29,9 @@
     "sealed": {}
   },
   "RedXe": {
-    "manual": [],
+    "manual": [
+      "benchmark.yml"
+    ],
     "metadata": {},
     "sealedDisabled": {},
     "sealed": {}
