@@ -206,6 +206,26 @@ Invoke-Case 'Strict schema rejects unknown policy keys and invalid path patterns
     Write-FixtureFile $root '.ci/project.json' ($project | ConvertTo-Json -Depth 8)
     Assert-Refused { Read-CiProject $root }
 }
+Invoke-Case 'Documentation manifest binds RedHome to the engine and stays outside native commands' {
+    $root = New-Fixture 'documentation-manifest'
+    $native = Read-CiProject $root
+    $schema = Join-Path $engineRoot 'Schemas/project.schema.json'
+    $manifest = [ordered]@{ schemaVersion = 1; repository = 'RedSalamanders/RedHome'; kind = 'documentation'; engine = $native.engine }
+    $json = $manifest | ConvertTo-Json -Depth 8
+    Assert-True (Test-Json -Json $json -SchemaFile $schema)
+    Write-FixtureFile $root '.ci/project.json' $json
+    $commit = Save-Fixture $root 'Documentation manifest'
+    Assert-Refused { Read-CiProject $root }
+    Assert-Refused { New-CiInputDescriptor $root -Ref $commit }
+
+    $manifest.repository = $native.repository
+    Assert-Refused { Test-Json -Json ($manifest | ConvertTo-Json -Depth 8) -SchemaFile $schema -ErrorAction Stop }
+    $manifest.repository = 'RedSalamanders/RedHome'
+    $manifest.winget = $null
+    Assert-Refused { Test-Json -Json ($manifest | ConvertTo-Json -Depth 8) -SchemaFile $schema -ErrorAction Stop }
+    $native.repository = 'RedSalamanders/RedHome'
+    Assert-Refused { Test-Json -Json ($native | ConvertTo-Json -Depth 8) -SchemaFile $schema -ErrorAction Stop }
+}
 Invoke-Case 'Snapshot uses the exact committed manifest rather than mutable working-tree policy' {
     $root = New-Fixture 'committed-manifest'
     $before = New-CiInputDescriptor $root

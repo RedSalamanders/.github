@@ -1,19 +1,28 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "RedSalamanders CI project adapter",
+  "title": "RedSalamanders CI project manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "policyVersion", "repository", "engine", "kind", "adapter", "include", "exclude", "formatRoots", "versionBase", "winget"],
+  "required": ["schemaVersion", "repository", "engine", "kind"],
+  "if": { "properties": { "kind": { "const": "documentation" } } },
+  "then": {
+    "properties": { "repository": { "const": "RedSalamanders/RedHome" } },
+    "propertyNames": { "enum": ["schemaVersion", "repository", "engine", "kind"] }
+  },
+  "else": {
+    "required": ["policyVersion", "adapter", "include", "exclude", "formatRoots", "versionBase", "winget"],
+    "properties": { "repository": { "pattern": "^RedSalamanders/(RedSalamander|DxUi|RedXe|RedPrism|RedTilde|RedMonitor)$" } }
+  },
   "properties": {
     "schemaVersion": { "const": 1 },
     "policyVersion": { "const": "1" },
-    "repository": { "type": "string", "pattern": "^RedSalamanders/(RedSalamander|DxUi|RedXe|RedPrism|RedTilde|RedMonitor)$" },
+    "repository": { "type": "string" },
     "engine": {
       "type": "object", "additionalProperties": false,
       "required": ["repository", "ref"],
       "properties": { "repository": { "const": "RedSalamanders/.github" }, "ref": { "type": "string", "pattern": "^[0-9a-f]{40}$" } }
     },
-    "kind": { "enum": ["application", "sdk"] },
+    "kind": { "enum": ["application", "sdk", "documentation"] },
     "adapter": { "const": "Tools/Invoke-ProjectCi.ps1" },
     "include": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
     "exclude": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
