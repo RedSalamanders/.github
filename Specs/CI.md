@@ -26,10 +26,10 @@ The engine template owns `.github/dependabot.yml` for native adapters. It schedu
 vcpkg checks and leaves reusable engine pins to the reviewed project pin update. RedSalamander retains
 its terminal workflow exclusion and coordinated vcpkg review in its adapter until its operator adopts the template.
 
-`Policy/extensions.json` classifies product-owned workflows outside the generated callers. DxUi and RedTilde own
-manual `benchmark.yml` workflows for paired performance evidence. Their product specs own the benchmark protocol,
-evidence handling and review. These extensions run by explicit dispatch and do not participate in native PR checks
-or production admission.
+`Policy/extensions.json` classifies product-owned workflows outside the generated callers. The registry permits
+DxUi, RedTilde and RedPrism to run a manual `benchmark.yml` for paired performance evidence. Each product spec owns
+its benchmark protocol, evidence handling and review. These extensions run by explicit dispatch and do not participate
+in native PR checks or production admission.
 
 The shared WinGet generator reads optional `winget.localeMetadata` from the project manifest. It retains the
 application's names, product descriptions, links, tags and installation notes in the default locale file.
