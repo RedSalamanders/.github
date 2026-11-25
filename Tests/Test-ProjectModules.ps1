@@ -155,6 +155,47 @@ Case 'build console diagnostics, results and links behave the same through the s
     [void](Refuses { Write-NativeBuildResult -Project Fixture -Platform x64 -Configuration Release -LogPath $clean -Artifacts @((Join-Path $scratch 'absent.exe')) } 'missing')
 }
 
+Case 'a build console shim can require the complete successful MSBuild summary' {
+    $product = New-ModuleProduct 'console-summary'
+    [void](Import-Shim (Join-Path $product.Root 'Build/BuildConsole.psm1'))
+    $log = Join-Path $runRoot 'console-summary.log'
+    $summary = @('Build succeeded.', '    0 Warning(s)', '    0 Error(s)', '', 'Time Elapsed 00:00:00.52')
+    [IO.File]::WriteAllLines($log, $summary)
+    Assert-NativeBuildDiagnostics -LogPath $log -RequireBuildSummary
+    $facts = Get-NativeBuildDiagnostics -LogPath $log -IncludeBuildSummary
+    Require ($facts.BuildSucceeded -and $facts.WarningSummary -eq 0 -and $facts.ErrorSummary -eq 0) 'The successful summary fields are missing.'
+    $defaultFacts = Get-NativeBuildDiagnostics -LogPath $log
+    Require ($null -eq $defaultFacts.PSObject.Properties['BuildSucceeded']) 'The existing diagnostics shape changed.'
+
+    $invalid = @(
+        ($summary[0..2] -join "`n"),
+        (($summary + 'Compile interrupted') -join "`n"),
+        (($summary + 'Build FAILED.') -join "`n"),
+        (($summary -join "`n").Replace('0 Warning(s)', '1 Warning(s)')),
+        (($summary -join "`n").Replace('0 Error(s)', '1 Error(s)'))
+    )
+    foreach ($text in $invalid) {
+        [IO.File]::WriteAllText($log, $text)
+        Assert-NativeBuildDiagnostics -LogPath $log
+        [void](Refuses { Assert-NativeBuildDiagnostics -LogPath $log -RequireBuildSummary } 'completed successful MSBuild log')
+    }
+    [void](Refuses {
+        Write-NativeBuildResult -Project Fixture -Platform x64 -Configuration Release -LogPath $log -RequireBuildSummary
+    } 'completed successful MSBuild log')
+
+    [string[]]$warnings = @(for ($index = 0; $index -lt 25; ++$index) {
+        "8>C:\work\source.cpp(4): warning C4365: " + ('diagnostic ' * 500)
+    })
+    [IO.File]::WriteAllLines($log, $warnings + $summary)
+    $facts = Get-NativeBuildDiagnostics -LogPath $log -IncludeBuildSummary
+    Require ($facts.WarningCount -eq 25 -and $facts.DiagnosticDetails.Count -eq 16) 'Diagnostic accounting or the evidence budget changed.'
+    Require ($facts.DiagnosticDetails[0].Length -eq 2048) 'A retained diagnostic line exceeds its budget.'
+    [void](Refuses { Assert-NativeBuildDiagnostics -LogPath $log -RequireBuildSummary } '25 warning')
+
+    [IO.File]::WriteAllLines($log, @('2>ExceptionCode = C0000006') + $summary)
+    [void](Refuses { Assert-NativeBuildDiagnostics -LogPath $log -RequireBuildSummary } 'tool process exception')
+}
+
 Case 'a module shim refuses a missing, other-commit or changed engine and a nested copy without its manifest' {
     $product = New-ModuleProduct 'console-refusals'
     $shim = Join-Path $product.Root 'Build/BuildConsole.psm1'

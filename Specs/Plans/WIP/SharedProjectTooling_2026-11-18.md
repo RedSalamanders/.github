@@ -96,8 +96,11 @@ Proposed homes and order, each step its own engine pull request and then one pro
    *Stage 1, implemented 2026-11-19:* the module binding, `Ci.BuildConsole.psm1` as RedTilde's variant (the four-repository
    variant plus the tool-exception refusal, which needs no logger change) and the shim
    `Templates/Project/Build/BuildConsole.psm1`, tested by `Tests/Test-ProjectModules.ps1`. RedMonitor, RedXe, RedPrism,
-   RedTilde and RedSalamander adopt the shim after their pin wave; DxUi keeps its stricter copy until stage 2 adds the
-   summary rule, after RedXe and RedSalamander log MSBuild summaries.
+   RedTilde and RedSalamander adopt the shim after their pin wave.
+
+   *Stage 2:* the engine exposes the completed-summary behavior through the same module. Products explicitly select it
+   when their own loggers produce the complete summary. DxUi can adopt the shim without waiting for another product's
+   logger. RedXe already requests the file-logger summary and RedSalamander's logger remains with its operator.
 2. **`setup-msvc`** moves to the engine as `.github/actions/setup-msvc`, DxUi's `Setup.ps1` plus RedPrism's
    `MSBUILD_EXE_PATH` export and RedXe's upload-on-failure rule; the required MSVC family stays product data. The
    engine workflows then use `./.ci-engine/.github/actions/setup-msvc`, and products delete their copies. Only native
