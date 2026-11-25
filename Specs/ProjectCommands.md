@@ -159,7 +159,7 @@ origins the [tooling plan](Plans/WIP/SharedProjectTooling_2026-11-18.md) (T5) re
   mappings are refused. `name` equals its folder, has at most 64 characters and is lowercase hyphen-separated words;
   `description` has at most 1024 code points, no `<` or `>`, and does not start with `[TODO:`. The instructions are not
   empty and hold no `[TODO: ...]` line outside fenced code.
-- G2 Reading: every file read is strict UTF-8 without NUL bytes or a UTF-16/32 byte order mark, and `SKILL.md` also has
+- G2 Reading: the root `AGENTS.md` fits within 24,000 bytes. Every file read is strict UTF-8 without NUL bytes or a UTF-16/32 byte order mark, and `SKILL.md` also has
   no UTF-8 byte order mark. A file that cannot be read is one problem that names it; everything else is still checked.
   A scanned Markdown file is not empty.
 - G3 Fences: an unclosed fence in a scanned Markdown file or plan index is reported with its line. It hides only its own

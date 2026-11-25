@@ -10,6 +10,7 @@ $ErrorActionPreference = 'Stop'
 
 $script:FrontMatterKeys = @('name', 'description', 'license', 'allowed-tools', 'metadata')
 $script:Pointers = @('CLAUDE.md', '.github/copilot-instructions.md')
+$script:RootGuidanceMaximumBytes = 24000
 $script:CommonParameterNames = $null
 
 #region Reading and Markdown structure (G2, G3)
@@ -21,12 +22,15 @@ function Get-GuidanceFailureDetail([Management.Automation.ErrorRecord] $ErrorRec
     return $ErrorRecord.Exception.Message
 }
 
-function Read-GuidanceText([string] $Path, [switch] $RejectByteOrderMark) {
+function Read-GuidanceText([string] $Path, [switch] $RejectByteOrderMark, [int] $MaximumBytes) {
     # G2: strict UTF-8 text of one file. A failure throws a message that reads after "<file>: ". UTF-16/32 text and NUL
     # bytes are always refused, because .NET would otherwise decode a UTF-16 file without a word. A UTF-8 byte order mark
     # is dropped unless RejectByteOrderMark is set: SKILL.md front matter must start at byte 0.
     try { $bytes = [IO.File]::ReadAllBytes($Path) }
     catch [Management.Automation.RuntimeException] { throw "cannot be read: $(Get-GuidanceFailureDetail $_)" }
+    if ($MaximumBytes -gt 0 -and $bytes.Length -gt $MaximumBytes) {
+        throw "exceeds the $MaximumBytes-byte root guidance limit ($($bytes.Length) bytes)"
+    }
     $head = [BitConverter]::ToString($bytes, 0, [Math]::Min(4, $bytes.Length))
     if ($head -match '^(?:FF-FE|FE-FF|00-00-FE-FF)') { throw 'expected UTF-8 but found a UTF-16 or UTF-32 byte order mark; save the file as UTF-8' }
     $start = 0
@@ -459,7 +463,10 @@ function Read-GuidanceFile([pscustomobject] $Context, [string] $Path) {
     $Path = [IO.Path]::GetFullPath($Path)
     if ($Context.Texts.ContainsKey($Path)) { return $Context.Texts[$Path] }
     $text = $null
-    try { $text = Read-GuidanceText $Path -RejectByteOrderMark:([IO.Path]::GetFileName($Path) -ceq 'SKILL.md') }
+    $maximum = if ($Path -ceq (Join-Path $Context.Root 'AGENTS.md')) { $script:RootGuidanceMaximumBytes } else { 0 }
+    try {
+        $text = Read-GuidanceText $Path -MaximumBytes $maximum -RejectByteOrderMark:([IO.Path]::GetFileName($Path) -ceq 'SKILL.md')
+    }
     catch [Management.Automation.RuntimeException] { Add-GuidanceProblem $Context (ConvertTo-GuidanceLabel $Context $Path) $_.Exception.Message 'G2' }
     $Context.Texts[$Path] = $text
     return $text
