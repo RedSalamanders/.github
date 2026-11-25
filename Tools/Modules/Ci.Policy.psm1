@@ -138,6 +138,7 @@ function Read-CiProject {
     $schema = Join-Path $PSScriptRoot '../../Schemas/project.schema.json'
     if (-not (Test-Json -Json $text -SchemaFile $schema -ErrorAction Stop)) { throw 'Invalid project manifest.' }
     $project = $text | ConvertFrom-Json -AsHashtable
+    if ($project.kind -ceq 'documentation') { throw 'Native project commands require an application or SDK manifest.' }
     if (($project.kind -eq 'sdk') -ne ($null -eq $project.winget)) { throw 'SDKs have no winget application; applications require a declared winget identity.' }
     $patterns = @($project.include) + @($project.exclude) + @($project.formatRoots)
     if ($project.Contains('formatExclude')) { $patterns += @($project.formatExclude) }

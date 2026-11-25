@@ -40,7 +40,12 @@ Organization-owned implementation work is indexed in [Plans/WIP](Plans/WIP/READM
 
 ## Source and input identity
 
-Every project uses the same strict manifest schema. Explicit runtime/build/test input exceptions precede reviewed prose/folder exclusions. Unknown paths are meaningful. Complete Git comparisons include both rename paths and deleted inputs. Full native input identity hashes the ordered meaningful Git tree entries, manifest and engine pin. It is cumulative; a later documentation commit cannot consume an earlier code obligation.
+Every project uses the same strict manifest schema. RedHome's `documentation` manifest declares its identity,
+schema version and engine pin. The `application` and `sdk` manifests also declare native policy and adapter
+inputs. Native classification, qualifier, publication and pin-regeneration commands require a native manifest.
+RedHome runs the shared guidance validator in documentation mode.
+
+Explicit runtime/build/test input exceptions precede reviewed prose/folder exclusions. Unknown paths are meaningful. Complete Git comparisons include both rename paths and deleted inputs. Full native input identity hashes the ordered meaningful Git tree entries, manifest and engine pin. It is cumulative; a later documentation commit cannot consume an earlier code obligation.
 
 Current adapter conformance refuses extension-wide Markdown exclusions (`**/*.md`, `*.md` and equivalent
 unowned wildcard forms). Exclusions must identify owned prose locations or known guides; new implementation,
