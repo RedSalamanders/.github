@@ -52,7 +52,9 @@
     "sealed": {}
   },
   "RedMonitor": {
-    "manual": [],
+    "manual": [
+      "benchmark.yml"
+    ],
     "metadata": {},
     "sealedDisabled": {},
     "sealed": {}
