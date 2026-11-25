@@ -36,6 +36,7 @@
   },
   "RedPrism": {
     "manual": [
+      "benchmark.yml",
       "native-arm64-feasibility.yml"
     ],
     "metadata": {},
