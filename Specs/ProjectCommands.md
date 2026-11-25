@@ -49,6 +49,12 @@ copies of shared tooling (RedHome `Specs/Plans/WIP/Convergence_2026-11-17.md`, P
 | `Build/ScopedTesting.psm1` (module shim) | `Tools/Modules/Ci.ScopedTesting.psm1` | same |
 | `Build/TestRunEvidence.psm1` (module shim) | `Tools/Modules/Ci.TestRunEvidence.psm1` | same (Windows) |
 
+The build-console module rejects warning and error diagnostics, including structured native tool failures.
+Build callers with an explicit MSBuild summary use `-RequireBuildSummary` for assertion and result output.
+That mode requires the successful footer, both zero counts and the elapsed time at the end of the log.
+`Get-NativeBuildDiagnostics -IncludeBuildSummary` exposes those observations and at most 16 bounded diagnostic lines.
+Existing callers keep their diagnostic result fields and zero-warning behavior while they adopt the explicit logger summary.
+
 ## Managed formatting files
 
 The engine publishes the common `.clang-format` and `.editorconfig` in
