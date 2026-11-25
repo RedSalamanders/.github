@@ -420,6 +420,17 @@ Case 'G3 an unclosed fence in a scoped AGENTS.md and a plan index is reported' {
 
 #endregion
 #region G2: reading
+Case 'G2 root guidance fits exactly 24000 UTF-8 bytes and refuses one byte more' {
+    $r = New-Product
+    $text = [IO.File]::ReadAllText((Join-Path $r 'AGENTS.md')) + "`n`n"
+    $remaining = 24000 - $utf8.GetByteCount($text)
+    $text += ('é' * [int][Math]::Floor($remaining / 2)) + ('a' * ($remaining % 2))
+    Put $r 'AGENTS.md' $text
+    Valid $r
+    Put $r 'AGENTS.md' ($text + 'b')
+    [void](Problem $r 'AGENTS.md: exceeds the 24000-byte root guidance limit (24001 bytes) (G2)')
+}
+
 
 $little = [Text.UnicodeEncoding]::new($false, $true)
 $plainSkill = $prefix + $contract
