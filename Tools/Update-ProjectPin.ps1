@@ -6,7 +6,8 @@ One RedSalamanders project checkout.
 .PARAMETER EngineRef
 Exact clean engine commit currently checked out beside this command.
 .OUTPUTS
-Updated .ci/project.json, canonical CI callers, .clang-format and .editorconfig, and the marked blocks in .gitattributes and .gitignore.
+Updated .ci/project.json, canonical CI callers, .clang-format and .editorconfig,
+common blocks in .gitattributes and .gitignore, and the adopted native build policy block in AGENTS.md.
 Removes an SDK's unchanged legacy publication caller.
 Replaces the original **/*.md exclusion with owned prose patterns and adds each agent harness path the exclusions
 lack (Get-CiHarnessExclusions); explicit runtime includes still take precedence.

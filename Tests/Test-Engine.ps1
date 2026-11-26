@@ -1084,6 +1084,19 @@ Invoke-Case 'Workflow conformance refuses a native PR route, pin drift and unrev
     }
     $context=@{root=$root;engineRoot=$engineRoot;project=$project;development=$false}
     Test-CiProjectConfiguration $context
+    $guidance = Join-Path $root 'AGENTS.md'
+    $canonicalGuidance = [IO.File]::ReadAllText($guidance)
+    Remove-Item -LiteralPath $guidance
+    Test-CiProjectConfiguration $context
+    Write-FixtureFile $root 'AGENTS.md' '# Product-owned guidance'
+    Test-CiProjectConfiguration $context
+    Write-FixtureFile $root 'AGENTS.md' (($canonicalGuidance -split '\r?\n')[0])
+    try { Test-CiProjectConfiguration $context; throw 'Conformance accepted incomplete guidance markers.' }
+    catch { Assert-True ($_.Exception.Message.Contains('AGENTS.md requires one ordered common block')) }
+    Write-FixtureFile $root 'AGENTS.md' ($canonicalGuidance.Replace('six-profile baseline','legacy baseline'))
+    try { Test-CiProjectConfiguration $context; throw 'Conformance accepted drift in the adopted guidance.' }
+    catch { Assert-True ($_.Exception.Message.Contains('Managed project file AGENTS.md differs')) }
+    Write-FixtureFile $root 'AGENTS.md' $canonicalGuidance
     $format = Join-Path $root '.clang-format'
     $canonical = [IO.File]::ReadAllText($format)
     Remove-Item -LiteralPath $format -Force
@@ -1175,7 +1188,12 @@ Invoke-Case 'Pin updates refresh only adopted engine shims and never add one' {
     $suffix = "$([char]13)$lf# Local product suffix$([char]13)$lf*.fixture binary$([char]13)$lf"
     foreach ($template in Get-CiManagedProjectFileTemplates (Read-CiProject $root) | Where-Object Block) {
         $canonical = [IO.File]::ReadAllText($template.FullName).TrimEnd([char]10)
-        $stale = ($canonical -replace '# Common block:[^\r\n]*','# Common block: old reviewed block').Replace($lf,([string][char]13+$lf))
+        $stale = if ($template.Path -ceq 'AGENTS.md') {
+            $canonical.Replace('six-profile baseline','legacy baseline')
+        } else {
+            $canonical -replace '# Common block:[^\r\n]*','# Common block: old reviewed block'
+        }
+        $stale = $stale.Replace($lf,([string][char]13+$lf))
         Write-FixtureFile $root $template.Path ($prefix + $stale + $suffix)
     }
     $result=Invoke-CiProcess (Get-Process -Id $PID).Path @('-NoProfile','-NonInteractive','-File',(Join-Path $fixtureEngine 'Tools/Update-ProjectPin.ps1'),'-Root',$root,'-EngineRef',$engineCommit) $root -TimeoutSeconds 120 -AllowFailure

@@ -67,6 +67,14 @@ The same pin operation owns the marked common blocks in `.gitattributes` and `.g
 A pin updates only the marked lines and retains the surrounding product-specific rules and checkout line endings.
 Compiler-free conformance verifies the marked content. Git does not renormalize tracked inputs during a pin update.
 
+### Shared build guidance
+
+Adopt the [shared native build policy block](../Templates/ManagedProjectFiles/agent-guidance.block)
+in the root `AGENTS.md`. It links the reviewed profile revision. Keep product-specific build
+commands and qualification requirements after the closing marker. Pin updates and compiler-free
+conformance use the same block. An existing checkout without either marker keeps its own guidance
+until adoption. An adopted block requires one ordered marker pair.
+
 ## Shared native toolchain helpers
 
 A product selects the MSBuild installation according to its build contract. The shared
