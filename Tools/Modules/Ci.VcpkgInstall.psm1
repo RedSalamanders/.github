@@ -22,8 +22,12 @@ function Get-CiVcpkgManifestInstallArguments {
     Platform-specific package staging directory below .build.
     .PARAMETER DownloadsRoot
     Managed downloads directory below .build.
+    .PARAMETER UseDefaultStorage
+    Keep the selected vcpkg tool's buildtrees, packages and downloads locations.
     .PARAMETER OverlayTriplets
     Generated triplet directory below .build.
+    .PARAMETER OverlayPorts
+    Optional project-owned port overlay directory.
     .PARAMETER RegistryRoot
     Optional independently pinned vcpkg registry directory below .build.
     .PARAMETER DisableBinaryCache
@@ -31,19 +35,29 @@ function Get-CiVcpkgManifestInstallArguments {
     .OUTPUTS
     Arguments in invocation order. Each path is passed as one argument.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ExplicitStorage')]
     param(
         [Parameter(Mandatory)][string] $ProjectRoot,
-        [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$')][string] $Triplet,
+        [Parameter(Mandatory)][string] $Triplet,
         [Parameter(Mandatory)][string] $InstallRoot,
-        [Parameter(Mandatory)][string] $BuildTreesRoot,
-        [Parameter(Mandatory)][string] $PackagesRoot,
-        [Parameter(Mandatory)][string] $DownloadsRoot,
+        [Parameter(Mandatory, ParameterSetName = 'ExplicitStorage')][string] $BuildTreesRoot,
+        [Parameter(Mandatory, ParameterSetName = 'ExplicitStorage')][string] $PackagesRoot,
+        [Parameter(Mandatory, ParameterSetName = 'ExplicitStorage')][string] $DownloadsRoot,
         [Parameter(Mandatory)][string] $OverlayTriplets,
         [string] $ManifestRoot,
         [string] $RegistryRoot,
-        [switch] $DisableBinaryCache
+        [switch] $DisableBinaryCache,
+        [Parameter(Mandatory, ParameterSetName = 'DefaultStorage')][switch] $UseDefaultStorage,
+        [string] $OverlayPorts
     )
+
+    if ($PSCmdlet.ParameterSetName -eq 'DefaultStorage') {
+        if ([string]::IsNullOrWhiteSpace($Triplet) -or $Triplet -in @('.', '..') -or $Triplet -match '[<>:"/\\|?*\x00-\x1F]') {
+            throw "Triplet must be a single file name: $Triplet"
+        }
+    } elseif ($Triplet -notmatch '^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$') {
+        throw "Invalid triplet name: $Triplet"
+    }
 
     $root = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($ProjectRoot)
     $buildRoot = Join-Path $root '.build'
@@ -63,13 +77,13 @@ function Get-CiVcpkgManifestInstallArguments {
     $arguments.Add("--triplet=$Triplet")
     $arguments.Add("--x-manifest-root=$manifestDirectory")
 
-    $outputPaths = [ordered]@{
-        '--x-install-root' = $InstallRoot
-        '--x-buildtrees-root' = $BuildTreesRoot
-        '--x-packages-root' = $PackagesRoot
-        '--downloads-root' = $DownloadsRoot
-        '--overlay-triplets' = $OverlayTriplets
+    $outputPaths = [ordered]@{ '--x-install-root' = $InstallRoot }
+    if ($PSCmdlet.ParameterSetName -eq 'ExplicitStorage') {
+        $outputPaths.Add('--x-buildtrees-root', $BuildTreesRoot)
+        $outputPaths.Add('--x-packages-root', $PackagesRoot)
+        $outputPaths.Add('--downloads-root', $DownloadsRoot)
     }
+    $outputPaths.Add('--overlay-triplets', $OverlayTriplets)
     foreach ($name in $outputPaths.Keys) {
         $path = Assert-CiContainedPath -Root $buildRoot -Path ($PSCmdlet.GetUnresolvedProviderPathFromPSPath($outputPaths[$name]))
         $path = Assert-CiContainedPath -Root $root -Path $path
@@ -77,6 +91,11 @@ function Get-CiVcpkgManifestInstallArguments {
             throw "Generated vcpkg overlay directory is missing: $path"
         }
         $arguments.Add("$name=$path")
+    }
+    if ($OverlayPorts) {
+        $portOverlay = Assert-CiContainedPath -Root $root -Path ($PSCmdlet.GetUnresolvedProviderPathFromPSPath($OverlayPorts))
+        if (-not [IO.Directory]::Exists($portOverlay)) { throw "vcpkg port overlay directory is missing: $portOverlay" }
+        $arguments.Add("--overlay-ports=$portOverlay")
     }
     if ($DisableBinaryCache) { $arguments.Add('--binarysource=clear') }
     return $arguments.ToArray()
