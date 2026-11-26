@@ -413,12 +413,20 @@ Invoke-Case 'Revision options cannot turn classification into a Git write or ext
     Assert-Refused { Get-CiChangeDecision $root '--output=outside.txt' }
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $root 'outside.txt')))
 }
-Invoke-Case 'Static project command selection refuses compiler-dependent entry points' {
+Invoke-Case 'Static project validation invokes reviewed aggregates and refuses native commands' {
     Import-Module (Join-Path $engineRoot 'Tools/Modules/Ci.Project.psm1')
     $root = New-Fixture 'compiler-free'
-    Write-FixtureFile $root 'build.ps1' "throw 'A build must never start in static checks.'"
-    $context = @{ root = $root; phase = 'Static'; project = @{ repository = 'RedSalamanders/RedMonitor' } }
-    Assert-Refused { Invoke-CiProjectScript $context 'build.ps1' }
+    Write-FixtureFile $root 'validate.ps1' 'Write-Output "recording compiler-free aggregate"; exit 0'
+    Write-FixtureFile $root 'build.ps1' 'exit 0'
+    $context = @{ root = $root; phase = 'Static'; project = @{ repository = 'RedSalamanders/RedPrism' } }
+    Assert-Refused { Invoke-CiProjectScript $context 'validate.ps1' -TimeoutSeconds 30 }
+    foreach ($repository in @('RedSalamanders/RedMonitor', 'RedSalamanders/RedSalamander')) {
+        $context.project.repository = $repository
+        Invoke-CiProjectScript $context 'validate.ps1' -TimeoutSeconds 30
+        Assert-Refused { Invoke-CiProjectScript $context 'build.ps1' -TimeoutSeconds 30 }
+    }
+    Write-FixtureFile $root 'validate.ps1' 'exit 23'
+    Assert-Refused { Invoke-CiProjectScript $context 'validate.ps1' -TimeoutSeconds 30 }
 }
 Invoke-Case 'Manual qualification selects only the requested architectures before native setup' {
     $root = New-Fixture 'qualification-platforms'
