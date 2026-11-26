@@ -3,14 +3,18 @@
 .PARAMETER ProjectRoot Checked-out product that owns RequiredMsvcToolsVersion in Directory.Build.props.
 .PARAMETER Platform Native target architecture.
 .PARAMETER VerifyOnly Local read-only verification. Downloads, installation and GitHub outputs are disabled.
-.PARAMETER InstallerTimeoutSeconds Wait budget before terminating the owned installer, chiefly for local fixture execution.
+.PARAMETER InstallerTimeoutSeconds Wait budget before terminating the owned installer.
+.PARAMETER InstallerRunner Optional product-owned process runner for the verified hosted bootstrapper.
+Receives FilePath, unquoted Arguments, WorkingDirectory, LogPath, ErrorLogPath and TimeoutMilliseconds.
+Owns process-tree containment and returns one integer exit code. Omit to use the shared launcher.
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string] $ProjectRoot,
     [ValidateSet('x64','ARM64')][string] $Platform = 'x64',
     [switch] $VerifyOnly,
-    [ValidateRange(1,3600)][int] $InstallerTimeoutSeconds = 1800
+    [ValidateRange(1,3600)][int] $InstallerTimeoutSeconds = 1800,
+    [scriptblock] $InstallerRunner
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -76,7 +80,8 @@ if(-not $selected){
     $signature=Get-AuthenticodeSignature -LiteralPath $installer
     if($signature.Status-ne 'Valid'-or $signature.SignerCertificate.Subject-notmatch 'O=Microsoft Corporation(?:,|$)'){throw 'The Visual Studio bootstrapper does not have a valid Microsoft signature.'}
     $installRoot=Join-Path $env:RUNNER_TEMP ('VS-Msvc-'+$required)
-    $arguments=@('--quiet','--wait','--norestart','--nocache','--installPath',('"'+$installRoot+'"'),
+    $installPathArgument = if ($InstallerRunner) { $installRoot } else { '"' + $installRoot + '"' }
+    $arguments=@('--quiet','--wait','--norestart','--nocache','--installPath',$installPathArgument,
         '--add','Microsoft.VisualStudio.Workload.VCTools','--includeRecommended',
         '--add','Microsoft.VisualStudio.Component.VC.Tools.ARM64',
         '--add','Microsoft.VisualStudio.Component.VC.Preview.Tools.x86.x64',
@@ -94,17 +99,26 @@ if(-not $selected){
     $installerTimedOut=$false
     $terminationProblem=$null
     $installerExit=$null
-    $process=Start-Process -FilePath $installer -ArgumentList $arguments -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-    try {
-        if(-not $process.WaitForExit($installerTimeoutMilliseconds)){
-            $installerTimedOut=$true
-            try { $process.Kill($true) }
-            catch [InvalidOperationException] { if(-not $process.HasExited){$terminationProblem=$_.Exception.Message} }
-            catch [System.Exception] { $terminationProblem=$_.Exception.Message }
-            if(-not $process.WaitForExit(15000)){$terminationProblem='Owned installer did not exit within 15 seconds after termination.'}
-        }
-        if($process.HasExited){$installerExit=$process.ExitCode}
-    } finally { $process.Dispose() }
+    $installerFailure=$null
+    if ($InstallerRunner) {
+        try {
+            $installerExit = & $InstallerRunner -FilePath $installer -Arguments $arguments -WorkingDirectory $scratch `
+                -LogPath $stdout -ErrorLogPath $stderr -TimeoutMilliseconds $installerTimeoutMilliseconds
+            if ($installerExit -isnot [int]) { throw 'The product installer runner must return one integer exit code.' }
+        } catch { $installerFailure = $_ }
+    } else {
+        $process=Start-Process -FilePath $installer -ArgumentList $arguments -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+        try {
+            if(-not $process.WaitForExit($installerTimeoutMilliseconds)){
+                $installerTimedOut=$true
+                try { $process.Kill($true) }
+                catch [InvalidOperationException] { if(-not $process.HasExited){$terminationProblem=$_.Exception.Message} }
+                catch [System.Exception] { $terminationProblem=$_.Exception.Message }
+                if(-not $process.WaitForExit(15000)){$terminationProblem='Owned installer did not exit within 15 seconds after termination.'}
+            }
+            if($process.HasExited){$installerExit=$process.ExitCode}
+        } finally { $process.Dispose() }
+    }
     if($null-ne $installerExit){Write-Host "Visual Studio bootstrapper exit code: $installerExit"}
     foreach($log in @($stdout,$stderr)){
         if(Test-Path -LiteralPath $log){Get-Content -LiteralPath $log -Tail 40 | Write-Host}
@@ -119,6 +133,7 @@ if(-not $selected){
                 catch {Write-Warning "Cannot archive installer log '$($_.TargetObject)': $($_.Exception.Message)"}
             }
     }
+    if ($installerFailure) { throw $installerFailure }
     if($installerTimedOut){throw "VS provisioning timed out after $InstallerTimeoutSeconds seconds. Owned installer termination: $(if($terminationProblem){$terminationProblem}else{'confirmed'}). Bootstrapper output remains at '$scratch'; detailed installer logs are listed above."}
     if($installerExit-notin @(0,3010)){throw "VS provisioning failed: $installerExit. Bootstrapper output remains at '$scratch'; detailed installer logs are listed above."}
     $selected=Get-SelectedTools
