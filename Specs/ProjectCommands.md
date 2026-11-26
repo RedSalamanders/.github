@@ -214,7 +214,7 @@ merge base with the base, of HEAD when that base does not resolve); `scopes[]` (
 `test.ps1`, or not, then its `commands`, each a product `.ps1` with literal `arguments`; `reuse`; optional
 `configurations`; `build` and `iteration` cannot name a native scope); `rules[]` (`pattern`, a glob where `**` is any
 folders and `*` and `?` stay within one name, case-insensitive; `scopes`, `*` for every scope; `reason`; optional
-`exclusive`, one exact path, or `additive`); `prose` and `unscoped` globs; `projectBindings` (native projects whose
+`exclusive` for one exact path, `additive`, or `fallback`); `prose` and `unscoped` globs; `projectBindings` (native projects whose
 compiled items and transitive local includes become exact-path rules, with per-pattern `overrides`, `includeRoots`
 and `exclude`); `nativeInventory` (required with a native scope: its file, `exclude` and `testFolders`);
 `runtimeFiles`; `interactiveObligations`; `watchedProcesses`; `prePushProfiles` (`buildOnly` for a profile the
@@ -224,8 +224,10 @@ becomes one of these keys.
 
 Each changed path is classified once, in this order: a matching `exclusive` rule gives only its scopes; a `prose`
 path gives every non-native scope plus those of matching rules whose pattern names Markdown (`*.md`); otherwise the
-matching rules give theirs, and a path that only `additive` rules match counts as unmatched; an unmatched `unscoped`
-path gives none; anything else gives every scope. A scope whose `configurations` exclude the profile is dropped, and
+matching ordinary rules give their scopes along with any matching `additive` rules. An unmatched `unscoped` path
+gives no scopes. The first matching `fallback` in manifest order supplies the scopes and reason for any other
+unmatched path. With no match, the implicit fallback selects every scope. A fallback rule cannot be additive or
+exclusive. A scope whose `configurations` exclude the profile is dropped, and
 named explicitly it is refused. Identities follow the same classification: an unscoped path is in none, and prose
 that gives no native scope is not a native input.
 

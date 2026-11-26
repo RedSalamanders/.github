@@ -306,6 +306,38 @@ Case 'plans and reasons for prose, native, unscoped, unmapped and exclusive chan
     Require (-not @($disagreements).Count) "The identity classifier disagrees with planning: $(@($disagreements) -join '; ')"
 }
 
+Case 'explicit scopes and source identities preserve ordered fallback rules' {
+    $product = New-Product 'ordered-fallback' {
+        param($Data)
+        $Data.rules += @(
+            [ordered]@{ pattern = 'Tests/Legacy/**'; scopes = @('Core'); reason = 'legacy native coverage'; fallback = $true },
+            [ordered]@{ pattern = 'Tests/**'; scopes = @('Sanitizer'); reason = 'remaining test sources'; fallback = $true },
+            [ordered]@{ pattern = 'README.md'; scopes = @('Core'); reason = 'unused prose fallback'; fallback = $true },
+            [ordered]@{ pattern = '**'; scopes = @('*'); reason = 'unknown input coverage'; fallback = $true }
+        )
+    }
+    $fallbackManifest = Read-ScopedTestManifest -Root $product.Root
+    $plan = Get-Plan $fallbackManifest @('Tests/Core/Core.Tests.Main.cpp') 'ASan Debug'
+    Require (($plan.scopes -join ',') -ceq 'Core,Sanitizer,Format' -and @($plan.reasons | Where-Object kind -eq 'fallback').Count -eq 0) 'Specific and additive rules keep their selection.'
+
+    $plan = Get-Plan $fallbackManifest @('Tests/Legacy/other.cpp') 'ASan Debug'
+    Require (($plan.scopes -join ',') -ceq 'Core' -and $plan.reasons.Count -eq 1 -and $plan.reasons[0].reason -ceq 'legacy native coverage') 'The first fallback supplies only its scopes and reason.'
+
+    $plan = Get-Plan $fallbackManifest @('Tests/New/changed.cpp') 'ASan Debug'
+    Require (($plan.scopes -join ',') -ceq 'Sanitizer' -and $plan.reasons[0].kind -ceq 'fallback') 'A new test path takes the matching test fallback.'
+
+    $plan = Get-Plan $fallbackManifest @('new.cpp') 'ASan Debug'
+    Require ($plan.full -and $plan.reasons[0].reason -ceq 'unknown input coverage') 'Unknown inputs take the declared full fallback.'
+
+    $plan = Get-Plan $fallbackManifest @('README.md', 'Measurements/run.json') 'ASan Debug'
+    Require ($plan.prose -and ($plan.scopes -join ',') -ceq 'Tooling,Format') 'A fallback never overrides prose or an unscoped path.'
+
+    Put $product.Root 'Tests/Legacy/other.cpp' '// A newly added test input.'
+    $inputs = Get-ScopedSourceMap -Root $product.Root -Manifest $fallbackManifest -CompiledOnly
+    Require ($inputs.Contains('Tests/Legacy/other.cpp') -and $inputs.Contains('docs/runtime/help.md')) 'The source identity retains fallback and native prose inputs.'
+    Require (-not $inputs.Contains('README.md') -and -not $inputs.Contains('Measurements/run.json')) 'Fallbacks preserve prose and unscoped exclusions from compiled identity.'
+}
+
 Case 'RedMonitor''s three outcomes (none, prose, native) are data rules (O3)' {
     $root = Join-Path $runRoot 'three-kinds'
     New-Repository $root
@@ -358,6 +390,13 @@ Case 'invalid data, inventories and reserved names are refused' {
     [void](Refuses { Read-ScopedTestManifest -Root $root } 'not valid scoped testing data')
     $data = New-FixtureData; $data.rules[6].pattern = 'Tools/*.psm1'; & $write $data
     [void](Refuses { Read-ScopedTestManifest -Root $root } 'must name one exact path')
+    foreach ($flag in 'exclusive', 'additive') {
+        $data = New-FixtureData
+        $data.rules[0]['fallback'] = $true
+        $data.rules[0][$flag] = $true
+        & $write $data
+        [void](Refuses { Read-ScopedTestManifest -Root $root } 'not valid scoped testing data')
+    }
     $data = New-FixtureData; $data.rules[0].scopes = @('Missing'); & $write $data
     [void](Refuses { Read-ScopedTestManifest -Root $root } "unknown scope 'Missing'")
     $data = New-FixtureData; $data.Remove('nativeInventory'); & $write $data

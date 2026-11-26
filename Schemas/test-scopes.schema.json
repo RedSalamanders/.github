@@ -152,9 +152,16 @@
         },
         "reason": { "type": "string", "minLength": 1 },
         "exclusive": { "description": "One exact path whose match replaces every other rule and the prose rule.", "type": "boolean" },
-        "additive": { "description": "Adds its scopes to a path that another rule maps, but never maps a path by itself.", "type": "boolean" }
+        "additive": { "description": "Adds its scopes to an explicit mapping for the path.", "type": "boolean" },
+        "fallback": { "description": "The first matching fallback supplies scopes for an otherwise unmapped path outside prose and unscoped paths.", "type": "boolean" }
       },
-      "not": { "properties": { "exclusive": { "const": true }, "additive": { "const": true } }, "required": ["exclusive", "additive"] }
+      "allOf": [
+        { "not": { "properties": { "exclusive": { "const": true }, "additive": { "const": true } }, "required": ["exclusive", "additive"] } },
+        {
+          "if": { "properties": { "fallback": { "const": true } }, "required": ["fallback"] },
+          "then": { "properties": { "exclusive": { "const": false }, "additive": { "const": false } } }
+        }
+      ]
     }
   }
 }
