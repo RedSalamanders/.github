@@ -230,8 +230,8 @@ $actual = @(Get-CiVcpkgManifestInstallArguments @defaultStorage)
 Assert-Equal ($expected -join [char]0) ($actual -join [char]0)
 $portOverlay = Join-Path $product 'Build/fixture ports'
 [void][IO.Directory]::CreateDirectory($portOverlay)
-$defaultStorage.Triplet = 'arm64-windows'
-$expected[1] = '--triplet=arm64-windows'
+$defaultStorage.Triplet = 'arm64-fixture_custom'
+$expected[1] = '--triplet=arm64-fixture_custom'
 $actual = @(Get-CiVcpkgManifestInstallArguments @defaultStorage -OverlayPorts $portOverlay)
 Assert-Equal (($expected + "--overlay-ports=$portOverlay") -join [char]0) ($actual -join [char]0)
 Assert-Equal $false ([IO.Directory]::Exists($arguments.InstallRoot))
@@ -240,7 +240,12 @@ Assert-Refused { Get-CiVcpkgManifestInstallArguments @defaultStorage -OverlayPor
 $linkedPortOverlay = Join-Path $product 'Build/linked ports'
 New-Item -ItemType $linkKind -Path $linkedPortOverlay -Target $portOverlay | Out-Null
 Assert-Refused { Get-CiVcpkgManifestInstallArguments @defaultStorage -OverlayPorts $linkedPortOverlay } 'Reparse path refused'
-Write-Host 'PASS vcpkg default storage and target port overlays preserve the install arguments and path policy'
+$defaultStorage.Triplet = '../arm64-fixture'
+Assert-Refused { Get-CiVcpkgManifestInstallArguments @defaultStorage } 'single file name'
+$invalidName = $arguments.Clone()
+$invalidName.Triplet = 'arm64-fixture_custom'
+Assert-Refused { Get-CiVcpkgManifestInstallArguments @invalidName } 'Invalid triplet name'
+Write-Host 'PASS vcpkg default storage and target port overlays preserve custom triplets, storage and path policy'
 
 $invalid = $arguments.Clone()
 $invalid.InstallRoot = Join-Path $fixture 'foreign'

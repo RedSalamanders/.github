@@ -90,8 +90,8 @@ and tool and registry locks. `Ci.VcpkgInstall.psm1` constructs manifest install 
 It validates manifests and optional port overlays inside the checkout, as well as generated
 triplets, managed registries and output paths below `.build/`. Products supply their
 existing target triplet, registry and cache policy. A product that already relies on vcpkg
-for buildtrees, packages and downloads locations selects `-UseDefaultStorage`. The install
-root and generated triplet overlay still require explicit managed paths.
+for buildtrees, packages and downloads locations selects `-UseDefaultStorage`. It accepts custom triplet
+file names. The install root and generated triplet overlay require explicit managed paths.
 The common checkout helper restores the declared full Git pin under `.build/`. It
 stages new checkouts at a short path under the build root, publishes after verification,
 refuses local changes and foreign origins,

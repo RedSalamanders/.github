@@ -38,7 +38,7 @@ function Get-CiVcpkgManifestInstallArguments {
     [CmdletBinding(DefaultParameterSetName = 'ExplicitStorage')]
     param(
         [Parameter(Mandatory)][string] $ProjectRoot,
-        [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$')][string] $Triplet,
+        [Parameter(Mandatory)][string] $Triplet,
         [Parameter(Mandatory)][string] $InstallRoot,
         [Parameter(Mandatory, ParameterSetName = 'ExplicitStorage')][string] $BuildTreesRoot,
         [Parameter(Mandatory, ParameterSetName = 'ExplicitStorage')][string] $PackagesRoot,
@@ -50,6 +50,14 @@ function Get-CiVcpkgManifestInstallArguments {
         [Parameter(Mandatory, ParameterSetName = 'DefaultStorage')][switch] $UseDefaultStorage,
         [string] $OverlayPorts
     )
+
+    if ($PSCmdlet.ParameterSetName -eq 'DefaultStorage') {
+        if ([string]::IsNullOrWhiteSpace($Triplet) -or $Triplet -in @('.', '..') -or $Triplet -match '[<>:"/\\|?*\x00-\x1F]') {
+            throw "Triplet must be a single file name: $Triplet"
+        }
+    } elseif ($Triplet -notmatch '^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$') {
+        throw "Invalid triplet name: $Triplet"
+    }
 
     $root = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($ProjectRoot)
     $buildRoot = Join-Path $root '.build'
