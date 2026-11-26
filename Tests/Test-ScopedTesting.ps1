@@ -97,7 +97,16 @@ if ([IO.File]::Exists((Join-Path $PSScriptRoot '.fixture-control/build-fail'))) 
     'test.ps1' = @'
 param([string]$Platform = 'x64', [string]$Configuration = 'Debug', [string[]]$Suites = @(), [switch]$SkipBuild, [switch]$SkipTooling, [int]$ParallelSuites = 1, [int]$BuildNumber = 0)
 $ErrorActionPreference = 'Stop'
-[string[]]$artifact = [IO.File]::ReadAllLines((Join-Path $PSScriptRoot ".build/$Platform/$Configuration/app.exe"))
+$control = Join-Path $PSScriptRoot '.fixture-control'
+$productOwnsProfile = [IO.File]::Exists((Join-Path $control 'product-owns-profile'))
+$artifactPath = Join-Path $PSScriptRoot ".build/$Platform/$Configuration/app.exe"
+if ($productOwnsProfile -and -not $SkipBuild) {
+    [void][IO.Directory]::CreateDirectory((Split-Path -Parent $artifactPath))
+    [IO.File]::WriteAllText($artifactPath, "Original canonical artifact.`n$BuildNumber")
+    [IO.File]::AppendAllText($env:FIXTURE_CALL_LOG, "canonical build $Platform $Configuration $BuildNumber`n")
+}
+if ($productOwnsProfile -and -not [IO.File]::Exists($artifactPath)) { exit 4 }
+[string[]]$artifact = [IO.File]::ReadAllLines($artifactPath)
 if ([int]$artifact[-1] -ne $BuildNumber) { throw "The test runner expected build stamp $($artifact[-1]), received $BuildNumber." }
 [IO.File]::AppendAllText($env:FIXTURE_CALL_LOG, "test $Platform $Configuration $($Suites -join ',') skipBuild=$SkipBuild skipTooling=$SkipTooling parallel=$ParallelSuites`n")
 if ($env:FIXTURE_SCOPED_MODULE) {
@@ -106,7 +115,12 @@ if ($env:FIXTURE_SCOPED_MODULE) {
     Exit-ScopedProfileLease $lease
     [IO.File]::AppendAllText($env:FIXTURE_CALL_LOG, "lease re-entered nested=$($lease.Nested)`n")
 }
-$control = Join-Path $PSScriptRoot '.fixture-control'
+if ($productOwnsProfile) {
+    [IO.File]::WriteAllText($artifactPath, "Re-attested canonical artifact.`n$BuildNumber")
+    if ([IO.File]::Exists((Join-Path $control 'mutate-native-input'))) {
+        [IO.File]::AppendAllText((Join-Path $PSScriptRoot 'src/app.cpp'), "// changed during native execution`n")
+    }
+}
 $skipped = if ([IO.File]::Exists((Join-Path $control 'skips'))) { @([IO.File]::ReadAllLines((Join-Path $control 'skips'))) } else { @() }
 $reports = Join-Path $PSScriptRoot '.build/reports'
 [void][IO.Directory]::CreateDirectory($reports)
@@ -569,6 +583,58 @@ Case 'PrePush refuses an uncommitted changelog, checks it against the base and r
     # The build number is the merge base's commit count, so the branch's own commits never relink it.
     Assert-Calls $result @("build $hostPlatform Debug 1", 'validate', 'format check=True', "test $hostPlatform Debug Core skipBuild=True skipTooling=True parallel=1",
         "build $hostPlatform Release 1", "test $hostPlatform Release Core skipBuild=True skipTooling=True parallel=1", "build $otherPlatform Debug 1")
+}
+
+Case 'the product owns native Full and PrePush builds, re-attestation and failure exits (B6, B12)' {
+    $product = New-Product 'canonical-profile' {
+        param($data)
+        $data.nativeProfileOwner = 'product'
+        foreach ($scope in $data.scopes) { $scope.reuse = $false }
+        $data.prePushProfiles = @(
+            [ordered]@{ platform = $hostPlatform; configuration = 'Debug'; buildOnly = 'cross' },
+            [ordered]@{ platform = $otherPlatform; configuration = 'Debug'; buildOnly = 'cross' },
+            [ordered]@{ platform = $hostPlatform; configuration = 'Release'; buildOnly = $true })
+    }
+    Set-Control $product 'product-owns-profile'
+    $full = @('-Mode', 'Full', '-Platform', $hostPlatform)
+    $result = Invoke-Runner $product $full
+    Assert-Run $result -Token 'FULL_PASSED' -Output @('PASSED Core \(native suite\)', 'INTERACTIVE_NOT_RUN: Menu')
+    $canonicalCall = "test $hostPlatform Debug Core skipBuild=False skipTooling=True parallel=1"
+    Assert-Calls $result @('validate', 'format check=True', "canonical build $hostPlatform Debug 1", $canonicalCall)
+    Require (([IO.File]::ReadAllLines((Join-Path $product.Root ".build/$hostPlatform/Debug/app.exe")))[0] -ceq 'Re-attested canonical artifact.') 'The canonical artifact writer did not replace the earlier bytes.'
+    $receiptRoot = Join-Path $product.Root ".build/reports/scoped-tests/$hostPlatform-Debug"
+    Require (-not @(Get-ChildItem -LiteralPath $receiptRoot -File -Filter '*.json' -ErrorAction SilentlyContinue).Count) 'The shared runner published receipts for a product-owned native profile.'
+
+    Set-Control $product 'no-report'
+    $result = Invoke-Runner $product ($full + '-SkipBuild')
+    Assert-Run $result -ExitCode 1 -Output @('wrote no current suite report') -Absent @('FULL_PASSED')
+    Assert-Calls $result @('validate', 'format check=True', "test $hostPlatform Debug Core skipBuild=True skipTooling=True parallel=1")
+    $archived = @(Get-ChildItem -LiteralPath (Join-Path $receiptRoot 'prior-suite-reports') -Recurse -File -Filter "Core-$hostPlatform-Debug.json")
+    Require ($archived.Count -eq 1) 'The runner did not preserve the previous report before requiring a fresh one.'
+    Clear-Control $product 'no-report'
+
+    $result = Invoke-Runner $product ($full + @('-Configuration', 'ASan Debug', '-SkipBuild'))
+    Assert-Run $result -ExitCode 4 -Output @('failed with exit 4') -Absent @('FULL_PASSED')
+    Require ($result.ExitCode -eq 4) 'The canonical blocked exit was lost in the handoff.'
+
+    $matrix = @('-Mode', 'PrePush')
+    $result = Invoke-Runner $product ($matrix + '-Explain')
+    Assert-Run $result -Output @("Test plan: PrePush \($hostPlatform Debug\)", "Build only: build.ps1 -Platform $otherPlatform -Configuration Debug",
+        "Build only: build.ps1 -Platform $hostPlatform -Configuration Release") -Absent @('NOT_EVALUATED')
+    Assert-Calls $result @()
+    $result = Invoke-Runner $product $matrix
+    Assert-Run $result -Token 'FULL_PASSED'
+    Assert-Calls $result @('validate', 'format check=True', "canonical build $hostPlatform Debug 1", $canonicalCall,
+        "build $otherPlatform Debug 1", "build $hostPlatform Release 1")
+
+    Set-Control $product 'mutate-native-input'
+    $result = Invoke-Runner $product $full
+    Assert-Run $result -ExitCode 1 -Output @('Source, index or environment changed') -Absent @('FULL_PASSED', 'PASSED Core \(native suite\)')
+}
+
+Case 'product profile ownership requires fresh evidence for every scope' {
+    $product = New-Product 'canonical-no-reuse' { param($data) $data.nativeProfileOwner = 'product' }
+    [void](Refuses { Read-ScopedTestManifest -Root $product.Root } 'reuse')
 }
 
 Case 'the profile lease refuses a concurrent run and lets Explain plan (B8)' {

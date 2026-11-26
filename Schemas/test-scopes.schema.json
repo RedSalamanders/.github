@@ -12,6 +12,10 @@
       "description": "none: build.ps1 receives no build number. mergeBaseCount: -BuildNumber is the commit count of HEAD's merge base with the comparison base (of HEAD when that base does not resolve).",
       "enum": ["none", "mergeBaseCount"]
     },
+    "nativeProfileOwner": {
+      "description": "Product ownership sends the selected native scopes to test.ps1 for the complete build, runtime and re-attestation lifecycle. Scoped reuse is forbidden.",
+      "enum": ["engine", "product"]
+    },
     "nativeInventory": {
       "description": "Declared native test sources. Required when any scope is native.",
       "type": "object",
@@ -95,7 +99,10 @@
         "properties": {
           "platform": { "$ref": "#/$defs/platform" },
           "configuration": { "$ref": "#/$defs/configuration" },
-          "buildOnly": { "description": "Builds the profile and runs no runtime test, for a platform the local host does not run.", "type": "boolean" }
+          "buildOnly": {
+            "description": "True always builds without runtime. The cross value runs tests on a matching host and builds only on other hosts.",
+            "oneOf": [{ "type": "boolean" }, { "const": "cross" }]
+          }
         }
       }
     },

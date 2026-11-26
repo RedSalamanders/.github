@@ -177,6 +177,10 @@ function Read-ScopedTestManifest {
         throw "Tests/test-scopes.json is not valid scoped testing data (version 2, the engine's Schemas/test-scopes.schema.json; Specs/ProjectCommands.md, Scoped testing): $details"
     }
     $manifest = ConvertFrom-Json -InputObject $text
+    Add-ScopedDefault $manifest 'nativeProfileOwner' 'engine'
+    if ($manifest.nativeProfileOwner -ceq 'product' -and @($manifest.scopes | Where-Object reuse).Count) {
+        throw 'Product-owned native profiles require reuse=false for every scope.'
+    }
     $canonical = [Collections.Generic.Dictionary[string, string]]::new([StringComparer]::OrdinalIgnoreCase)
     foreach ($scope in @($manifest.scopes)) {
         if (-not $canonical.TryAdd($scope.name, $scope.name)) { throw "Tests/test-scopes.json declares the scope '$($scope.name)' twice." }

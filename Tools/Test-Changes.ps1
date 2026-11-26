@@ -26,7 +26,8 @@ Prints the plan, its reasons and the interactive obligations, then stops: no cha
 .PARAMETER Force
 Runs every selected scope even when identical successful evidence exists, and ignores the iteration baseline.
 .PARAMETER SkipBuild
-Uses only build outputs whose attestation (.build/reports/scoped-tests/<profile>/build.json) still matches.
+Uses only matching build outputs. For a product-owned runtime profile the product's
+canonical test.ps1 verifies its own receipt.
 .PARAMETER ParallelSuites
 Suites test.ps1 may run at once (1 to 8). Bound into native identity; passed to test.ps1 only when above 1.
 .OUTPUTS
@@ -67,6 +68,10 @@ Import-Module (Join-Path $PSScriptRoot 'Modules/Ci.Policy.psm1')
 Import-Module (Join-Path $PSScriptRoot 'Modules/Ci.ScopedTesting.psm1') -Force
 # The data's own keys first; the rules derived from bound projects are read after the changelog gate (B3).
 $manifest = Read-ScopedTestManifest -Root $Root -SkipProjectRules
+$productOwnsProfile = $manifest.nativeProfileOwner -ceq 'product'
+if ($productOwnsProfile -and $ParallelSuites -ne 1) {
+    throw 'Product-owned native profiles run their selected suites in canonical order.'
+}
 # O2: names or comma-separated strings.
 $Scopes = @($Scopes | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 if ($Scopes.Count -and $Mode -ne 'Affected') { throw '-Scopes selects the scopes of an Affected run; Full and PrePush run every scope.' }
@@ -82,14 +87,25 @@ $pwsh = Join-Path $PSHOME $(if ($IsWindows) { 'pwsh.exe' } else { 'pwsh' })
 $bridge = Join-Path $PSScriptRoot 'Invoke-ScopedScript.ps1'
 $results = [Collections.Generic.List[string]]::new()
 
-function Invoke-ScopedProductScript([string]$Name, [Collections.Specialized.OrderedDictionary]$Parameters, [string]$Label) {
+function Invoke-ScopedProductScript {
+    param([string]$Name, [Collections.Specialized.OrderedDictionary]$Parameters, [string]$Label,
+        [switch]$PreserveExitCode)
+
     # A child process, so the product script never shares this runner's modules; the bridge passes arrays as arrays.
     $script = Join-Path $Root $Name
     if (-not [IO.File]::Exists($script)) { throw "$Label needs the product's $Name ($script)." }
     $json = ConvertTo-Json -InputObject $Parameters -Compress -Depth 4
     $global:LASTEXITCODE = 0
     & $pwsh -NoProfile -NonInteractive -File $bridge -Script $script -WorkingDirectory $Root -ParametersJson $json | Out-Host
-    if ($LASTEXITCODE -ne 0) { throw "$Label failed with exit $LASTEXITCODE." }
+    if ($LASTEXITCODE -ne 0) {
+        $code = $LASTEXITCODE
+        $message = "$Label failed with exit $code."
+        if ($PreserveExitCode) {
+            Write-Error $message -ErrorAction Continue
+            exit $code
+        }
+        throw $message
+    }
 }
 
 function Invoke-ScopedCommands([object]$Scope) {
@@ -169,11 +185,16 @@ function Invoke-ScopedBuild([string]$P, [string]$C, [string]$Reports, [string]$E
 function Invoke-ScopedProfile([object]$Target) {
     $P = [string]$Target.platform
     $C = [string]$Target.configuration
+    $buildOnly = if ($Target.buildOnly -is [string]) {
+        $P -ine [Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
+    } else {
+        [bool]$Target.buildOnly
+    }
     $reports = Get-ScopedReportRoot -Root $Root -Platform $P -Configuration $C
     $iterationPath = Join-Path $reports 'iteration.json'
-    if ($Mode -eq 'PrePush') { Write-Host "== PrePush profile $P $C$(if ($Target.buildOnly) { ' (build only)' })" }
-    if ($Target.buildOnly -and $Explain) {
-        Write-Host "Build only: build.ps1 -Platform $P -Configuration $C; runtime tests of $P need a matching host."
+    if ($Mode -eq 'PrePush') { Write-Host "== PrePush profile $P $C$(if ($buildOnly) { ' (build only)' })" }
+    if ($buildOnly -and $Explain) {
+        Write-Host "Build only: build.ps1 -Platform $P -Configuration $C"
         $results.Add('explained')
         return
     }
@@ -181,10 +202,10 @@ function Invoke-ScopedProfile([object]$Target) {
     $lease = if (-not $Explain) { Enter-ScopedProfileLease -Root $Root -Platform $P -Configuration $C } else { $null }
     try {
         $environmentBase = Get-ScopedEnvironmentIdentity -Root $Root -Manifest $manifest
-        if ($Target.buildOnly) {
+        if ($buildOnly) {
             # B10: a cross build stays a build.
             [void](Invoke-ScopedBuild $P $C $reports $environmentBase)
-            Write-Host "BUILT $P $C (build only; runtime tests of $P need a matching host)"
+            Write-Host "BUILT $P $C (build only)"
             $results.Add('built')
             return
         }
@@ -193,14 +214,18 @@ function Invoke-ScopedProfile([object]$Target) {
         $toolingEnvironment = Get-ScopedDigest ((Get-ScopedEnvironmentIdentity -Root $Root -Manifest $manifest -Tooling) + "`n" + $toolIdentity)
         $instrumentation = @(Get-ScopedInstrumentation -Manifest $manifest)
         $options = "parallel-suites=$ParallelSuites"
-        $source = Get-ScopedSourceMap -Root $Root -Manifest $manifest
-        $index = Get-ScopedIndexMap -Root $Root
-        $artifact = Get-ScopedArtifactState $P $C
+        # Product-owned runs have no iteration baseline. Explain needs only the plan and reported obligations.
+        if (-not ($Explain -and $productOwnsProfile)) {
+            $source = Get-ScopedSourceMap -Root $Root -Manifest $manifest
+            $index = Get-ScopedIndexMap -Root $Root
+        }
+        $artifact = if (-not $productOwnsProfile) { Get-ScopedArtifactState $P $C }
         $changed = @()
         $branchChanged = @()
         $forceFull = $false
         $basis = if ($Scopes.Count) { 'explicit scopes' } elseif ($Mode -ne 'Affected') { "$Mode selects every scope" } else { '' }
-        $ordinary = $Mode -eq 'Affected' -and -not $Scopes.Count -and -not $explicitBase -and -not $env:CI -and -not $env:GITHUB_ACTIONS
+        $ordinary = $Mode -eq 'Affected' -and -not $productOwnsProfile -and -not $Scopes.Count -and
+            -not $explicitBase -and -not $env:CI -and -not $env:GITHUB_ACTIONS
         if ($Mode -eq 'Affected' -and -not $Scopes.Count) {
             # B2: an unresolvable base refuses with its remedy, also when a baseline exists.
             $branchChanged = @(Get-ScopedChangedPaths -Root $Root -BaseRef $BaseRef)
@@ -208,7 +233,8 @@ function Invoke-ScopedProfile([object]$Target) {
             $basis = "merge base with $BaseRef"
             # B4: the iteration baseline is local, recent and exact; never in CI, with an explicit base, -Force or instrumentation.
             $off = @($(if ($explicitBase) { 'explicit -BaseRef' }), $(if ($env:CI -or $env:GITHUB_ACTIONS) { 'CI' }), $(if ($Force) { '-Force' }),
-                $(if ($instrumentation.Count) { 'instrumentation' }) | Where-Object { $_ })
+                $(if ($instrumentation.Count) { 'instrumentation' }), $(if ($productOwnsProfile) { 'product-owned profile' }) |
+                Where-Object { $_ })
             if ($off.Count) { $basis += " (iteration baseline off: $($off -join ', '))" }
             else {
                 $iteration = Read-ScopedIteration -Path $iterationPath -Root $Root -Platform $P -Configuration $C -Environment $environment -Options $options
@@ -234,18 +260,24 @@ function Invoke-ScopedProfile([object]$Target) {
         Remove-ScopedIteration -Path $iterationPath -Root $Root
         $selected = @($manifest.scopes | Where-Object { $_.name -cin $plan.scopes })
         $native = @($selected | Where-Object { $_.native })
-        $buildOptions = ''
-        $compiled = ''
+        $nativeKey = ''
+        $buildNumber = $null
         if ($native.Count) {
             Assert-ScopedRuntimePlatform -Platform $P
-            $build = Invoke-ScopedBuild $P $C $reports $environmentBase $source
-            $buildOptions = $build.Options
-            $compiled = $build.Compiled
-            $artifact = Get-ScopedArtifactIdentity -Root $Root -Platform $P -Configuration $C -Manifest $manifest
+            if ($productOwnsProfile) {
+                if ($manifest.buildNumber -ceq 'mergeBaseCount') {
+                    $buildNumber = Get-ScopedBuildNumber -Root $Root -BaseRef $BaseRef
+                }
+            } else {
+                $build = Invoke-ScopedBuild $P $C $reports $environmentBase $source
+                $buildNumber = $build.BuildNumber
+                $nativeOptions = "$options;$($build.Options)"
+                $artifact = Get-ScopedArtifactIdentity -Root $Root -Platform $P -Configuration $C -Manifest $manifest
+                $nativeKey = Get-ScopedDigest (@($Root, $P, $C, '(common)', $nativeOptions, $build.Compiled, $artifact, $environment) -join "`n")
+            }
         }
-        $nativeOptions = "$options;$buildOptions"
-        $nativeKey = if ($native.Count) { Get-ScopedDigest (@($Root, $P, $C, '(common)', $nativeOptions, $compiled, $artifact, $environment) -join "`n") } else { '' }
-        $toolingKey = Get-ScopedDigest ((Get-ScopedSourceIdentity -Root $Root -Manifest $manifest -From $source) + "`n" + $toolingEnvironment)
+        $sourceIdentity = Get-ScopedSourceIdentity -Root $Root -Manifest $manifest -From $source
+        $toolingKey = Get-ScopedDigest ($sourceIdentity + "`n" + $toolingEnvironment)
         # B5: reuse needs the exact receipt and, for a native scope, a clean suite report; instrumentation never reuses.
         $pending = [Collections.Generic.List[object]]::new()
         $identities = @{}
@@ -274,8 +306,14 @@ function Invoke-ScopedProfile([object]$Target) {
         $runtime = [string[]]@($pending | Where-Object { $_.native } | ForEach-Object { $_.name })
         $reduced = [Collections.Generic.List[string]]::new()
         if ($runtime.Count) {
-            $parameters = [ordered]@{ Platform = $P; Configuration = $C; Suites = $runtime; SkipBuild = $true; SkipTooling = $true }
-            if ($null -ne $build.BuildNumber) { $parameters['BuildNumber'] = $build.BuildNumber }
+            $parameters = [ordered]@{
+                Platform = $P
+                Configuration = $C
+                Suites = $runtime
+                SkipTooling = $true
+            }
+            if (-not $productOwnsProfile -or $SkipBuild) { $parameters['SkipBuild'] = $true }
+            if ($null -ne $buildNumber) { $parameters['BuildNumber'] = $buildNumber }
             if ($ParallelSuites -gt 1) { $parameters['ParallelSuites'] = $ParallelSuites }
             # Keep prior evidence and require test.ps1 to create the report for this invocation.
             $archive = Assert-CiContainedPath -Root $Root -Path (Join-Path $reports ("prior-suite-reports/" + [guid]::NewGuid().ToString('N')))
@@ -285,25 +323,27 @@ function Invoke-ScopedProfile([object]$Target) {
                 [void][IO.Directory]::CreateDirectory($archive)
                 [IO.File]::Move($priorReport, (Join-Path $archive ([IO.Path]::GetFileName($priorReport))))
             }
-            Invoke-ScopedProductScript 'test.ps1' $parameters "Selected runtime tests ($P $C)"
-            $afterKey = Get-ScopedDigest (@($Root, $P, $C, '(common)', $nativeOptions, (Get-ScopedSourceIdentity -Root $Root -Manifest $manifest -CompiledOnly),
-                    (Get-ScopedArtifactIdentity -Root $Root -Platform $P -Configuration $C -Manifest $manifest), $environment) -join "`n")
-            foreach ($name in $runtime) {
-                if ((Get-ScopedDigest ($afterKey + "`n" + $name)) -cne $identities[$name]) { throw "Inputs changed during $name; no reusable success was published." }
-            }
-            foreach ($scope in @($pending | Where-Object { $_.native })) {
-                $report = Read-ScopedSuiteReport $scope.name $P $C ([bool]$instrumentation.Count)
-                if (-not $report) { throw "test.ps1 wrote no current suite report .build/reports/$($scope.name)-$P-$C.json; no success was established for $($scope.name)." }
-                if ($report.exitCode -ne 0) { throw "The suite report of $($scope.name) does not show a successful exit." }
-                if ($report.skips.Count) { $reduced.Add($scope.name); Write-Host "PASSED_WITH_CAPABILITY_SKIPS $($scope.name) (not reusable)"; continue }
-                if ($scope.reuse -and -not $instrumentation.Count) { Write-ScopedReceipt -Path (Get-ScopedReceiptPath $scope $reports) -Identity $identities[$scope.name] }
-                Write-Host "PASSED $($scope.name) (native suite)"
+            Invoke-ScopedProductScript 'test.ps1' $parameters "Selected runtime tests ($P $C)" -PreserveExitCode:$productOwnsProfile
+            if (-not $productOwnsProfile) {
+                $afterKey = Get-ScopedDigest (@($Root, $P, $C, '(common)', $nativeOptions, (Get-ScopedSourceIdentity -Root $Root -Manifest $manifest -CompiledOnly),
+                        (Get-ScopedArtifactIdentity -Root $Root -Platform $P -Configuration $C -Manifest $manifest), $environment) -join "`n")
+                foreach ($name in $runtime) {
+                    if ((Get-ScopedDigest ($afterKey + "`n" + $name)) -cne $identities[$name]) { throw "Inputs changed during $name; no reusable success was published." }
+                }
             }
         }
-        if ((Get-ScopedMapIdentity (Get-ScopedSourceMap -Root $Root -Manifest $manifest)) -cne (Get-ScopedMapIdentity $source) -or
+        if ((Get-ScopedSourceIdentity -Root $Root -Manifest $manifest) -cne $sourceIdentity -or
             (Get-ScopedMapIdentity (Get-ScopedIndexMap -Root $Root)) -cne (Get-ScopedMapIdentity $index) -or
             (Get-ScopedDigest ((Get-ScopedEnvironmentIdentity -Root $Root -Manifest $manifest) + "`n" + (Get-ScopedToolIdentity))) -cne $environment) {
             throw 'Source, index or environment changed during the run; no iteration baseline was published.'
+        }
+        foreach ($scope in @($pending | Where-Object { $_.native })) {
+            $report = Read-ScopedSuiteReport $scope.name $P $C ([bool]$instrumentation.Count)
+            if (-not $report) { throw "test.ps1 wrote no current suite report .build/reports/$($scope.name)-$P-$C.json; no success was established for $($scope.name)." }
+            if ($report.exitCode -ne 0) { throw "The suite report of $($scope.name) does not show a successful exit." }
+            if ($report.skips.Count) { $reduced.Add($scope.name); Write-Host "PASSED_WITH_CAPABILITY_SKIPS $($scope.name) (not reusable)"; continue }
+            if ($scope.reuse -and -not $instrumentation.Count) { Write-ScopedReceipt -Path (Get-ScopedReceiptPath $scope $reports) -Identity $identities[$scope.name] }
+            Write-Host "PASSED $($scope.name) (native suite)"
         }
         if ($ordinary -and -not $instrumentation.Count -and -not $reduced.Count) {
             Write-ScopedIteration -Path $iterationPath -Root $Root -Platform $P -Configuration $C -Environment $environment -Options $options `

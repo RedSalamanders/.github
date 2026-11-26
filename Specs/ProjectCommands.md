@@ -238,11 +238,11 @@ that gives no native scope is not a native input.
 | B3 | Every run except `-Explain` first runs this engine's `Tools/Test-Changelog.ps1 -Root`; PrePush first refuses an uncommitted `CHANGELOG.md` or `Changes/`, then passes `-Base <base>`. |
 | B4 | The iteration baseline, `iteration.json` of the profile, is written only by a successful ordinary Affected run (no `-Scopes`, explicit base, `CI` or `GITHUB_ACTIONS`, instrumentation or capability skip). It replaces the merge base for 24 hours while root, profile, environment and Git identity and options match, and never with `-Force`. Every run that executes revokes it first; build outputs changed since it select every scope. |
 | B5 | A scope is reused only with `reuse`, without `-Force` or instrumentation, and with a receipt of exactly its identity; a native scope also needs `.build/reports/<suite>-<platform>-<configuration>.json` with `exitCode` 0 and no `skips`. Before `test.ps1`, prior reports for the invoked suites move to a unique archive under the profile receipts. Each invoked suite must then create a current report (the `.instrumented.json` form while instrumented); one with skips is `PASSED_WITH_CAPABILITY_SKIPS` and never reusable. |
-| B6 | Source, index, build outputs or environment that change during the build, a scope or the run refuse it, and nothing is published. |
+| B6 | Source, index or environment changes during execution refuse the run. For engine-owned profiles, changes to test-bound build outputs also refuse success. |
 | B7 | Evidence lives in `.build/reports/scoped-tests/<platform>-<configuration without spaces>/` (native receipts, `build.json`, `iteration.json`) and `.build/reports/scoped-tests/independent/` (receipts of non-native scopes, shared by profiles). |
 | B8 | A fail-fast lease per checkout output folder and profile (`Enter-ScopedProfileLease`), never taken by `-Explain`, is re-entered on its thread and by the owner's child processes, which inherit `CI_SCOPED_TESTING_LEASE` and verify the owning ancestor PID and its exact process creation identity. |
 | B9 | `interactiveObligations` matching the branch's changes (all of them in Full and PrePush) print `INTERACTIVE_NOT_RUN: <suite> - <reason> [<pattern>]` and never run. |
-| B10 | Runtime tests need a host of exactly the profile's architecture; a cross build stays a build (`build.ps1`, or a `buildOnly` profile). |
+| B10 | Runtime tests need a matching host architecture. In `prePushProfiles`, `buildOnly: true` always builds without runtime, and `buildOnly: "cross"` selects build-only on a different host architecture. The default is `false`. |
 | B11 | Each selected non-native scope runs its `commands` in order, each as `pwsh -NoProfile -NonInteractive -File <path> <arguments>`; formatting (`format.ps1 -Check`) is such a scope in every product. |
 | B12 | With a native scope selected, the whole profile is built by `build.ps1 -Platform -Configuration`, then tested by `test.ps1 -Platform -Configuration -Suites <scopes> -SkipBuild -SkipTooling [-ParallelSuites <n> above 1]`. Each executes in a child pwsh through `Tools/Invoke-ScopedScript.ps1`. When the product declares the `EnableTests` switch, the scoped runner passes it for its build profiles and binds it into the build identity. The `mergeBaseCount` policy passes the same `-BuildNumber` to both scripts. `-SkipBuild` instead requires the profile's matching `build.json` and passes its build number to the test. |
 | B13 | An unmapped path selects every scope. |
@@ -251,7 +251,14 @@ that gives no native scope is not a native input.
 | O2 | `-Scopes` takes names or comma-separated strings. |
 | O3 | A planner of three outcomes (none, prose, native) is data: `prose` patterns, no rules, a native scope. |
 
-A product's `build.ps1` writes `.build/<platform>/<configuration>`; its `test.ps1` takes the parameters of B12 and
+With `nativeProfileOwner: "product"`, B12 runs the product's `test.ps1` for the selected native suites in
+canonical order. The product owns the runtime profile build, verification, and any re-attestation after an
+artifact-writing suite. The shared runner forwards the caller's `-SkipBuild` and, for `mergeBaseCount`, the
+policy build number. It preserves the child's failure exit code. Every scope must set `reuse: false` and the
+runner omits the iteration baseline. The profile lease, fresh named reports, and unchanged source, index and
+environment still guard success. Build-only profiles continue to use `build.ps1` and the shared build receipt.
+
+A product's `build.ps1` writes `.build/<platform>/<configuration>`. Its `test.ps1` takes the parameters of B12 and
 writes the reports of B5. `Build/TestRunEvidence.psm1` serves `test.ps1` on Windows: `Start-TestRunEvidence
 -CaptureNativeArtifacts` refuses while a `watchedProcesses` executable runs from the checkout's `.build`, and never
 stops it. The Windows run handle starts in `Active` state. Verified completion sets `Completed` for a pass
