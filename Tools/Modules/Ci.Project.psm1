@@ -54,7 +54,9 @@ function Invoke-CiProjectScript {
         $allowed = @('Tools/Test-Changelog.ps1','validate-skills.ps1','validate-specs.ps1','validate-dependencies.ps1',
             'validate-test-port.ps1','validate-build-matrix.ps1','Tools/Get-SpecInventory.ps1','Tools/Get-ToolInventory.ps1',
             'Tools/Verify-NoSubclassManager.ps1','Tools/Audit-ComctlReportSurfaces.ps1','Tools/Audit-VisibleNativeSurfaces.ps1')
-        if ($Context.project.repository -eq 'RedSalamanders/RedMonitor') { $allowed += 'validate.ps1' }
+        if ($Context.project.repository -in @('RedSalamanders/RedMonitor', 'RedSalamanders/RedSalamander')) {
+            $allowed += 'validate.ps1'
+        }
         if ($Context.project.repository -ceq 'RedSalamanders/DxUi') { $allowed += 'Tools/tests/Test-ScopedTesting.ps1' }
         if ($Script.Replace('\','/') -cnotin $allowed) { throw "Project command is not in the reviewed compiler-free static subset: $Script" }
     }

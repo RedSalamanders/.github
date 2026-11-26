@@ -61,6 +61,10 @@ top-level Templates YAML files may become callers; ignored untracked templates c
 
 PR checks never compile, including compiler-dependent tooling fixtures. Classification errors fail the static gate. Formatting drift retains a patch and fails the check. An explicitly dispatched trusted formatter may commit a narrow change to the verified same-repository PR head, then explicitly dispatch fresh compiler-free checks for that exact new head. Because token pushes suppress ordinary workflow events, that dispatch also runs CodeQL with the exact pull-head ref/SHA and dependency review with the verified base/head SHAs. A trusted reporter completes each of the three separately required checks on that source; skipped, failed or cancelled security work cannot pass.
 
+The reviewed Static command list admits `validate.ps1` for RedMonitor and RedSalamander. The root command
+aggregates their compiler-free checks. Native builds and compiler-dependent fixtures remain in the
+separate qualification stages.
+
 DxUi's reviewed compiler-free subset additionally admits Tools/tests/Test-ScopedTesting.ps1. Its Git,
 recording-process and fixture-byte controls exercise planning before an expensive native build; they run
 with CI_NATIVE_BUILDS_DISABLED and do not compile or establish native acceptance. Simulated local children
