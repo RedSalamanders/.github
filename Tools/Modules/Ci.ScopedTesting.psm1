@@ -199,6 +199,7 @@ function Read-ScopedTestManifest {
         Assert-ScopedRelativePath $rule.pattern 'the rule pattern'
         Add-ScopedDefault $rule 'exclusive' $false
         Add-ScopedDefault $rule 'additive' $false
+        Add-ScopedDefault $rule 'fallback' $false
         $rule.scopes = @(& $resolve @($rule.scopes) "the rule '$($rule.pattern)'")
         # An exclusive rule is an isolated exception for one exact path, never a prefix-wide exclusion.
         if ($rule.exclusive -and $rule.pattern -match '[*?]') { throw "Tests/test-scopes.json: the exclusive rule '$($rule.pattern)' must name one exact path, not a pattern." }
@@ -346,10 +347,10 @@ function Get-ScopedProjectRules {
     $paths = [string[]]@($owners.Keys)
     [Array]::Sort($paths, [StringComparer]::Ordinal)
     foreach ($path in $paths) {
-        [pscustomobject]@{ pattern = $path; scopes = @($owners[$path]); reason = 'current native project and transitive local-include consumers'; exclusive = $false; additive = $false }
+        [pscustomobject]@{ pattern = $path; scopes = @($owners[$path]); reason = 'current native project and transitive local-include consumers'; exclusive = $false; additive = $false; fallback = $false }
     }
     if ($unresolved) {
-        [pscustomobject]@{ pattern = '**'; scopes = @('*'); reason = 'unresolved macro, wildcard or include in a bound native project; conservative full fallback'; exclusive = $false; additive = $false }
+        [pscustomobject]@{ pattern = '**'; scopes = @('*'); reason = 'unresolved macro, wildcard or include in a bound native project; conservative full fallback'; exclusive = $false; additive = $false; fallback = $false }
     }
 }
 
@@ -371,17 +372,18 @@ function New-ScopedRuleMatcher([object]$Manifest) {
 function New-ScopedPathClassifier([object]$Manifest) {
     # The classification of Resolve-ScopedPath reduced to what identities need over a whole tree: a dictionary lookup
     # and a few combined expressions per path. Exact-path flags: 1 exclusive, 2 maps, 4 maps a native scope from a
-    # Markdown pattern, 8 the same from an additive rule.
+    # Markdown pattern, 8 the same from an additive rule, 16 a fallback match.
     $native = [Collections.Generic.HashSet[string]]::new([string[]]@(@($Manifest.scopes) | Where-Object { $_.native } | ForEach-Object { $_.name }), [StringComparer]::OrdinalIgnoreCase)
     $exact = [Collections.Generic.Dictionary[string, int]]::new([StringComparer]::OrdinalIgnoreCase)
     $mapping = [Collections.Generic.List[string]]::new()
     $markdown = [Collections.Generic.List[string]]::new()
     $markdownAdditive = [Collections.Generic.List[string]]::new()
+    $fallback = [Collections.Generic.List[string]]::new()
     foreach ($rule in @(@($Manifest.rules) + @($Manifest.liveRules))) {
         $nativeRule = $false
         foreach ($scope in @($rule.scopes)) { if ($scope -ceq '*' -or $native.Contains($scope)) { $nativeRule = $true } }
         $markdownRule = $nativeRule -and $rule.pattern -match '\.md$'
-        $flags = if ($rule.exclusive) { 1 } elseif (-not $rule.additive) { 2 -bor $(if ($markdownRule) { 4 } else { 0 }) } elseif ($markdownRule) { 8 } else { 0 }
+        $flags = if ($rule.exclusive) { 1 } elseif ($rule.fallback) { 16 } elseif (-not $rule.additive) { 2 -bor $(if ($markdownRule) { 4 } else { 0 }) } elseif ($markdownRule) { 8 } else { 0 }
         if ($rule.pattern -notmatch '[*?]') {
             $previous = 0
             [void]$exact.TryGetValue($rule.pattern, [ref]$previous)
@@ -391,14 +393,15 @@ function New-ScopedPathClassifier([object]$Manifest) {
         if ($flags -band 2) { $mapping.Add($rule.pattern) }
         if ($flags -band 4) { $markdown.Add($rule.pattern) }
         if ($flags -band 8) { $markdownAdditive.Add($rule.pattern) }
+        if ($flags -band 16) { $fallback.Add($rule.pattern) }
     }
     return [pscustomobject]@{ Exact = $exact; Mapping = (New-ScopedAnyExpression $mapping.ToArray()); Markdown = (New-ScopedAnyExpression $markdown.ToArray())
         MarkdownAdditive = (New-ScopedAnyExpression $markdownAdditive.ToArray()); Prose = (New-ScopedAnyExpression @($Manifest.prose))
-        Unscoped = (New-ScopedAnyExpression @($Manifest.unscoped)) }
+        Unscoped = (New-ScopedAnyExpression @($Manifest.unscoped)); Fallback = (New-ScopedAnyExpression $fallback.ToArray()) }
 }
 
 function Get-ScopedPathKind([object]$Classifier, [string]$Path) {
-    # exclusive, prose, native prose (prose that a Markdown rule maps to a native scope), rule, unscoped or unmapped.
+    # Prose mapped to a native scope is reported separately so compiled identity retains it.
     $flags = 0
     [void]$Classifier.Exact.TryGetValue($Path, [ref]$flags)
     if ($flags -band 1) { return 'exclusive' }
@@ -410,12 +413,13 @@ function Get-ScopedPathKind([object]$Classifier, [string]$Path) {
     }
     if ($mapped) { return 'rule' }
     if ($null -ne $Classifier.Unscoped -and $Classifier.Unscoped.IsMatch($Path)) { return 'unscoped' }
+    if (($flags -band 16) -or ($null -ne $Classifier.Fallback -and $Classifier.Fallback.IsMatch($Path))) { return 'fallback' }
     return 'unmapped'
 }
 
 function Resolve-ScopedPath([object]$Manifest, [object]$Matcher, [string]$Path, [string[]]$Names, [string[]]$NonNative) {
     # The one classification every plan and identity uses (Specs/ProjectCommands.md, Scoped testing):
-    # exclusive rule > prose (+ rules naming Markdown) > rules (an additive rule never maps alone) > unscoped > unmapped.
+    # Exact exclusive rules, prose, explicit mappings, unscoped paths, the first fallback, then the implicit full fallback.
     $entries = [Collections.Generic.List[object]]::new()
     $exactEntries = $null
     if ($Matcher.Exact.TryGetValue($Path, [ref]$exactEntries)) { $entries.AddRange($exactEntries) }
@@ -426,7 +430,7 @@ function Resolve-ScopedPath([object]$Manifest, [object]$Matcher, [string]$Path, 
     if ($exclusive.Count) {
         return [pscustomobject]@{ kind = 'exclusive'; reasons = @($exclusive | ForEach-Object { [pscustomobject]@{ scopes = @(& $expand $_); reason = $_.reason } }) }
     }
-    $mapping = @($matched | Where-Object { -not $_.exclusive })
+    $mapping = @($matched | Where-Object { -not $_.exclusive -and -not $_.fallback })
     if (-not @($mapping | Where-Object { -not $_.additive }).Count) { $mapping = @() }
     if (Test-ScopedAnyPattern $Path @($Manifest.prose)) {
         $reasons = @([pscustomobject]@{ scopes = $NonNative; reason = 'prose: validated by every non-native scope; no native test input' })
@@ -439,6 +443,11 @@ function Resolve-ScopedPath([object]$Manifest, [object]$Matcher, [string]$Path, 
     }
     if (Test-ScopedAnyPattern $Path @($Manifest.unscoped)) {
         return [pscustomobject]@{ kind = 'unscoped'; reasons = @([pscustomobject]@{ scopes = @(); reason = 'unscoped: no test input' }) }
+    }
+    foreach ($rule in $matched) {
+        if ($rule.fallback) {
+            return [pscustomobject]@{ kind = 'fallback'; reasons = @([pscustomobject]@{ scopes = @(& $expand $rule); reason = $rule.reason }) }
+        }
     }
     return [pscustomobject]@{ kind = 'unmapped'; reasons = @([pscustomobject]@{ scopes = $Names; reason = 'unmapped input; conservative full fallback' }) }
 }
