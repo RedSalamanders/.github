@@ -53,6 +53,50 @@ foreach ($invalidBudget in @(0,3601)) {
 }
 Write-Host 'PASS shared setup rejects invalid product MSVC policy and installer budgets before discovery'
 
+$tokens = $null
+$errors = $null
+$setupAst = [Management.Automation.Language.Parser]::ParseFile($setup,[ref]$tokens,[ref]$errors)
+Assert-Equal 0 $errors.Count
+# Exercise just the in-process dispatch with a recording callback and no installer.
+$dispatches = @($setupAst.FindAll({
+    param($node)
+    $node -is [Management.Automation.Language.IfStatementAst] -and
+        $node.Clauses[0].Item1.Extent.Text -ceq '$InstallerRunner' -and
+        $node.Clauses[0].Item2.Extent.Text.Contains('-TimeoutMilliseconds')
+}, $true))
+Assert-Equal 1 $dispatches.Count
+$dispatch = $dispatches[0].Clauses[0].Item2.Extent.Text
+$dispatch = [scriptblock]::Create($dispatch.Substring(1,$dispatch.Length-2))
+
+function Invoke-InstallerDispatchFixture([scriptblock]$InstallerRunner) {
+    $scratch = Join-Path $fixture 'installer workspace with spaces'
+    $installer = Join-Path $scratch 'fixture.exe'
+    $stdout = Join-Path $scratch 'bootstrapper.stdout.log'
+    $stderr = Join-Path $scratch 'bootstrapper.stderr.log'
+    $arguments = @('--quiet','--installPath',(Join-Path $scratch 'install root'))
+    $installerTimeoutMilliseconds = 2700000
+    $installerExit = $null
+    $installerFailure = $null
+    . $dispatch
+    return @{ ExitCode=$installerExit; Failure=$installerFailure }
+}
+$result = Invoke-InstallerDispatchFixture {
+    param($FilePath,[string[]]$Arguments,$WorkingDirectory,$LogPath,$ErrorLogPath,$TimeoutMilliseconds)
+    Assert-Equal (Join-Path $WorkingDirectory 'fixture.exe') $FilePath
+    Assert-Equal (Join-Path $WorkingDirectory 'bootstrapper.stdout.log') $LogPath
+    Assert-Equal (Join-Path $WorkingDirectory 'bootstrapper.stderr.log') $ErrorLogPath
+    Assert-Equal (Join-Path $WorkingDirectory 'install root') $Arguments[2]
+    Assert-Equal 2700000 $TimeoutMilliseconds
+    return 3010
+}
+Assert-Equal 3010 $result.ExitCode
+Assert-Equal $null $result.Failure
+$result = Invoke-InstallerDispatchFixture { throw 'Fixture timeout' }
+Assert-Equal 'Fixture timeout' $result.Failure.Exception.Message
+$result = Invoke-InstallerDispatchFixture { 'invalid result' }
+Assert-Equal 'The product installer runner must return one integer exit code.' $result.Failure.Exception.Message
+Write-Host 'PASS installer dispatch retains the argument array, diagnostic paths, timeout, and exact result'
+
 $installation = Join-Path $fixture 'VS Fixture'
 $versionPath = 'VS Fixture/VC/Auxiliary/Build/Microsoft.VCToolsVersion.default.txt'
 $x64 = Write-FixtureFile 'VS Fixture/MSBuild/Current/Bin/amd64/MSBuild.exe' ''

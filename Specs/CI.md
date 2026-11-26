@@ -85,6 +85,10 @@ the Windows 11 SDK and the x64 LLVM PDB utility when applicable. A successful ho
 selected native `MSBUILD_EXE_PATH`. Only a GitHub-hosted Windows job may provision missing tools. Installation
 uses the signed Microsoft bootstrapper, bounded download and install waits, and diagnostics under
 `RUNNER_TEMP`. Failed provisioning uploads those diagnostics for 14 days.
+A pinned product setup wrapper may supply an installer runner to preserve its process containment.
+The shared setup calls it only after hosted admission and verification of the bootstrapper signature.
+The runner receives the native argument array, diagnostic paths and configured millisecond budget
+and returns the bootstrapper exit code. Shared discovery, verification and diagnostic retention apply.
 
 For read-only checks, invoke `Setup.ps1 -ProjectRoot <checkout> -Platform x64 -VerifyOnly` from the pinned
 engine's action folder. Use `-Platform ARM64` to verify that target. These checks do not start a build.
