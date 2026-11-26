@@ -217,6 +217,31 @@ Assert-Equal '--binarysource=clear' $actual[-1]
 Assert-Equal 10 $actual.Count
 Write-Host 'PASS ordinary and independent-registry vcpkg arguments preserve exact owned paths and cache option'
 
+$defaultStorage = @{
+    ProjectRoot = $product
+    Triplet = 'x64-windows'
+    InstallRoot = $arguments.InstallRoot
+    OverlayTriplets = $arguments.OverlayTriplets
+    UseDefaultStorage = $true
+}
+$expected = @('install', '--triplet=x64-windows', "--x-manifest-root=$product",
+    "--x-install-root=$($arguments.InstallRoot)", "--overlay-triplets=$($arguments.OverlayTriplets)")
+$actual = @(Get-CiVcpkgManifestInstallArguments @defaultStorage)
+Assert-Equal ($expected -join [char]0) ($actual -join [char]0)
+$portOverlay = Join-Path $product 'Build/fixture ports'
+[void][IO.Directory]::CreateDirectory($portOverlay)
+$defaultStorage.Triplet = 'arm64-windows'
+$expected[1] = '--triplet=arm64-windows'
+$actual = @(Get-CiVcpkgManifestInstallArguments @defaultStorage -OverlayPorts $portOverlay)
+Assert-Equal (($expected + "--overlay-ports=$portOverlay") -join [char]0) ($actual -join [char]0)
+Assert-Equal $false ([IO.Directory]::Exists($arguments.InstallRoot))
+Assert-Refused { Get-CiVcpkgManifestInstallArguments @defaultStorage -OverlayPorts (Join-Path $product 'missing') } 'port overlay directory is missing'
+Assert-Refused { Get-CiVcpkgManifestInstallArguments @defaultStorage -OverlayPorts $fixture } 'contained repository'
+$linkedPortOverlay = Join-Path $product 'Build/linked ports'
+New-Item -ItemType $linkKind -Path $linkedPortOverlay -Target $portOverlay | Out-Null
+Assert-Refused { Get-CiVcpkgManifestInstallArguments @defaultStorage -OverlayPorts $linkedPortOverlay } 'Reparse path refused'
+Write-Host 'PASS vcpkg default storage and target port overlays preserve the install arguments and path policy'
+
 $invalid = $arguments.Clone()
 $invalid.InstallRoot = Join-Path $fixture 'foreign'
 Assert-Refused { Get-CiVcpkgManifestInstallArguments @invalid } 'contained repository'
