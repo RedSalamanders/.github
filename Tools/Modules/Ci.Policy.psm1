@@ -203,13 +203,18 @@ function Get-CiManagedProjectFileTemplates {
     $engine = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
     $directory = 'Templates/ManagedProjectFiles'
     $committed = (Invoke-CiGit $engine @('ls-tree','-r','--name-only','-z','HEAD','--',$directory)).stdout.Split([char]0,[StringSplitOptions]::RemoveEmptyEntries)
-    $paths = @('.clang-format', '.editorconfig', '.gitattributes', '.gitignore')
+    $blocks = @{
+        '.gitattributes' = 'gitattributes.block'
+        '.gitignore' = 'gitignore.block'
+        'AGENTS.md' = 'agent-guidance.block'
+    }
+    $paths = @('.clang-format', '.editorconfig', '.gitattributes', '.gitignore', 'AGENTS.md')
     if ($Project.repository -cne 'RedSalamanders/RedSalamander') {
         $paths += '.github/dependabot.yml'
     }
     foreach ($name in $paths) {
-        $block = $name -cin @('.gitattributes','.gitignore')
-        $fileName = if ($block) { $name.Substring(1) + '.block' } else { [IO.Path]::GetFileName($name) }
+        $block = $blocks.ContainsKey($name)
+        $fileName = if ($block) { $blocks[$name] } else { [IO.Path]::GetFileName($name) }
         $source = "$directory/$fileName"
         if ($source -cnotin $committed) { throw "Missing committed managed project template: $source" }
         $path = Assert-CiContainedPath $engine (Join-Path $engine $source)
@@ -230,8 +235,9 @@ function Get-CiManagedProjectFileUpdate {
     $crlf = [string][char]13 + $lf
     $expected = [IO.File]::ReadAllText($Template.FullName).Replace($crlf,$lf)
     $encoding = [Text.UTF8Encoding]::new($false,$true)
+    $guidance = $Template.Path -ceq 'AGENTS.md'
     if (-not [IO.File]::Exists($path)) {
-        return [pscustomobject]@{ Path = $path; Text = $expected; Encoding = $encoding; Changed = $true }
+        return [pscustomobject]@{ Path = $path; Text = $expected; Encoding = $encoding; Changed = (-not $guidance) }
     }
 
     $reader = [IO.StreamReader]::new($path,$encoding,$true)
@@ -246,8 +252,16 @@ function Get-CiManagedProjectFileUpdate {
         return [pscustomobject]@{ Path = $path; Text = $expected; Encoding = $encoding; Changed = $original.Replace($crlf,$lf) -cne $expected }
     }
 
-    $begin = [regex]::Matches($original, '(?m)^# Common block:[^\r\n]*')
-    $end = [regex]::Matches($original, '(?m)^# End of the common block\.(?=\r?$)')
+    if ($guidance) {
+        $begin = [regex]::Matches($original, '(?m)^<!-- BEGIN SHARED NATIVE BUILD POLICY -->(?=\r?$)')
+        $end = [regex]::Matches($original, '(?m)^<!-- END SHARED NATIVE BUILD POLICY -->(?=\r?$)')
+        if ($begin.Count -eq 0 -and $end.Count -eq 0) {
+            return [pscustomobject]@{ Path = $path; Text = $original; Encoding = $encoding; Changed = $false }
+        }
+    } else {
+        $begin = [regex]::Matches($original, '(?m)^# Common block:[^\r\n]*')
+        $end = [regex]::Matches($original, '(?m)^# End of the common block\.(?=\r?$)')
+    }
     if ($begin.Count -ne 1 -or $end.Count -ne 1 -or $begin[0].Index -ge $end[0].Index) {
         throw "Managed project file $($Template.Path) requires one ordered common block."
     }
