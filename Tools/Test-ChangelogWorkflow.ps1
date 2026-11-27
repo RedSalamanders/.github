@@ -803,6 +803,11 @@ if ($ProjectRoot) {
         [void](New-ShimProduct $r)
         $runnerText = [IO.File]::ReadAllText((Join-Path $ProjectRoot $runnerName))
         Put $r $runnerName $runnerText
+        $productTestRunner = Join-Path $ProjectRoot 'test.ps1'
+        if ($scoped -and [IO.File]::Exists($productTestRunner)) {
+            # A product compatibility entrypoint can forward to its root test command.
+            Put $r 'test.ps1' ([IO.File]::ReadAllText($productTestRunner))
+        }
         # The engine's runner (an adopted Test-Changes.ps1 shim) reads the product's scoped testing data before its gate.
         if ($scoped -and $runnerText.Contains('# Engine shim (Specs/ProjectCommands.md in the engine)')) {
             Put $r 'Tests/test-scopes.json' ([IO.File]::ReadAllText((Join-Path $ProjectRoot 'Tests/test-scopes.json')))

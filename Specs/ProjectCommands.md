@@ -301,4 +301,6 @@ none of the person's hooks or signing, a local bare remote and a stand-in `gh`, 
 controls report SKIP elsewhere. It also covers the shims of `Templates/Project/Tools` against fixture products with a
 `.ci-engine` built from this engine, including every refusal above. A product's shim passes `-ProjectRoot`, which adds
 two product cases: the product's shims equal this engine's templates, and its PrePush runner validates the changelog
-against `origin/main` before anything else. Engine CI runs the suite on Windows and Linux.
+against `origin/main` before anything else. The fixture stages the product's root `test.ps1` when present
+so it exercises the compatibility entry point and its actual target together. Engine CI runs the suite
+on Windows and Linux.
