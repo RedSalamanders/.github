@@ -10,6 +10,8 @@ function Get-NativeBuildDiagnostics {
     $warnings=0;$errors=0;$toolExceptions=0
     $details=[Collections.Generic.List[string]]::new()
     $succeeded=$false;$warningSummary=$null;$errorSummary=$null;$summaryStage=0
+    $fileLoggerNotice = "FileLogger wrote to: $full"
+    $sawFileLoggerNotice = $false
     $options=[Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [Text.RegularExpressions.RegexOptions]::CultureInvariant
     if([Enum]::IsDefined([Text.RegularExpressions.RegexOptions], 'NonBacktracking')){
         $options=$options -bor [Enum]::Parse([Text.RegularExpressions.RegexOptions], 'NonBacktracking')
@@ -35,6 +37,7 @@ function Get-NativeBuildDiagnostics {
         }
         if($line -match '^\s*Build succeeded\.\s*$'){
             $summaryStage=1;$succeeded=$false;$warningSummary=$null;$errorSummary=$null
+            $sawFileLoggerNotice = $false
         }elseif($line -match '^\s*Build FAILED\.\s*$'){
             $summaryStage=0;$succeeded=$false;$warningSummary=$null;$errorSummary=$null
         }elseif($succeeded -and $line -notmatch '^\s*$'){
@@ -44,6 +47,8 @@ function Get-NativeBuildDiagnostics {
                 $warningSummary=0;$summaryStage=2
             }elseif($summaryStage -eq 2 -and $line -match '^\s*0+ Error\(s\)\s*$'){
                 $errorSummary=0;$summaryStage=3
+            }elseif($summaryStage -eq 3 -and !$sawFileLoggerNotice -and $line.Trim() -ieq $fileLoggerNotice){
+                $sawFileLoggerNotice = $true
             }elseif($summaryStage -eq 3 -and $line -match '^\s*Time Elapsed \d{2,}:\d{2}:\d{2}\.\d{2,7}\s*$'){
                 $succeeded=$true;$summaryStage=0
             }else{
