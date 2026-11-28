@@ -167,8 +167,14 @@ Case 'a build console shim can require the complete successful MSBuild summary' 
     $defaultFacts = Get-NativeBuildDiagnostics -LogPath $log
     Require ($null -eq $defaultFacts.PSObject.Properties['BuildSucceeded']) 'The existing diagnostics shape changed.'
 
+    $notice = "FileLogger wrote to: $log"
+    [IO.File]::WriteAllLines($log, ($summary[0..2] + @('', $notice, '', $summary[4])))
+    Assert-NativeBuildDiagnostics -LogPath $log -RequireBuildSummary
+
     $invalid = @(
         ($summary[0..2] -join "`n"),
+        (($summary[0..2] + "FileLogger wrote to: $(Join-Path $runRoot 'another.log')" + $summary[4]) -join "`n"),
+        (($summary[0..2] + @($notice, $notice, $summary[4])) -join "`n"),
         (($summary + 'Compile interrupted') -join "`n"),
         (($summary + 'Build FAILED.') -join "`n"),
         (($summary -join "`n").Replace('0 Warning(s)', '1 Warning(s)')),

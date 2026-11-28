@@ -52,6 +52,7 @@ copies of shared tooling (RedHome `Specs/Plans/WIP/Convergence_2026-11-17.md`, P
 The build-console module rejects warning and error diagnostics, including structured native tool failures.
 Build callers with an explicit MSBuild summary use `-RequireBuildSummary` for assertion and result output.
 That mode requires the successful footer, both zero counts and the elapsed time at the end of the log.
+The MSBuild file logger may report the current log's full path once between the counts and the elapsed time.
 `Get-NativeBuildDiagnostics -IncludeBuildSummary` exposes those observations and at most 16 bounded diagnostic lines.
 Existing callers keep their diagnostic result fields and zero-warning behavior while they adopt the explicit logger summary.
 
