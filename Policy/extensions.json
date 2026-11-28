@@ -1,6 +1,7 @@
 {
   "RedSalamander": {
     "manual": [
+      "benchmark.yml",
       "asan.yml",
       "nightly-ci.yml",
       "nightly-flake.yml",
