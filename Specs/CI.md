@@ -27,9 +27,9 @@ vcpkg checks and leaves reusable engine pins to the reviewed project pin update.
 its terminal workflow exclusion and coordinated vcpkg review in its adapter until its operator adopts the template.
 
 `Policy/extensions.json` classifies product-owned workflows outside the generated callers. The registry permits
-DxUi, RedTilde, RedPrism, RedMonitor and RedXe to run a manual `benchmark.yml` for paired performance evidence.
-Each product spec owns its benchmark protocol, evidence handling and review. These extensions run by explicit
-dispatch outside native PR checks and production admission.
+DxUi, RedTilde, RedPrism, RedMonitor, RedXe and RedSalamander to run a manual `benchmark.yml` for paired
+performance evidence. Each product spec owns its benchmark protocol, evidence handling and review. These
+extensions run by explicit dispatch outside native PR checks and production admission.
 
 The shared WinGet generator reads optional `winget.localeMetadata` from the project manifest. It retains the
 application's names, product descriptions, links, tags and installation notes in the default locale file.
